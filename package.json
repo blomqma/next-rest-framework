@@ -1,0 +1,32 @@
+{
+  "name": "root",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter dev run dev",
+    "build": "pnpm --filter next-rest-framework run build",
+    "test": "pnpm --filter next-rest-framework run test",
+    "test:watch": "pnpm --filter next-rest-framework run test:watch",
+    "type-check": "pnpm run -r type-check",
+    "format": "prettier --write '**/*.{ts,json}' && eslint --fix --max-warnings=0 --ext=.ts .",
+    "lint": "prettier --check '**/*.{ts,json}' && eslint --max-warnings=0 --ext=.ts ."
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "5.0.0",
+    "eslint": "8.0.1",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-config-standard-with-typescript": "23.0.0",
+    "eslint-plugin-import": "2.25.2",
+    "eslint-plugin-n": "15.0.0",
+    "eslint-plugin-promise": "6.0.0",
+    "next": "13.0.2",
+    "prettier": "2.7.1",
+    "typescript": "4.9.3",
+    "zod": "3.19.1",
+    "yup": "0.32.11"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "none"
+  }
+}

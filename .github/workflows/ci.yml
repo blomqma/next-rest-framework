@@ -1,0 +1,33 @@
+name: "CI"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    name: "Run CI pipeline"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [14, 16, 18]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7.5.1
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "pnpm"
+      - run: pnpm i
+      - run: pnpm build
+      - run: pnpm type-check
+      - run: pnpm lint
+      - run: pnpm test
+
+      # - name: Coverage
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     fail_ci_if_error: true
