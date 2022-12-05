@@ -15,7 +15,8 @@ export const createNextRestFrameworkMocks = <Body>(
   resOptions?: ResponseOptions
 ) =>
   createMocks<
-    TypedNextApiRequest<Body>,
     // @ts-expect-error: Our custom response types are not compatible with node-mocks-http.
+    TypedNextApiRequest<Body>,
+    // @ts-expect-error: Same as above.
     TypedNextApiResponse
   >(reqOptions as RequestOptions, resOptions);
