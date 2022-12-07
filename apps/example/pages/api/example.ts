@@ -1,20 +1,20 @@
-import z from 'zod';
+import { object, string } from 'zod';
 import { defineEndpoints } from 'next-rest-framework/client';
 
 export default defineEndpoints({
   POST: {
     requestBody: {
       contentType: 'application/json',
-      schema: z.object({
-        bar: z.string()
+      schema: object({
+        bar: string()
       })
     },
     responses: [
       {
         status: 200,
         contentType: 'text/html',
-        schema: z.object({
-          bar: z.string()
+        schema: object({
+          bar: string()
         })
       }
     ],

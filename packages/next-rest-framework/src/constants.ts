@@ -22,3 +22,5 @@ export enum ValidMethod {
   PATCH = 'PATCH',
   TRACE = 'TRACE'
 }
+
+export const NEXT_REST_FRAMEWORK_USER_AGENT = 'next-rest-framework';

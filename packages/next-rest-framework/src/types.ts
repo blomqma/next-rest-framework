@@ -61,7 +61,7 @@ type ExampleObject<Body> = Modify<
   }
 >;
 
-export type RequestBodyObject<Body> = Omit<
+export type RequestBodyObject<Body = unknown> = Omit<
   OpenAPIV3_1.RequestBodyObject,
   'content'
 > &
@@ -312,6 +312,7 @@ export interface DefineEndpointsParams<
     params: GlobalMiddlewareResponse & RouteMiddlewareResponse;
   }>;
   $ref?: OpenAPIV3_1.ReferenceObject;
+  summary?: OpenAPIV3_1.PathItemObject['summary'];
   description?: OpenAPIV3_1.PathItemObject['description'];
   servers?: OpenAPIV3_1.ServerObject[];
   parameters?: OpenAPIV3_1.PathItemObject['parameters'];

@@ -8,9 +8,17 @@
     "test:watch": "pnpm --filter next-rest-framework run test:watch",
     "type-check": "pnpm run -r type-check",
     "format": "prettier --write '**/*.{ts,json}' && eslint --fix --max-warnings=0 --ext=.ts .",
-    "lint": "prettier --check '**/*.{ts,json}' && eslint --max-warnings=0 --ext=.ts ."
+    "lint": "prettier --check '**/*.{ts,json}' && eslint --max-warnings=0 --ext=.ts .",
+    "ci": "pnpm run build && pnpm run type-check && pnpm run lint && pnpm run test"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
+    "@types/node": "18.11.9",
+    "@types/react": "18.0.25",
+    "@types/react-dom": "18.0.8",
     "@typescript-eslint/eslint-plugin": "5.0.0",
     "eslint": "8.0.1",
     "eslint-config-prettier": "8.5.0",

@@ -1,6 +1,6 @@
 <p align="center">
   <br/>
-  <img width="250px" src="./packages/next-rest-framework/logo.svg" />
+  <img width="250px" src="https://raw.githubusercontent.com/blomqma/next-rest-framework/d02224b38d07ede85257b22ed50159a947681f99/packages/next-rest-framework/logo.svg" />
   <h2 align="center">Next REST Framework</h3>
   <p align="center">Type-safe, self-documenting REST APIs for Next.js</p>
   <br/>
@@ -8,11 +8,17 @@
     <a href="https://github.com/blomqma/next-rest-framework/actions?query=branch%3Amain">
       <img src="https://github.com/blomqma/next-rest-framework/actions/workflows/ci.yml/badge.svg?event=push&branch=main" alt="CI status" />
     </a>
+    <a href="https://codecov.io/gh/blomqma/next-rest-framework" >
+      <img src="https://codecov.io/gh/blomqma/next-rest-framework/branch/main/graph/badge.svg?token=IUG5ZCVGPV"/>
+    </a>
+    <a href="https://github.com/blomqma/next-rest-framework/stargazers">
+      <img src="https://img.shields.io/github/stars/blomqma/next-rest-framework" alt="Github Stars" />
+    </a>
     <a href="https://packagephobia.com/result?p=next-rest-framework">
       <img src="https://packagephobia.com/badge?p=next-rest-framework" alt="Bundle Size"/>
     </a>
-    <a href="https://opensource.org/licenses/MIT" rel="nofollow">
-      <img src="https://img.shields.io/github/license/blomqma/next-rest-framework" alt="License">
+    <a href="https://opensource.org/licenses/ISC" rel="nofollow">
+      <img src="https://img.shields.io/badge/License-ISC-blue.svg" alt="License">
     </a>
     <img src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg" alt="Contributor Covenant 2.1" />
   </p>
@@ -122,7 +128,6 @@ All of these are configurable with the [Config options](#config-options) that yo
 import { object, string, number, boolean, array } from 'zod';
 import { defineEndpoints } from 'next-rest-framework/client';
 
-// Can be a `zod` schema as well.
 const todoSchema = object({
   id: string(),
   name: string(),
