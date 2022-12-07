@@ -1,5 +1,5 @@
 import { NextApiResponse } from 'next';
-import { DEFAULT_ERRORS } from './constants';
+import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import {
   BaseContentType,
   BaseStatus,
@@ -9,14 +9,17 @@ import {
   TypedNextApiRequest
 } from './types';
 import {
-  handleReservedPaths,
   isValidMethod,
   isZodSchema,
   isYupSchema,
   isYupValidationError,
   logReservedPaths,
-  warnAboutReservedPath
+  getPathsFromMethodHandlers,
+  handleReservedPathWarnings,
+  getHTMLForSwaggerUI,
+  getOpenApiSpecWithPaths
 } from './utils';
+import yaml from 'js-yaml';
 
 export const defineEndpoints = <GlobalMiddlewareResponse>({
   config,
@@ -179,11 +182,6 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
         >
       | undefined
     > => {
-      // The handler is called without params when generating OpenAPI spec.
-      if (!req || !res) {
-        return methodHandlers;
-      }
-
       const { method, body, headers, url } = req;
 
       const {
@@ -198,52 +196,31 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
         logReservedPaths({ config, headers });
       }
 
-      if (_warnAboutReservedPaths) {
-        if (
-          url === openApiJsonPath &&
-          !global.reservedOpenApiJsonPathWarningLogged
-        ) {
-          warnAboutReservedPath({
-            path: openApiJsonPath,
-            name: 'OpenAPI JSON spec',
-            configName: 'openApiJsonPath'
-          });
-        }
-
-        if (
-          url === openApiYamlPath &&
-          !global.reservedOpenApiYamlPathWarningLogged
-        ) {
-          warnAboutReservedPath({
-            path: openApiYamlPath,
-            name: 'OpenAPI YAML spec',
-            configName: 'openApiYamlPath'
-          });
-        }
-
-        if (
-          url === swaggerUiPath &&
-          !global.reservedSwaggerUiPathWarningLogged
-        ) {
-          warnAboutReservedPath({
-            path: swaggerUiPath,
-            name: 'Swagger UI',
-            configName: 'swaggerUiPath'
-          });
-        }
-      }
-
       if (
         [openApiJsonPath, openApiYamlPath, swaggerUiPath].includes(url) &&
         exposeOpenApiSpec
       ) {
-        const reservedPathFound = await handleReservedPaths({
-          req,
-          res,
-          config
-        });
+        const spec = await getOpenApiSpecWithPaths({ config });
 
-        if (reservedPathFound) {
+        if (_warnAboutReservedPaths) {
+          handleReservedPathWarnings({ url, config });
+        }
+
+        if (url === openApiJsonPath) {
+          res.status(200).json(spec);
+          return;
+        }
+
+        if (url === openApiYamlPath) {
+          res.setHeader('Content-Type', 'text/plain');
+          res.status(200).send(yaml.dump(spec));
+          return;
+        }
+
+        if (url === swaggerUiPath) {
+          const html = getHTMLForSwaggerUI({ headers });
+          res.setHeader('Content-Type', 'text/html');
+          res.status(200).send(html);
           return;
         }
       }
@@ -258,6 +235,22 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
       const returnUnexpectedError = () => {
         res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
       };
+
+      if (headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT) {
+        try {
+          const paths = getPathsFromMethodHandlers({
+            methodHandlers: methodHandlers as DefineEndpointsParams,
+            route: url ?? ''
+          });
+
+          res.status(200).json(paths);
+        } catch (error) {
+          await config.errorHandler?.({ req, res, error });
+          returnUnexpectedError();
+        }
+
+        return;
+      }
 
       if (!isValidMethod(method)) {
         returnMethodNotAllowed();

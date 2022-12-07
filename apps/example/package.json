@@ -1,5 +1,5 @@
 {
-  "name": "dev",
+  "name": "example",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,6 +8,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "next-rest-framework": "workspace:*"
+    "next-rest-framework": "0.1.0"
   }
 }

@@ -4,6 +4,9 @@ importers:
 
   .:
     specifiers:
+      '@types/node': 18.11.9
+      '@types/react': 18.0.25
+      '@types/react-dom': 18.0.8
       '@typescript-eslint/eslint-plugin': 5.0.0
       eslint: 8.0.1
       eslint-config-prettier: 8.5.0
@@ -13,10 +16,18 @@ importers:
       eslint-plugin-promise: 6.0.0
       next: 13.0.2
       prettier: 2.7.1
+      react: 18.2.0
+      react-dom: 18.2.0
       typescript: 4.9.3
       yup: 0.32.11
       zod: 3.19.1
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
     devDependencies:
+      '@types/node': 18.11.9
+      '@types/react': 18.0.25
+      '@types/react-dom': 18.0.8
       '@typescript-eslint/eslint-plugin': 5.0.0_6smm3ppkqcrhrv2tlnxbs2d6xe
       eslint: 8.0.1
       eslint-config-prettier: 8.5.0_eslint@8.0.1
@@ -32,20 +43,15 @@ importers:
 
   apps/dev:
     specifiers:
-      '@types/node': 18.11.9
-      '@types/react': 18.0.25
-      '@types/react-dom': 18.0.8
       next-rest-framework: workspace:*
-      react: 18.2.0
-      react-dom: 18.2.0
     dependencies:
       next-rest-framework: link:../../packages/next-rest-framework
-    devDependencies:
-      '@types/node': 18.11.9
-      '@types/react': 18.0.25
-      '@types/react-dom': 18.0.8
-      react: 18.2.0
-      react-dom: 18.2.0_react@18.2.0
+
+  apps/example:
+    specifiers:
+      next-rest-framework: 0.1.0
+    dependencies:
+      next-rest-framework: link:../../packages/next-rest-framework
 
   packages/next-rest-framework:
     specifiers:
@@ -2959,7 +2965,6 @@ packages:
 
   /js-tokens/4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
-    dev: true
 
   /js-yaml/3.14.1:
     resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
@@ -3065,7 +3070,6 @@ packages:
     hasBin: true
     dependencies:
       js-tokens: 4.0.0
-    dev: true
 
   /lru-cache/6.0.0:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
@@ -3491,7 +3495,6 @@ packages:
       loose-envify: 1.4.0
       react: 18.2.0
       scheduler: 0.23.0
-    dev: true
 
   /react-is/18.2.0:
     resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
@@ -3502,7 +3505,6 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
-    dev: true
 
   /regenerator-runtime/0.13.11:
     resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
@@ -3592,7 +3594,6 @@ packages:
     resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
     dependencies:
       loose-envify: 1.4.0
-    dev: true
 
   /semver/6.3.0:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}

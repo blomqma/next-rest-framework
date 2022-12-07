@@ -1,18 +1,41 @@
 import http from 'http';
-import { OPEN_API_VERSION, ValidMethod } from './constants';
-import { NextRestFrameworkConfig } from './types';
-import { readFileSync } from 'fs';
+import {
+  DEFAULT_ERRORS,
+  OPEN_API_VERSION,
+  ValidMethod,
+  NEXT_REST_FRAMEWORK_USER_AGENT
+} from './constants';
+import {
+  DefineEndpointsParams,
+  MethodHandler,
+  NextRestFrameworkConfig
+} from './types';
+import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { generatePaths } from './generate-paths';
 import { z } from 'zod';
 import * as yup from 'yup';
 import { OpenAPIV3_1 } from 'openapi-types';
 import chalk from 'chalk';
 import merge from 'lodash.merge';
 import { Modify } from './utility-types';
-import yaml from 'js-yaml';
-import { NextApiRequest, NextApiResponse } from 'next';
 import isEqualWith from 'lodash.isequalwith';
+import zodToJsonSchema from 'zod-to-json-schema';
+import yupToJsonSchema from '@sodaru/yup-to-json-schema';
+
+const logNextRestFrameworkError = ({ error }: { error: unknown }) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(
+      chalk.red(`Next REST Framework encountered an error:
+${error}`)
+    );
+  } else {
+    console.error(
+      chalk.red(
+        'Next REST Framework encountered an error - suppressed in production mode.'
+      )
+    );
+  }
+};
 
 export const getDefaultConfig = ({
   config
@@ -40,20 +63,7 @@ export const getDefaultConfig = ({
   openApiYamlPath: '/api/openapi.yaml',
   swaggerUiPath: '/api',
   exposeOpenApiSpec: true,
-  errorHandler: ({ error }) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error(
-        chalk.red(`Next REST Framework encountered an error:
-${error}`)
-      );
-    } else {
-      console.error(
-        chalk.red(
-          'Next REST Framework encountered an error - suppressed in production mode.'
-        )
-      );
-    }
-  },
+  errorHandler: logNextRestFrameworkError,
   suppressInfo: false
 });
 
@@ -150,37 +160,36 @@ export const warnAboutReservedPath = ({
   }
 };
 
-export const handleReservedPaths = async ({
-  req: { url, headers },
-  res,
-  config
+export const handleReservedPathWarnings = ({
+  url,
+  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath }
 }: {
-  req: NextApiRequest;
-  res: NextApiResponse;
+  url?: string;
   config: NextRestFrameworkConfig;
 }) => {
-  const { openApiJsonPath, openApiYamlPath, swaggerUiPath } = config;
-  const spec = await getOpenApiSpecWithPaths({ config });
-
-  if (url === openApiJsonPath) {
-    res.status(200).json(spec);
-    return true;
+  if (url === openApiJsonPath && !global.reservedOpenApiJsonPathWarningLogged) {
+    warnAboutReservedPath({
+      path: openApiJsonPath,
+      name: 'OpenAPI JSON spec',
+      configName: 'openApiJsonPath'
+    });
   }
 
-  if (url === openApiYamlPath) {
-    res.setHeader('Content-Type', 'text/plain');
-    res.status(200).send(yaml.dump(spec));
-    return true;
+  if (url === openApiYamlPath && !global.reservedOpenApiYamlPathWarningLogged) {
+    warnAboutReservedPath({
+      path: openApiYamlPath,
+      name: 'OpenAPI YAML spec',
+      configName: 'openApiYamlPath'
+    });
   }
 
-  if (url === swaggerUiPath) {
-    const html = getHTMLForSwaggerUI({ headers });
-    res.setHeader('Content-Type', 'text/html');
-    res.status(200).send(html);
-    return true;
+  if (url === swaggerUiPath && !global.reservedSwaggerUiPathWarningLogged) {
+    warnAboutReservedPath({
+      path: swaggerUiPath,
+      name: 'Swagger UI',
+      configName: 'swaggerUiPath'
+    });
   }
-
-  return false;
 };
 
 export const getHTMLForSwaggerUI = ({
@@ -249,18 +258,20 @@ export const getHTMLForSwaggerUI = ({
 export const isValidMethod = (x: unknown): x is ValidMethod =>
   Object.values(ValidMethod).includes(x as ValidMethod);
 
-export const getOpenApiSpecWithPaths = async <GlobalMiddlewareResponse>({
+export const getOpenApiSpecWithPaths = async ({
   config
 }: {
-  config: NextRestFrameworkConfig<GlobalMiddlewareResponse>;
+  config: NextRestFrameworkConfig;
 }) => {
   const paths = await generatePaths({ config });
 
-  return {
+  const spec = {
     ...config.openApiSpec,
     openapi: OPEN_API_VERSION,
     paths: merge(config.openApiSpec?.paths, paths)
   };
+
+  return spec;
 };
 
 export const isZodSchema = (obj: unknown): obj is z.ZodAny => {
@@ -273,4 +284,226 @@ export const isYupSchema = (obj: unknown): obj is yup.AnySchema => {
 
 export const isYupValidationError = (e: unknown): e is yup.ValidationError => {
   return e instanceof Error && e.name === 'ValidationError';
+};
+
+export const convertSchemaToJsonSchema = (
+  _schema: unknown
+): OpenAPIV3_1.SchemaObject => {
+  let schema: OpenAPIV3_1.SchemaObject = {};
+
+  if (isZodSchema(_schema)) {
+    schema = zodToJsonSchema(_schema) as OpenAPIV3_1.SchemaObject;
+  } else if (isYupSchema(_schema)) {
+    schema = yupToJsonSchema(_schema) as OpenAPIV3_1.SchemaObject;
+  } else {
+    console.warn(
+      chalk.yellowBright(
+        "Warning: Unsupported schema type. Can't convert to JSON Schema."
+      )
+    );
+  }
+
+  return schema;
+};
+
+export const defaultResponses: OpenAPIV3_1.ResponsesObject = {
+  500: {
+    description: DEFAULT_ERRORS.unexpectedError,
+    content: {
+      'application/json': {
+        schema: convertSchemaToJsonSchema(z.object({ message: z.string() }))
+      }
+    }
+  }
+};
+
+export const getPathsFromMethodHandlers = ({
+  methodHandlers,
+  route
+}: {
+  methodHandlers: DefineEndpointsParams;
+  route: string;
+}) => {
+  const { $ref, summary, description, servers, parameters } = methodHandlers;
+  const paths: OpenAPIV3_1.PathsObject = {};
+
+  paths[route] = {
+    $ref: $ref as string | undefined,
+    summary,
+    description,
+    servers,
+    parameters
+  };
+
+  Object.keys(methodHandlers)
+    .filter(isValidMethod)
+    .forEach((method) => {
+      const {
+        tags,
+        summary,
+        description,
+        externalDocs,
+        operationId,
+        parameters,
+        requestBody: _requestBody,
+        responses: _responses,
+        callbacks,
+        deprecated,
+        security,
+        servers
+      } = methodHandlers[method] as MethodHandler;
+
+      let requestBody: OpenAPIV3_1.OperationObject['requestBody'];
+
+      if (_requestBody) {
+        const {
+          description,
+          required,
+          contentType,
+          schema: _schema,
+          examples,
+          example,
+          encoding
+        } = _requestBody;
+
+        const schema = convertSchemaToJsonSchema(_schema);
+
+        requestBody = {
+          description,
+          required,
+          content: {
+            [contentType]: {
+              schema,
+              examples,
+              example,
+              encoding
+            }
+          }
+        };
+      } else {
+        requestBody = _requestBody;
+      }
+
+      const responses: OpenAPIV3_1.ResponsesObject = {
+        ...defaultResponses
+      };
+
+      _responses.forEach(
+        ({
+          status,
+          contentType,
+          description = 'Auto-generated description by Next REST Framework.',
+          headers,
+          links,
+          schema: _schema,
+          example,
+          examples,
+          encoding
+        }) => {
+          if (status) {
+            const schema = convertSchemaToJsonSchema(_schema);
+
+            responses[status.toString()] = {
+              description,
+              headers,
+              links,
+              content: {
+                [contentType]: {
+                  schema,
+                  example,
+                  examples,
+                  encoding
+                }
+              }
+            };
+          }
+        }
+      );
+
+      paths[route] = {
+        ...paths[route],
+        [method.toLowerCase()]: {
+          tags,
+          summary,
+          description,
+          externalDocs,
+          operationId,
+          parameters,
+          requestBody,
+          responses,
+          callbacks,
+          deprecated,
+          security,
+          servers
+        }
+      };
+    });
+
+  return paths;
+};
+
+export const generatePaths = async <GlobalMiddlewareResponse>({
+  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath, errorHandler }
+}: {
+  config: NextRestFrameworkConfig<GlobalMiddlewareResponse>;
+}): Promise<OpenAPIV3_1.PathsObject> => {
+  const filterApiRoutes = (file: string) => {
+    const isCatchAllRoute = file.includes('...');
+
+    const isOpenApiJsonRoute = file.endsWith(
+      `${openApiJsonPath?.split('/').at(-1)}.ts`
+    );
+
+    const isOpenApiYamlRoute = file.endsWith(
+      `${openApiYamlPath?.split('/').at(-1)}.ts`
+    );
+
+    const isSwaggerUiRoute = file.endsWith(
+      `${swaggerUiPath?.split('/').at(-1)}.ts`
+    );
+
+    if (
+      isCatchAllRoute ||
+      isOpenApiJsonRoute ||
+      isOpenApiYamlRoute ||
+      isSwaggerUiRoute
+    ) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+
+  const mapApiRoutes = readdirSync(join(process.cwd(), 'pages/api'))
+    .filter(filterApiRoutes)
+    .map((file) =>
+      `/api/${file}`
+        .replace('/index', '')
+        .replace('[', '{')
+        .replace(']', '}')
+        .replace('.ts', '')
+    );
+
+  let paths: OpenAPIV3_1.PathsObject = {};
+
+  await Promise.all(
+    mapApiRoutes.map(async (route) => {
+      try {
+        const res = await fetch(`http://localhost:3000${route}`, {
+          headers: {
+            'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT
+          }
+        });
+
+        const data: Record<string, OpenAPIV3_1.PathItemObject> =
+          await res.json();
+
+        paths = { ...paths, ...data };
+      } catch (error) {
+        logNextRestFrameworkError({ error });
+      }
+    })
+  );
+
+  return paths;
 };
