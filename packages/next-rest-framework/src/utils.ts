@@ -21,6 +21,7 @@ import { Modify } from './utility-types';
 import isEqualWith from 'lodash.isequalwith';
 import zodToJsonSchema from 'zod-to-json-schema';
 import yupToJsonSchema from '@sodaru/yup-to-json-schema';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 const logNextRestFrameworkError = ({ error }: { error: unknown }) => {
   if (process.env.NODE_ENV !== 'production') {
@@ -259,11 +260,15 @@ export const isValidMethod = (x: unknown): x is ValidMethod =>
   Object.values(ValidMethod).includes(x as ValidMethod);
 
 export const getOpenApiSpecWithPaths = async ({
+  req,
+  res,
   config
 }: {
+  req: NextApiRequest;
+  res: NextApiResponse;
   config: NextRestFrameworkConfig;
 }) => {
-  const paths = await generatePaths({ config });
+  const paths = await generatePaths({ req, res, config });
 
   const spec = {
     ...config.openApiSpec,
@@ -442,10 +447,13 @@ export const getPathsFromMethodHandlers = ({
   return paths;
 };
 
-export const generatePaths = async <GlobalMiddlewareResponse>({
-  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath, errorHandler }
+export const generatePaths = async ({
+  req: { headers },
+  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath }
 }: {
-  config: NextRestFrameworkConfig<GlobalMiddlewareResponse>;
+  req: NextApiRequest;
+  res: NextApiResponse;
+  config: NextRestFrameworkConfig;
 }): Promise<OpenAPIV3_1.PathsObject> => {
   const filterApiRoutes = (file: string) => {
     const isCatchAllRoute = file.includes('...');
@@ -489,7 +497,11 @@ export const generatePaths = async <GlobalMiddlewareResponse>({
   await Promise.all(
     mapApiRoutes.map(async (route) => {
       try {
-        const res = await fetch(`http://localhost:3000${route}`, {
+        const proto = headers['x-forwarded-proto'] ?? 'http';
+        const host = headers.host;
+        const url = `${proto}://${host}${route}`;
+
+        const res = await fetch(url, {
           headers: {
             'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT
           }

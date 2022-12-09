@@ -200,7 +200,7 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
         [openApiJsonPath, openApiYamlPath, swaggerUiPath].includes(url) &&
         exposeOpenApiSpec
       ) {
-        const spec = await getOpenApiSpecWithPaths({ config });
+        const spec = await getOpenApiSpecWithPaths({ req, res, config });
 
         if (_warnAboutReservedPaths) {
           handleReservedPathWarnings({ url, config });
