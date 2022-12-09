@@ -49,7 +49,7 @@ importers:
 
   apps/example:
     specifiers:
-      next-rest-framework: 0.1.0
+      next-rest-framework: 0.1.2
     dependencies:
       next-rest-framework: link:../../packages/next-rest-framework
 

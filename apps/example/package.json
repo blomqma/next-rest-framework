@@ -2,12 +2,12 @@
   "name": "example",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "next-rest-framework": "0.1.0"
+    "next-rest-framework": "0.1.2"
   }
 }

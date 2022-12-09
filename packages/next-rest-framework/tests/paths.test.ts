@@ -179,13 +179,15 @@ global.fetch = (url: string) => {
 it('auto-generates responses', async () => {
   const { req, res } = createNextRestFrameworkMocks({
     method: 'GET',
-    path: '/api/openapi.json'
+    path: '/api/openapi.json',
+    headers: {
+      'x-forwarded-proto': 'http',
+      host: 'localhost:3000'
+    }
   });
 
   await NextRestFramework().defineCatchAllHandler()(req, res);
   const { paths } = res._getJSONData();
-
-  console.log('paths', paths);
 
   expect(paths['/api/foo'].post.responses).toEqual({
     ...defaultResponses,

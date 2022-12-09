@@ -24,3 +24,7 @@ export enum ValidMethod {
 }
 
 export const NEXT_REST_FRAMEWORK_USER_AGENT = 'next-rest-framework';
+
+// Ignore: We don't want to use promises here to avoid making this an async function.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const VERSION = require('../package.json').version;

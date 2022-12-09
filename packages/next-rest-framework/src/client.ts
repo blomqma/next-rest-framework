@@ -2,11 +2,7 @@ import { defineCatchAllHandler } from './define-catch-all-handler';
 import { defineEndpoints } from './define-endpoints';
 import { NextRestFrameworkConfig } from './types';
 import merge from 'lodash.merge';
-import {
-  getDefaultConfig,
-  getOpenApiSpecWithPaths,
-  logInitInfo
-} from './utils';
+import { getDefaultConfig, logInitInfo } from './utils';
 
 export const NextRestFramework = <GlobalMiddlewareResponse>(
   _config?: NextRestFrameworkConfig<GlobalMiddlewareResponse>
@@ -19,7 +15,6 @@ export const NextRestFramework = <GlobalMiddlewareResponse>(
 
   return {
     config,
-    getOpenApiSpec: async () => await getOpenApiSpecWithPaths({ config }),
     defineCatchAllHandler: defineCatchAllHandler({ config }),
     defineEndpoints: defineEndpoints({ config })
   };
