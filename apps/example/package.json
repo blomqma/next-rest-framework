@@ -2,7 +2,7 @@
   "name": "example",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit"
