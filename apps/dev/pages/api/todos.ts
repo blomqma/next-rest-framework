@@ -1,98 +1,52 @@
-import sampleData from 'sample-data.json';
-import * as z from 'zod';
-import * as yup from 'yup';
 import { defineEndpoints } from 'next-rest-framework/client';
+import { z } from 'zod';
+import * as yup from 'yup';
 
 export default defineEndpoints({
   middleware: ({ params: { foo, bar, baz } }) => ({
     foo: bar,
     bar: baz,
-    baz: foo,
-    asd: 'asd'
+    baz: foo
   }),
   GET: {
     middleware: () => ({
       qux: 'qux'
     }),
-    responses: [
+    output: [
       {
         status: 200,
         contentType: 'text/html',
         schema: z.object({
-          data: z.array(
-            z.object({
-              userId: z.number(),
-              id: z.number(),
-              title: z.string(),
-              completed: z.boolean()
-            })
-          )
+          foo: z.string(),
+          bar: z.string(),
+          baz: z.string(),
+          qux: z.string()
         })
       }
     ],
     handler: async ({ res, params: { foo, bar, baz, qux } }) => {
-      console.log({ foo, bar, baz, qux });
       res.setHeader('content-type', 'text/html');
-      res.status(200).json({ data: sampleData });
+      res.status(200).json({ foo, bar, baz, qux });
     }
   },
   POST: {
-    tags: ['Todo'],
-    description: 'Create a new todo',
-    externalDocs: {
-      description: 'Find out more about Swagger',
-      url: 'http://swagger.io'
-    },
-    operationId: 'createTodo',
-    parameters: [
-      {
-        name: 'todo',
-        in: 'body',
-        description: 'The todo to create',
-        required: true,
-        deprecated: false,
-        allowEmptyValue: false
-      }
-    ],
-    deprecated: false,
-    security: [
-      {
-        foo: ['bar']
-      }
-    ],
-    servers: [
-      {
-        url: 'http://localhost:3000',
-        description: 'Development server',
-        variables: {}
-      }
-    ],
-    requestBody: {
-      description: 'The todo to create',
+    input: {
       contentType: 'application/json',
-      schema: yup.object({
-        foo: yup.string(),
-        bar: yup.number()
-      }),
-      example: {
-        foo: 'Buy milk',
-        bar: 1
-      },
-      examples: {},
-      encoding: {},
-      required: true
+      schema: z.object({
+        foo: z.string(),
+        bar: z.number()
+      })
     },
-    responses: [
+    output: [
       {
         status: 201,
         contentType: 'application/json',
         schema: z.object({
-          data: z.array(
+          foo: z.string(),
+          bar: z.number(),
+          qux: z.array(
             z.object({
-              userId: z.number(),
-              id: z.number(),
-              title: z.string(),
-              completed: z.boolean()
+              qux: z.string()
             })
           )
         })
@@ -101,8 +55,54 @@ export default defineEndpoints({
     middleware: () => ({
       qux: 'qux'
     }),
-    handler: async ({ res }) => {
-      res.status(201).json({ data: sampleData });
+    handler: async ({
+      req: {
+        body: { foo, bar }
+      },
+      res,
+      params: { qux }
+    }) => {
+      res.status(201).json({ foo, bar, qux: [{ qux }] });
+    }
+  },
+  PUT: {
+    input: {
+      contentType: 'application/json',
+      schema: yup.object({
+        foo: yup.array(
+          yup.object({
+            bar: yup.string()
+          })
+        ),
+        baz: yup.number()
+      })
+    },
+    output: [
+      {
+        status: 201,
+        contentType: 'application/json',
+        schema: yup.object({
+          foo: yup.array(
+            yup.object({
+              bar: yup.string()
+            })
+          ),
+          bar: yup.number(),
+          qux: yup.string()
+        })
+      }
+    ],
+    middleware: () => ({
+      qux: 'qux'
+    }),
+    handler: async ({
+      req: {
+        body: { foo }
+      },
+      res,
+      params: { qux }
+    }) => {
+      res.status(201).json({ foo, bar: 0, qux });
     }
   }
 });

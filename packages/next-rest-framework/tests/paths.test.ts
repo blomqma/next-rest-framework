@@ -1,13 +1,15 @@
 import { NextRestFramework } from '../src';
-import { z } from 'zod';
-import zodToJsonSchema from 'zod-to-json-schema';
-import { defaultResponses, getPathsFromMethodHandlers } from '../src/utils';
-import { createNextRestFrameworkMocks, resetCustomGlobals } from './utils';
+import * as openApiUtils from '../src/utils/open-api';
+import { defaultResponse } from '../src/utils';
 import {
-  TypedNextApiRequest,
-  TypedNextApiResponse,
-  DefineEndpointsParams
-} from '../src/types';
+  complexSchemaData,
+  complexYupSchema,
+  complexZodSchema,
+  createNextRestFrameworkMocks,
+  resetCustomGlobals
+} from './utils';
+import { NEXT_REST_FRAMEWORK_USER_AGENT } from '../src/constants';
+import chalk from 'chalk';
 
 jest.mock('fs', () => ({
   readdirSync: () => [
@@ -22,161 +24,258 @@ beforeEach(() => {
   resetCustomGlobals();
 });
 
-const fooMethodHandlers = {
+const { defineEndpoints } = NextRestFramework();
+
+const fooMethodHandlers = defineEndpoints({
   POST: {
-    responses: [
+    input: {
+      contentType: 'application/json',
+      schema: complexZodSchema
+    },
+    output: [
       {
-        description: 'foo',
         status: 201,
-        schema: z.string(),
+        schema: complexYupSchema,
         contentType: 'application/json'
       }
     ],
-    handler: ({
-      req: { body },
-      res
-    }: {
-      req: TypedNextApiRequest<{ name: string }>;
-      res: TypedNextApiResponse<201, 'application/json', string>;
-    }) => {
-      res.status(201).json(body.name);
-    },
-    requestBody: {
-      contentType: 'application/json',
-      schema: z.object({
-        name: z.string()
-      })
+    handler: ({ req: { body }, res }) => {
+      res.status(201).json(body);
     }
   }
-};
+});
 
-const fooBarMethodHandlers = {
+const fooBarMethodHandlers = defineEndpoints({
   PUT: {
-    responses: [
-      {
-        description: 'bar',
-        status: 203,
-        schema: z.string(),
-        contentType: 'application/json'
-      }
-    ],
-    handler: ({
-      req: { body },
-      res
-    }: {
-      req: TypedNextApiRequest<{ name: string }>;
-      res: TypedNextApiResponse<203, 'application/json', string>;
-    }) => {
-      res.status(203).json(body.name);
-    },
-    requestBody: {
+    input: {
       contentType: 'application/json',
-      schema: z.object({
-        name: z.string()
-      })
-    }
-  }
-};
-
-const fooBarBazMethodHandlers = {
-  GET: {
-    responses: [
+      schema: complexYupSchema
+    },
+    output: [
       {
-        description: 'baz',
-        status: 200,
-        schema: z.string(),
+        status: 203,
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],
-    handler: ({
-      res
-    }: {
-      res: TypedNextApiResponse<200, 'application/json', string>;
-    }) => {
-      res.status(200).send('baz');
+    handler: ({ req: { body }, res }) => {
+      res.status(203).json(body);
     }
   }
-};
+});
 
-const fooBarBazQuzMethodHandlers = {
+const fooBarBazMethodHandlers = defineEndpoints({
   GET: {
-    responses: [
+    output: [
       {
-        description: 'qux',
         status: 200,
-        schema: z.string(),
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],
-    handler: ({
-      res
-    }: {
-      res: TypedNextApiResponse<200, 'application/json', string>;
-    }) => {
-      res.status(200).send('qux');
+    handler: ({ res }) => {
+      res.status(200).send(complexSchemaData);
     }
   }
-};
+});
 
-jest.mock(
-  '../../../apps/dev/pages/api/foo',
-  () =>
-    NextRestFramework().defineEndpoints(
-      fooMethodHandlers as DefineEndpointsParams
-    ),
-  { virtual: true }
-);
+const fooBarBazQuxMethodHandlers = defineEndpoints({
+  GET: {
+    output: [
+      {
+        status: 200,
+        schema: complexYupSchema,
+        contentType: 'application/json'
+      }
+    ],
+    handler: ({ res }) => {
+      res.status(200).send(complexSchemaData);
+    }
+  }
+});
+
+jest.mock('../../../apps/dev/pages/api/foo', () => fooMethodHandlers, {
+  virtual: true
+});
 
 jest.mock(
   '../../../apps/dev/pages/api/foo/bar',
-  () =>
-    NextRestFramework().defineEndpoints(
-      fooBarMethodHandlers as DefineEndpointsParams
-    ),
+  () => fooBarBazMethodHandlers,
   { virtual: true }
 );
 
 jest.mock(
   '../../../apps/dev/pages/api/foo/bar/baz',
-  () =>
-    NextRestFramework().defineEndpoints(
-      fooBarBazMethodHandlers as DefineEndpointsParams
-    ),
+  () => fooBarBazMethodHandlers,
   { virtual: true }
 );
 
 jest.mock(
   '../../../apps/dev/pages/api/foo/bar/[qux]/index',
-  () =>
-    NextRestFramework().defineEndpoints(
-      fooBarBazQuzMethodHandlers as DefineEndpointsParams
-    ),
+  () => fooBarBazQuxMethodHandlers,
   { virtual: true }
 );
 
 // @ts-expect-error: TS expects the mock function to extend the typings of the global `fetch` function but we don't need those types here.
-global.fetch = (url: string) => {
-  const route = url.replace('http://localhost:3000', '');
-  console.log('route', route);
+global.fetch = async (url: string) => {
+  const path = url.replace('http://localhost:3000', '');
+
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET',
+    path,
+    headers: {
+      'x-forwarded-proto': 'http',
+      host: 'localhost:3000',
+      'user-agent': NEXT_REST_FRAMEWORK_USER_AGENT
+    }
+  });
 
   const handlersForPaths = {
     '/api/foo': fooMethodHandlers,
     '/api/foo/bar': fooBarMethodHandlers,
     '/api/foo/bar/baz': fooBarBazMethodHandlers,
-    '/api/foo/bar/{qux}': fooBarBazQuzMethodHandlers
+    '/api/foo/bar/{qux}': fooBarBazQuxMethodHandlers
   };
 
-  const methodHandlers = handlersForPaths[
-    route as keyof typeof handlersForPaths
-  ] as DefineEndpointsParams;
-  const data = getPathsFromMethodHandlers({ methodHandlers, route });
+  const methodHandlers =
+    handlersForPaths[path as keyof typeof handlersForPaths];
+
+  await methodHandlers(req, res);
+  const json = () => res._getJSONData();
 
   return {
-    json: async () => await Promise.resolve(data)
+    json,
+    status: 200
   };
 };
 
-it('auto-generates responses', async () => {
+it('auto-generates the paths from the internal endpoint responses', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET',
+    path: '/api/openapi.json',
+    headers: {
+      'x-forwarded-proto': 'http',
+      host: 'localhost:3000',
+      'content-type': 'application/json'
+    }
+  });
+
+  await NextRestFramework().defineCatchAllHandler()(req, res);
+  const { paths } = res._getJSONData();
+
+  const schema = {
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string'
+      },
+      age: {
+        type: 'number'
+      },
+      hobbies: {
+        items: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string'
+            },
+            properties: {
+              type: 'object',
+              properties: {
+                foo: {
+                  type: 'string'
+                }
+              }
+            }
+          }
+        },
+        type: 'array'
+      },
+      isCool: {
+        type: 'boolean'
+      }
+    }
+  };
+
+  const requestBody = {
+    content: {
+      'application/json': {
+        schema
+      }
+    }
+  };
+
+  const responseContent = {
+    content: {
+      'application/json': {
+        schema
+      }
+    }
+  };
+
+  expect(paths['/api/foo']).toEqual({
+    post: {
+      requestBody,
+      responses: {
+        '201': responseContent,
+        default: defaultResponse
+      }
+    }
+  });
+
+  expect(paths['/api/foo/bar']).toEqual({
+    put: {
+      requestBody,
+      responses: {
+        '203': responseContent,
+        default: defaultResponse
+      }
+    }
+  });
+
+  expect(paths['/api/foo/bar/baz']).toEqual({
+    get: {
+      requestBody: {
+        content: {}
+      },
+      responses: {
+        '200': responseContent,
+        default: defaultResponse
+      }
+    }
+  });
+
+  expect(paths['/api/foo/bar/{qux}']).toEqual({
+    get: {
+      requestBody: {
+        content: {}
+      },
+      responses: {
+        '200': responseContent,
+        default: defaultResponse
+      }
+    }
+  });
+});
+
+it('handles error if the OpenAPI spec generation fails', async () => {
+  console.error = jest.fn();
+
+  jest.mock('../src/utils/open-api', () => {
+    return {
+      __esModule: true,
+      ...jest.requireActual('../src/utils/open-api')
+    };
+  });
+
+  const error = 'Something went wrong';
+
+  jest
+    .spyOn(openApiUtils, 'getPathsFromMethodHandlers')
+    .mockImplementation(() => {
+      throw Error(error);
+    });
+
   const { req, res } = createNextRestFrameworkMocks({
     method: 'GET',
     path: '/api/openapi.json',
@@ -188,52 +287,33 @@ it('auto-generates responses', async () => {
 
   await NextRestFramework().defineCatchAllHandler()(req, res);
   const { paths } = res._getJSONData();
+  expect(paths).toEqual({});
 
-  expect(paths['/api/foo'].post.responses).toEqual({
-    ...defaultResponses,
-    201: {
-      description: 'foo',
-      content: {
-        'application/json': {
-          schema: zodToJsonSchema(z.string())
-        }
-      }
-    }
-  });
+  expect(console.error).toHaveBeenNthCalledWith(
+    1,
+    chalk.red(`Next REST Framework encountered an error:
+${'Error: OpenAPI spec generation failed for route: /api/foo'}
+${`Error: ${error}`}`)
+  );
 
-  expect(paths['/api/foo/bar'].put.responses).toEqual({
-    ...defaultResponses,
-    203: {
-      description: 'bar',
-      content: {
-        'application/json': {
-          schema: zodToJsonSchema(z.string())
-        }
-      }
-    }
-  });
+  expect(console.error).toHaveBeenNthCalledWith(
+    2,
+    chalk.red(`Next REST Framework encountered an error:
+${'Error: OpenAPI spec generation failed for route: /api/foo/bar'}
+${`Error: ${error}`}`)
+  );
 
-  expect(paths['/api/foo/bar/baz'].get.responses).toEqual({
-    ...defaultResponses,
-    200: {
-      description: 'baz',
-      content: {
-        'application/json': {
-          schema: zodToJsonSchema(z.string())
-        }
-      }
-    }
-  });
+  expect(console.error).toHaveBeenNthCalledWith(
+    3,
+    chalk.red(`Next REST Framework encountered an error:
+${'Error: OpenAPI spec generation failed for route: /api/foo/bar/baz'}
+${`Error: ${error}`}`)
+  );
 
-  expect(paths['/api/foo/bar/{qux}'].get.responses).toEqual({
-    ...defaultResponses,
-    200: {
-      description: 'qux',
-      content: {
-        'application/json': {
-          schema: zodToJsonSchema(z.string())
-        }
-      }
-    }
-  });
+  expect(console.error).toHaveBeenNthCalledWith(
+    4,
+    chalk.red(`Next REST Framework encountered an error:
+${'Error: OpenAPI spec generation failed for route: /api/foo/bar/{qux}'}
+${`Error: ${error}`}`)
+  );
 });

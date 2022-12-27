@@ -2,82 +2,83 @@ import { NextApiResponse } from 'next';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import {
   BaseContentType,
+  BaseSchemaType,
   BaseStatus,
   DefineEndpointsParams,
   NextRestFrameworkConfig,
-  ResponseObject,
+  SchemaReturnType,
   TypedNextApiRequest
 } from './types';
 import {
   isValidMethod,
-  isZodSchema,
-  isYupSchema,
-  isYupValidationError,
   logReservedPaths,
   getPathsFromMethodHandlers,
   handleReservedPathWarnings,
   getHTMLForSwaggerUI,
-  getOpenApiSpecWithPaths
+  getOpenApiSpecWithPaths,
+  validateRequestBody
 } from './utils';
 import yaml from 'js-yaml';
 
 export const defineEndpoints = <GlobalMiddlewareResponse>({
   config,
-  _warnAboutReservedPaths = true
+  _warnAboutReservedPaths = true,
+  _returnNotFoundForMissingHandler = false
 }: {
   config: NextRestFrameworkConfig<GlobalMiddlewareResponse>;
   _warnAboutReservedPaths?: boolean;
+  _returnNotFoundForMissingHandler?: boolean;
 }) => {
   return <
-    GetBody,
+    GetBodySchema extends BaseSchemaType,
     GetStatus extends BaseStatus,
     GetContentType extends BaseContentType,
-    GetResponse extends ResponseObject,
+    GetResponseSchema extends BaseSchemaType,
     GetMiddlewareResponse,
-    PutBody,
+    PutBodySchema extends BaseSchemaType,
     PutStatus extends BaseStatus,
     PutContentType extends BaseContentType,
-    PutResponse extends ResponseObject,
+    PutResponseSchema extends BaseSchemaType,
     PutMiddlewareResponse,
-    PostBody,
+    PostBodySchema extends BaseSchemaType,
     PostStatus extends BaseStatus,
     PostContentType extends BaseContentType,
-    PostResponse extends ResponseObject,
+    PostResponseSchema extends BaseSchemaType,
     PostMiddlewareResponse,
-    DeleteBody,
+    DeleteBodySchema extends BaseSchemaType,
     DeleteStatus extends BaseStatus,
     DeleteContentType extends BaseContentType,
-    DeleteResponse extends ResponseObject,
+    DeleteResponseSchema extends BaseSchemaType,
     DeleteMiddlewareResponse,
-    OptionsBody,
+    OptionsBodySchema extends BaseSchemaType,
     OptionsStatus extends BaseStatus,
     OptionsContentType extends BaseContentType,
-    OptionsResponse extends ResponseObject,
+    OptionsResponseSchema extends BaseSchemaType,
     OptionsMiddlewareResponse,
-    HeadBody,
+    HeadBodySchema extends BaseSchemaType,
     HeadStatus extends BaseStatus,
     HeadContentType extends BaseContentType,
-    HeadResponse extends ResponseObject,
+    HeadResponseSchema extends BaseSchemaType,
     HeadMiddlewareResponse,
-    PatchBody,
+    PatchBodySchema extends BaseSchemaType,
     PatchStatus extends BaseStatus,
     PatchContentType extends BaseContentType,
-    PatchResponse extends ResponseObject,
+    PatchResponseSchema extends BaseSchemaType,
     PatchMiddlewareResponse,
-    TraceBody,
+    TraceBodySchema extends BaseSchemaType,
     TraceStatus extends BaseStatus,
     TraceContentType extends BaseContentType,
-    TraceResponse extends ResponseObject,
+    TraceResponseSchema extends BaseSchemaType,
     TraceMiddlewareResponse,
     RouteMiddlewareResponse,
-    Body extends GetBody &
-      PutBody &
-      PostBody &
-      DeleteBody &
-      OptionsBody &
-      HeadBody &
-      PatchBody &
-      TraceBody,
+    SchemaType extends GetBodySchema &
+      PutBodySchema &
+      PostBodySchema &
+      DeleteBodySchema &
+      OptionsBodySchema &
+      HeadBodySchema &
+      PatchBodySchema &
+      TraceBodySchema,
     MethodMiddlewareResponse extends GetMiddlewareResponse &
       PutMiddlewareResponse &
       PostMiddlewareResponse &
@@ -88,254 +89,305 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
       TraceMiddlewareResponse
   >(
     methodHandlers: DefineEndpointsParams<
-      GetBody,
+      GetBodySchema,
       GetStatus,
       GetContentType,
-      GetResponse,
+      GetResponseSchema,
       GetMiddlewareResponse,
-      PutBody,
+      PutBodySchema,
       PutStatus,
       PutContentType,
-      PutResponse,
+      PutResponseSchema,
       PutMiddlewareResponse,
-      PostBody,
+      PostBodySchema,
       PostStatus,
       PostContentType,
-      PostResponse,
+      PostResponseSchema,
       PostMiddlewareResponse,
-      DeleteBody,
+      DeleteBodySchema,
       DeleteStatus,
       DeleteContentType,
-      DeleteResponse,
+      DeleteResponseSchema,
       DeleteMiddlewareResponse,
-      OptionsBody,
+      OptionsBodySchema,
       OptionsStatus,
       OptionsContentType,
-      OptionsResponse,
+      OptionsResponseSchema,
       OptionsMiddlewareResponse,
-      HeadBody,
+      HeadBodySchema,
       HeadStatus,
       HeadContentType,
-      HeadResponse,
+      HeadResponseSchema,
       HeadMiddlewareResponse,
-      PatchBody,
+      PatchBodySchema,
       PatchStatus,
       PatchContentType,
-      PatchResponse,
+      PatchResponseSchema,
       PatchMiddlewareResponse,
-      TraceBody,
+      TraceBodySchema,
       TraceStatus,
       TraceContentType,
-      TraceResponse,
+      TraceResponseSchema,
       TraceMiddlewareResponse,
       GlobalMiddlewareResponse,
       RouteMiddlewareResponse
-    >
+    > = {}
   ) => {
     return async (
-      req: TypedNextApiRequest<Body>,
+      req: TypedNextApiRequest<SchemaReturnType<SchemaType>>,
       res: NextApiResponse
     ): Promise<
       | DefineEndpointsParams<
-          GetBody,
+          GetBodySchema,
           GetStatus,
           GetContentType,
-          GetResponse,
+          GetResponseSchema,
           GetMiddlewareResponse,
-          PutBody,
+          PutBodySchema,
           PutStatus,
           PutContentType,
-          PutResponse,
+          PutResponseSchema,
           PutMiddlewareResponse,
-          PostBody,
+          PostBodySchema,
           PostStatus,
           PostContentType,
-          PostResponse,
+          PostResponseSchema,
           PostMiddlewareResponse,
-          DeleteBody,
+          DeleteBodySchema,
           DeleteStatus,
           DeleteContentType,
-          DeleteResponse,
+          DeleteResponseSchema,
           DeleteMiddlewareResponse,
-          OptionsBody,
+          OptionsBodySchema,
           OptionsStatus,
           OptionsContentType,
-          OptionsResponse,
+          OptionsResponseSchema,
           OptionsMiddlewareResponse,
-          HeadBody,
+          HeadBodySchema,
           HeadStatus,
           HeadContentType,
-          HeadResponse,
+          HeadResponseSchema,
           HeadMiddlewareResponse,
-          PatchBody,
+          PatchBodySchema,
           PatchStatus,
           PatchContentType,
-          PatchResponse,
+          PatchResponseSchema,
           PatchMiddlewareResponse,
-          TraceBody,
+          TraceBodySchema,
           TraceStatus,
           TraceContentType,
-          TraceResponse,
+          TraceResponseSchema,
           TraceMiddlewareResponse,
           GlobalMiddlewareResponse,
           RouteMiddlewareResponse
         >
       | undefined
     > => {
-      const { method, body, headers, url } = req;
-
-      const {
-        openApiJsonPath,
-        openApiYamlPath,
-        swaggerUiPath,
-        exposeOpenApiSpec,
-        suppressInfo
-      } = config;
-
-      if (!suppressInfo && !global.reservedPathsLogged) {
-        logReservedPaths({ config, headers });
-      }
-
-      if (
-        [openApiJsonPath, openApiYamlPath, swaggerUiPath].includes(url) &&
-        exposeOpenApiSpec
-      ) {
-        const spec = await getOpenApiSpecWithPaths({ req, res, config });
-
-        if (_warnAboutReservedPaths) {
-          handleReservedPathWarnings({ url, config });
-        }
-
-        if (url === openApiJsonPath) {
-          res.status(200).json(spec);
-          return;
-        }
-
-        if (url === openApiYamlPath) {
-          res.setHeader('Content-Type', 'text/plain');
-          res.status(200).send(yaml.dump(spec));
-          return;
-        }
-
-        if (url === swaggerUiPath) {
-          const html = getHTMLForSwaggerUI({ headers });
-          res.setHeader('Content-Type', 'text/html');
-          res.status(200).send(html);
-          return;
-        }
-      }
-
-      const allowedMethods = Object.keys(methodHandlers);
-
-      const returnMethodNotAllowed = (): void => {
-        res.setHeader('Allow', allowedMethods.join(', '));
-        res.status(405).json({ message: DEFAULT_ERRORS.methodNotAllowed });
-      };
-
       const returnUnexpectedError = () => {
         res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
       };
 
-      if (headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT) {
-        try {
-          const paths = getPathsFromMethodHandlers({
-            methodHandlers: methodHandlers as DefineEndpointsParams,
-            route: url ?? ''
-          });
+      const handleRequest = async (): Promise<
+        | DefineEndpointsParams<
+            GetBodySchema,
+            GetStatus,
+            GetContentType,
+            GetResponseSchema,
+            GetMiddlewareResponse,
+            PutBodySchema,
+            PutStatus,
+            PutContentType,
+            PutResponseSchema,
+            PutMiddlewareResponse,
+            PostBodySchema,
+            PostStatus,
+            PostContentType,
+            PostResponseSchema,
+            PostMiddlewareResponse,
+            DeleteBodySchema,
+            DeleteStatus,
+            DeleteContentType,
+            DeleteResponseSchema,
+            DeleteMiddlewareResponse,
+            OptionsBodySchema,
+            OptionsStatus,
+            OptionsContentType,
+            OptionsResponseSchema,
+            OptionsMiddlewareResponse,
+            HeadBodySchema,
+            HeadStatus,
+            HeadContentType,
+            HeadResponseSchema,
+            HeadMiddlewareResponse,
+            PatchBodySchema,
+            PatchStatus,
+            PatchContentType,
+            PatchResponseSchema,
+            PatchMiddlewareResponse,
+            TraceBodySchema,
+            TraceStatus,
+            TraceContentType,
+            TraceResponseSchema,
+            TraceMiddlewareResponse,
+            GlobalMiddlewareResponse,
+            RouteMiddlewareResponse
+          >
+        | undefined
+      > => {
+        const { method, body, headers, url } = req;
 
-          res.status(200).json(paths);
-        } catch (error) {
-          await config.errorHandler?.({ req, res, error });
-          returnUnexpectedError();
+        const {
+          openApiJsonPath,
+          openApiYamlPath,
+          swaggerUiPath,
+          exposeOpenApiSpec,
+          suppressInfo
+        } = config;
+
+        if (!suppressInfo && !global.reservedPathsLogged) {
+          logReservedPaths({ config, headers });
         }
 
-        return;
-      }
+        if (
+          [openApiJsonPath, openApiYamlPath, swaggerUiPath].includes(url) &&
+          exposeOpenApiSpec
+        ) {
+          if (_warnAboutReservedPaths) {
+            handleReservedPathWarnings({ url, config });
+          }
 
-      if (!isValidMethod(method)) {
-        returnMethodNotAllowed();
-        return;
-      }
+          const spec = await getOpenApiSpecWithPaths({ req, res, config });
 
-      const methodHandler = methodHandlers[method];
+          if (url === openApiJsonPath) {
+            res.status(200).json(spec);
+            return;
+          }
 
-      if (methodHandler == null) {
-        returnMethodNotAllowed();
-        return;
-      }
+          if (url === openApiYamlPath) {
+            res.setHeader('Content-Type', 'text/plain');
+            res.status(200).send(yaml.dump(spec));
+            return;
+          }
 
-      const {
-        requestBody,
-        handler,
-        errorHandler = methodHandlers.errorHandler ?? config.errorHandler
-      } = methodHandler;
+          if (url === swaggerUiPath) {
+            const html = getHTMLForSwaggerUI({ headers });
+            res.setHeader('Content-Type', 'text/html');
+            res.status(200).send(html);
+            return;
+          }
+        }
 
-      if (requestBody) {
-        const { schema, contentType } = requestBody;
+        const allowedMethods = Object.keys(methodHandlers);
 
-        if (headers['content-type'] !== contentType) {
-          res
-            .status(415)
-            .json({ message: DEFAULT_ERRORS.unsupportedMediaType });
+        const returnMethodNotAllowed = (): void => {
+          res.setHeader('Allow', allowedMethods.join(', '));
+          res.status(405).json({ message: DEFAULT_ERRORS.methodNotAllowed });
+        };
 
+        if (headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT) {
+          const route = url ?? '';
+
+          try {
+            const paths = getPathsFromMethodHandlers({
+              config,
+              methodHandlers: methodHandlers as DefineEndpointsParams,
+              route
+            });
+
+            res.status(200).json(paths);
+            return;
+          } catch (error) {
+            throw Error(`OpenAPI spec generation failed for route: ${route}
+${error}`);
+          }
+        }
+
+        if (!isValidMethod(method)) {
+          returnMethodNotAllowed();
           return;
         }
 
-        if (isZodSchema(schema)) {
-          const data = schema.safeParse(body);
+        const methodHandler = methodHandlers[method];
 
-          if (!data.success) {
-            res.status(400).json({ message: data.error.issues });
+        if (!methodHandler && _returnNotFoundForMissingHandler) {
+          res.status(404).json({ message: DEFAULT_ERRORS.notFound });
+          return;
+        } else if (!methodHandler) {
+          returnMethodNotAllowed();
+          return;
+        }
+
+        const {
+          input,
+          handler,
+          errorHandler = methodHandlers.errorHandler ?? config.errorHandler
+        } = methodHandler;
+
+        if (input) {
+          const { schema, contentType } = input;
+
+          if (headers['content-type'] !== contentType) {
+            res.status(415).json({ message: DEFAULT_ERRORS.invalidMediaType });
             return;
           }
-        } else if (isYupSchema(schema)) {
-          try {
-            await schema.validate(body);
-          } catch (e) {
-            if (isYupValidationError(e)) {
-              res.status(400).json({ message: e.errors });
+
+          const validate = await validateRequestBody?.({
+            schema,
+            body
+          });
+
+          if (validate) {
+            const { valid, errors } = validate;
+
+            if (!valid) {
+              res.status(400).json({ message: errors });
               return;
-            } else {
-              returnUnexpectedError();
             }
           }
         }
-      }
 
-      const globalMiddlewareParams = (await config.middleware?.({
-        req,
-        res
-      })) as Awaited<GlobalMiddlewareResponse>;
+        const globalMiddlewareParams = (await config.middleware?.({
+          req,
+          res
+        })) as Awaited<GlobalMiddlewareResponse>;
 
-      const routeMiddlewareParams = (await methodHandlers.middleware?.({
-        req,
-        res,
-        params: globalMiddlewareParams
-      })) as Awaited<RouteMiddlewareResponse>;
+        const routeMiddlewareParams = (await methodHandlers.middleware?.({
+          req,
+          res,
+          params: globalMiddlewareParams
+        })) as Awaited<RouteMiddlewareResponse>;
 
-      const methodMiddlewareParams = (await methodHandler.middleware?.({
-        req,
-        res,
-        params: {
+        const methodMiddlewareParams = (await methodHandler.middleware?.({
+          req,
+          res,
+          params: {
+            ...globalMiddlewareParams,
+            ...routeMiddlewareParams
+          }
+        })) as Awaited<MethodMiddlewareResponse>;
+
+        const params = {
           ...globalMiddlewareParams,
-          ...routeMiddlewareParams
-        }
-      })) as Awaited<MethodMiddlewareResponse>;
+          ...routeMiddlewareParams,
+          ...methodMiddlewareParams
+        };
 
-      const params = {
-        ...globalMiddlewareParams,
-        ...routeMiddlewareParams,
-        ...methodMiddlewareParams
+        try {
+          await handler({
+            req,
+            res,
+            params
+          });
+        } catch (error) {
+          await errorHandler?.({ req, res, error, params });
+          returnUnexpectedError();
+        }
       };
 
       try {
-        await handler({
-          req,
-          res,
-          params
-        });
+        return await handleRequest();
       } catch (error) {
-        await errorHandler?.({ req, res, error, params });
+        await config.errorHandler?.({ req, res, error });
         returnUnexpectedError();
       }
     };

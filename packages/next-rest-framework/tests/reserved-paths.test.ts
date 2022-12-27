@@ -1,7 +1,8 @@
 import { NextRestFramework } from '../src';
-import { z } from 'zod';
 import chalk from 'chalk';
 import { createNextRestFrameworkMocks, resetCustomGlobals } from './utils';
+import { z } from 'zod';
+import * as yup from 'yup';
 
 jest.mock('fs', () => ({
   readdirSync: () => ['openapi.json.ts', 'openapi.yaml.ts', 'docs.ts'],
@@ -12,50 +13,58 @@ beforeEach(() => {
   resetCustomGlobals();
 });
 
-const openApiSpecHandler = NextRestFramework({
+const { defineEndpoints } = NextRestFramework({
   swaggerUiPath: '/api/docs'
-}).defineEndpoints({
+});
+
+const inputSchema = z.object({
+  name: z.string(),
+  age: z.number(),
+  isCool: z.boolean(),
+  hobbies: z.array(z.object({ name: z.string() }))
+});
+
+const outputSchema = yup.object({
+  name: yup.string(),
+  age: yup.number(),
+  isCool: yup.boolean(),
+  hobbies: yup.array(yup.object({ name: yup.string() }))
+});
+
+const openApiSpecHandler = defineEndpoints({
   POST: {
-    responses: [
+    input: {
+      contentType: 'application/json',
+      schema: inputSchema
+    },
+    output: [
       {
-        description: 'foo',
         status: 201,
-        schema: z.string(),
+        schema: outputSchema,
         contentType: 'application/json'
       }
     ],
     handler: ({ req: { body }, res }) => {
-      res.status(201).json(body.name);
-    },
-    requestBody: {
-      contentType: 'application/json',
-      schema: z.object({
-        name: z.string()
-      })
+      res.status(201).json(body);
     }
   }
 });
 
-const swaggerUiHandler = NextRestFramework({
-  swaggerUiPath: '/api/docs'
-}).defineEndpoints({
+const swaggerUiHandler = defineEndpoints({
   PUT: {
-    responses: [
+    input: {
+      contentType: 'application/json',
+      schema: inputSchema
+    },
+    output: [
       {
-        description: 'bar',
         status: 203,
-        schema: z.string(),
+        schema: outputSchema,
         contentType: 'application/json'
       }
     ],
     handler: ({ req: { body }, res }) => {
-      res.status(203).json(body.name);
-    },
-    requestBody: {
-      contentType: 'application/json',
-      schema: z.object({
-        name: z.string()
-      })
+      res.status(203).json(body);
     }
   }
 });

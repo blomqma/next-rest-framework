@@ -1,4 +1,3 @@
-import { defineCatchAllHandler } from './define-catch-all-handler';
 import { defineEndpoints } from './define-endpoints';
 import { NextRestFrameworkConfig } from './types';
 import merge from 'lodash.merge';
@@ -15,7 +14,11 @@ export const NextRestFramework = <GlobalMiddlewareResponse>(
 
   return {
     config,
-    defineCatchAllHandler: defineCatchAllHandler({ config }),
+    defineCatchAllHandler: defineEndpoints({
+      config,
+      _warnAboutReservedPaths: false,
+      _returnNotFoundForMissingHandler: true
+    }),
     defineEndpoints: defineEndpoints({ config })
   };
 };

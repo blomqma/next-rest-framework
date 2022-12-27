@@ -7,7 +7,7 @@ export const DEFAULT_ERRORS = {
   unexpectedError: 'An unknown error occurred, trying again might help.',
   methodNotAllowed: 'Method not allowed.',
   notFound: 'Not found.',
-  unsupportedMediaType: 'Unsupported media type.'
+  invalidMediaType: 'Invalid media type.'
 };
 
 export const OPEN_API_VERSION = '3.0.1';

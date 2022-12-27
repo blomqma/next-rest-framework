@@ -1,18 +1,18 @@
-import { object, string } from 'zod';
 import { defineEndpoints } from 'next-rest-framework/client';
+import { object, string } from 'yup';
 
 export default defineEndpoints({
   POST: {
-    requestBody: {
+    input: {
       contentType: 'application/json',
       schema: object({
-        bar: string()
+        foo: string()
       })
     },
-    responses: [
+    output: [
       {
         status: 200,
-        contentType: 'text/html',
+        contentType: 'application/json',
         schema: object({
           bar: string()
         })
@@ -21,11 +21,11 @@ export default defineEndpoints({
     handler: async ({
       res,
       req: {
-        body: { bar }
+        body: { foo }
       }
     }) => {
-      res.setHeader('content-type', 'text/html');
-      res.status(200).json({ bar });
+      res.setHeader('content-type', 'application/json');
+      res.status(200).json({ bar: foo });
     }
   }
 });
