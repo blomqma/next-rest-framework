@@ -1,9 +1,9 @@
 import { defineCatchAllHandler } from 'next-rest-framework/client';
-import * as z from 'zod';
+import { z } from 'zod';
 
 export default defineCatchAllHandler({
   GET: {
-    responses: [
+    output: [
       {
         status: 200,
         contentType: 'text/plain',

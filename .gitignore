@@ -1,1 +1,8 @@
 node_modules
+coverage
+dist
+tsconfig.tsbuildinfo
+.next
+next-env.d.ts
+build
+.docusaurus

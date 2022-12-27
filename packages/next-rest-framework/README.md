@@ -38,8 +38,8 @@
 - [Config options](#config-options)
 - [Route config](#route-config)
   - [Method handlers](#method-handlers)
-    - [Request body](#request-body)
-    - [Response object](#response-object)
+    - [Input](#input)
+    - [Output object](#output-object)
     - [Handler](#handler)
 - [Middlewares](#middlewares)
   - [Global middleware](#global-middleware)
@@ -67,7 +67,7 @@ This is a monorepo containing the following packages / projects:
 ### Lightweight, type-safe, easy to use
 
 - Designed to work with TypeScript so that your request bodies, responses, headers etc. are strongly typed.
-- Object-schema validation with popular libraries like [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup)
+- Object-schema validation with popular libraries like [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup). These schemas are automatically converted to JSON schema format for the auto-generated OpenAPI specifications.
 - Supports auto-generated openapi.json and openapi.yaml documents for which you can include your existing OpenAPI specification.
 - Supports any kind of middleware logic that you want to use for authentication etc. See more in [Middlewares](#middlewares). Also works with other Next.js server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
 - Fully customizable - You can decide which routes Next REST Framework will use to serve your API docs etc. and it can be easily customized to work with any kind of existing Next.js REST API.
@@ -125,13 +125,13 @@ All of these are configurable with the [Config options](#config-options) that yo
 ```typescript
 // pages/api/todos.ts
 
-import { object, string, number, boolean, array } from 'zod';
 import { defineEndpoints } from 'next-rest-framework/client';
+import { z } from 'zod';
 
 const todoSchema = object({
-  id: string(),
-  name: string(),
-  completed: boolean()
+  id: z.string(),
+  name: z.string(),
+  completed: z.boolean()
 });
 
 export default defineEndpoints({
@@ -140,39 +140,33 @@ export default defineEndpoints({
       {
         status: 200,
         contentType: 'application/json',
-        schema: object({
-          data: array(todoSchema)
-        })
+        schema: z.array(todoSchema)
       }
     ],
     handler: ({ res }) => {
       // Using any other content type, status code or response data format will lead to TS error.
       res.setHeader('content-type', 'application/json');
-      res.status(200).json({
-        data: [
-          {
-            id: 'foo',
-            name: 'bar',
-            completed: true
-          }
-        ]
-      });
+      res.status(200).json([
+        {
+          id: 'foo',
+          name: 'bar',
+          completed: true
+        }
+      ]);
     }
   },
   POST: {
-    requestBody: {
+    request: {
       contentType: 'application/json',
-      schema: object({
-        name: string()
+      schema: z.object({
+        name: z.string()
       })
     },
     responses: [
       {
         status: 201,
         contentType: 'application/json',
-        schema: object({
-          data: todoSchema
-        })
+        schema: todoSchema
       }
     ],
     handler: ({
@@ -199,65 +193,57 @@ These type-safe endpoints will be now auto-generated to your OpenAPI spec and Sw
 
 The optional config options allow you to customize Next REST Framework. The following options can be passed as a parameter for your `NextRestFramework` client in an object:
 
-| Name                | Description                                                                                                                                                                                             |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `openApiSpec`       | Your custom [OpenAPI Object](https://swagger.io/specification/#openapi-object) that will be merged with the auto-generated spec. Defaults to a minimum config required for the OpenAPI spec generation. |
-| `openApiJsonPath`   | Custom path for serving `openapi.json` file. Defaults to `/api/openapi.json`.                                                                                                                           |
-| `openApiYamlPath`   | Custom path for serving `openapi.yaml` file. Defaults to `/api/openapi.yaml`.                                                                                                                           |
-| `swaggerUiPath`     | Custom path for service Swagger UI. Defaults to `/api`.                                                                                                                                                 |
-| `exposeOpenApiSpec` | Setting this to `false` will serve none of the OpenAPI documents neither the Swagger UI. Defaults to `true`.                                                                                            |
-| `middleware`        | A global middleware for all of your API routes. See [Global middleware](#global-middleware) for more information.                                                                                       |
-| `errorHandler`      | A [Global error handler](#global-error-handler) for all of your API routes. Defaults to a basic error handler logging the errors in non-production mode.                                                |
-| `suppressInfo`      | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                              |
+| Name                | Description                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openApiSpec`       | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.          |
+| `openApiJsonPath`   | Custom path for serving `openapi.json` file. Defaults to `/api/openapi.json`.                                                                            |
+| `openApiYamlPath`   | Custom path for serving `openapi.yaml` file. Defaults to `/api/openapi.yaml`.                                                                            |
+| `swaggerUiPath`     | Custom path for service Swagger UI. Defaults to `/api`.                                                                                                  |
+| `exposeOpenApiSpec` | Setting this to `false` will serve none of the OpenAPI documents neither the Swagger UI. Defaults to `true`.                                             |
+| `middleware`        | A global middleware for all of your API routes. See [Global middleware](#global-middleware) for more information.                                        |
+| `errorHandler`      | A [Global error handler](#global-error-handler) for all of your API routes. Defaults to a basic error handler logging the errors in non-production mode. |
+| `suppressInfo`      | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                               |
 
 ## [Route config](#route-config)
 
 In addition to your method handlers, `middleware` and `errorHandler`, you can also configure OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) parameters for your API route and they will automatically become part of your auto-generated OpenAPI spec The following options can be passed as a parameter for your `defineCatchAllHandler` and `defineEndpoints` in an object:
 
-| Name                                                                | Description                                                                                                                                                         | Required |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `GET \| PUT \| POST \| DELETE \| OPTIONS \| HEAD \| PATCH \| TRACE` | A [Method handler](#method-handlers) object.                                                                                                                        | `true`   |
-| `middleware`                                                        |  A [Middleware](#middlewares) function that takes in the return values from your [Global middleware](#global-middleware).                                           | `false`  |
-| `errorHandler`                                                      | A [Route error handler](#route-error-handler) for this API route, overriding the [Global error handler](#global-error-handler).                                     | `false`  |
-| `$ref`                                                              | A reference to another [Path Item Object](https://swagger.io/specification/#path-item-object).                                                                      | `false`  |
-| `description`                                                       | A string description, intended to apply to all operations in this path. [CommonMark syntax](https://spec.commonmark.org/) MAY be used for rich text representation. | `false`  |
-| `servers`                                                           | An array of [Server Objects](https://swagger.io/specification/#server-object).                                                                                      | `false`  |
-| `parameters`                                                        | An array of [Parameter objects](#https://swagger.io/specification/#parameter-object) or [Reference objects](https://swagger.io/specification/#reference-object).    | `false`  |
+| Name                                                                | Description                                                                                                                                                                   | Required |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `GET \| PUT \| POST \| DELETE \| OPTIONS \| HEAD \| PATCH \| TRACE` | A [Method handler](#method-handlers) object.                                                                                                                                  | `true`   |
+| `middleware`                                                        |  A [Middleware](#middlewares) function that takes in the return values from your [Global middleware](#global-middleware).                                                     | `false`  |
+| `errorHandler`                                                      | A [Route error handler](#route-error-handler) for this API route, overriding the [Global error handler](#global-error-handler).                                               | `false`  |
+| `openApiSpec`                                                       | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated and higher level specifications. | `false`  |
 
 ### [Method handlers](#method-handlers)
 
 | Name           | Description                                                                                                                                                                         | Required |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `requestBody`  | A [Request body](#request-body) object.                                                                                                                                             | `false`  |
-| `responses`    | An array of [Response objects](#response-object).                                                                                                                                   |  `true`  |
+| `input`        | An [Input object](#input-object) object.                                                                                                                                            | `false`  |
+| `output`       | An array of [Output objects](#output-object).                                                                                                                                       |  `true`  |
 | `middleware`   | A [Middleware](#middlewares) function that takes in the return values from both your [Global middleware](#global-middleware) and [Route middleware](#route-middleware).             |  `false` |
 | `handler`      |  Your [Handler](#handler) function that takes in your typed request, response and [Middleware](#middlewares) parameters and contains all of your business logic.                    | `true`   |
 | `errorHandler` | A [Method error handler](#method-error-handler) for this method, overriding both the [Global error handler](#global-error-handler) and [Route error handler](#route-error-handler). | `false`  |
+| `openApiSpec`  | An OpenAPI [Operation object](https://swagger.io/specification/#operation-object) that can be used to override and extend the auto-generated and higher level specifications.       | `false`  |
 
-#### [Request body](#request-body)
+#### [Input](#input-object)
 
-The required properties are used for internal type-checking and the optional properties are used for OpenAPI spec generation and come from the OpenAPI [Request Body Object](https://swagger.io/specification/#request-body-object) and [Media Type Object](https://swagger.io/specification/#media-type-object) specification.
+The input object is used for the validation of the incoming request:
 
-| Name          | Description                                                                                                                                                                         | Required |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `contentType` | The content type that all requests must have - requests with no content type or incorrect content type will get an error response.                                                  | `true`   |
-| `schema`      | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body.                                               | `true`   |
-| `description` |  A brief description of the request body. This could contain examples of use. [CommonMark syntax](https://spec.commonmark.org/) MAY be used for rich text representation.           |  `false` |
-| `required`    | Determines if the request body is required in the request. All requests without a body will get an error response when this is set to `true`. Defaults to `false`.                  | `false`  |
-| `example`     | An example object matching the `schema`.                                                                                                                                            | `false`  |
-| `examples`    | A mapping of [Example Objects](https://swagger.io/specification/#example-object) or [Reference Objects](#https://swagger.io/specification/#reference-object) matching the `schema`. |  `false` |
-| `encoding`    | A mapping of [Encoding Objects](https://swagger.io/specification/#encoding-object).                                                                                                 |  `false` |
+| Name          | Description                                                                                                                           | Required |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.      | `true`   |
+| `schema`      | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body. | `true`   |
 
-#### [Response object](#response-object)
+#### [Output object](#output-object)
+
+The output objects define what kind of responses you are allowed to return from your API handlers:
 
 | Name          | Description                                                                                                                                                                                                  | Required |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| `description` | A short description of the response. [CommonMark syntax](https://spec.commonmark.org/) MAY be used for rich text representation.                                                                             |  `true`  |
-| `status`      | A possible status code returned by your API route.                                                                                                                                                           | `true`   |
-| `contentType` | The content type of the response. Using any other content-type will lead to a TS error.                                                                                                                      | `true`   |
-| `schema`      | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the response data. All response data not matching to the schema will lead to a TS error. |  `true`  |
-| `headers`     | A mapping of headers to [Header Objects](https://swagger.io/specification/#header-object) or [Reference Objects](https://swagger.io/specification/#reference-object).                                        | `false`  |
-| `links`       |  A mapping of [Link Objects](https://swagger.io/specification/#link-object) or [Reference Objects](https://swagger.io/specification/#reference-object).                                                      | `false`  |
+| `status`      | A possible status code that your API can return - using other status codes will lead to a TS error.                                                                                                          | `true`   |
+| `contentType` | The content type of the response - using other content-types will lead to a TS error.                                                                                                                        | `true`   |
+| `schema`      | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the response data. A response format not matching to the schema will lead to a TS error. |  `true`  |
 
 #### [Handler](#handler)
 

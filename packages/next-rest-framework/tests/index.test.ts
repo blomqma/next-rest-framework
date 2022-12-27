@@ -2,11 +2,12 @@ import { NextRestFramework } from '../src';
 import { RequestMethod } from 'node-mocks-http';
 import { getDefaultConfig, getHTMLForSwaggerUI } from '../src/utils';
 import { DEFAULT_ERRORS, ValidMethod, VERSION } from '../src/constants';
-import { z } from 'zod';
 import { NextRestFrameworkConfig } from '../src/types';
 import merge from 'lodash.merge';
 import chalk from 'chalk';
 import { createNextRestFrameworkMocks, resetCustomGlobals } from './utils';
+import { z } from 'zod';
+import * as yup from 'yup';
 
 jest.mock('fs', () => ({
   readdirSync: () => [],
@@ -17,107 +18,106 @@ beforeEach(() => {
   resetCustomGlobals();
 });
 
-describe('handler', () => {
-  it('uses the default config by default', () => {
-    const { config } = NextRestFramework();
-    expect(JSON.stringify(config)).toEqual(JSON.stringify(getDefaultConfig()));
-  });
+it('uses the default config by default', () => {
+  const { config } = NextRestFramework();
+  expect(JSON.stringify(config)).toEqual(JSON.stringify(getDefaultConfig()));
+});
 
-  it('sets the global config', () => {
-    const customConfig: NextRestFrameworkConfig = {
-      openApiSpec: {
-        info: {
-          title: 'Some Title',
-          version: '1.2.3'
-        },
-        paths: {}
+it('sets the global config', () => {
+  const customConfig: NextRestFrameworkConfig = {
+    openApiSpec: {
+      info: {
+        title: 'Some Title',
+        version: '1.2.3'
       },
-      openApiJsonPath: '/foo/bar',
-      openApiYamlPath: '/bar/baz',
-      swaggerUiPath: '/baz/qux',
-      exposeOpenApiSpec: false,
-      errorHandler: () => {}
-    };
+      paths: {}
+    },
+    openApiJsonPath: '/foo/bar',
+    openApiYamlPath: '/bar/baz',
+    swaggerUiPath: '/baz/qux',
+    exposeOpenApiSpec: false,
+    errorHandler: () => {}
+  };
 
-    const { config } = NextRestFramework(customConfig);
+  const { config } = NextRestFramework(customConfig);
 
-    expect(JSON.stringify(config)).toEqual(
-      JSON.stringify(merge(getDefaultConfig(), customConfig))
-    );
+  expect(JSON.stringify(config)).toEqual(
+    JSON.stringify(merge(getDefaultConfig(), customConfig))
+  );
+});
+
+it('logs init, reserved paths and config changed info', async () => {
+  console.info = jest.fn();
+
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET',
+    path: '/api/openapi.yaml',
+    headers: {
+      'x-forwarded-proto': 'http',
+      host: 'localhost:3000'
+    }
   });
 
-  it('logs init, reserved paths and config changed info', async () => {
-    console.info = jest.fn();
+  await NextRestFramework().defineCatchAllHandler()(req, res);
 
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'GET',
-      path: '/api/openapi.yaml',
-      headers: {
-        'x-forwarded-proto': 'http',
-        host: 'localhost:3000'
-      }
-    });
+  expect(console.info).toHaveBeenNthCalledWith(
+    1,
+    chalk.green('Next REST Framework initialized! 🚀')
+  );
 
-    await NextRestFramework().defineCatchAllHandler()(req, res);
-
-    expect(console.info).toHaveBeenNthCalledWith(
-      1,
-      chalk.green('Next REST Framework initialized! 🚀')
-    );
-
-    expect(console.info).toHaveBeenNthCalledWith(
-      2,
-      chalk.yellowBright(`Swagger UI: http://localhost:3000/api
+  expect(console.info).toHaveBeenNthCalledWith(
+    2,
+    chalk.yellowBright(`Swagger UI: http://localhost:3000/api
 OpenAPI JSON: http://localhost:3000/api/openapi.json
 OpenAPI YAML: http://localhost:3000/api/openapi.yaml`)
-    );
+  );
 
-    await NextRestFramework({
-      swaggerUiPath: '/api/foo/bar',
-      openApiJsonPath: '/api/bar/baz',
-      openApiYamlPath: '/api/baz/qux'
-    }).defineCatchAllHandler()(req, res);
+  await NextRestFramework({
+    swaggerUiPath: '/api/foo/bar',
+    openApiJsonPath: '/api/bar/baz',
+    openApiYamlPath: '/api/baz/qux'
+  }).defineCatchAllHandler()(req, res);
 
-    expect(console.info).toHaveBeenNthCalledWith(
-      3,
-      chalk.green('Next REST Framework config changed, re-initializing!')
-    );
+  expect(console.info).toHaveBeenNthCalledWith(
+    3,
+    chalk.green('Next REST Framework config changed, re-initializing!')
+  );
 
-    expect(console.info).toHaveBeenNthCalledWith(
-      4,
-      chalk.yellowBright(`Swagger UI: http://localhost:3000/api/foo/bar
+  expect(console.info).toHaveBeenNthCalledWith(
+    4,
+    chalk.yellowBright(`Swagger UI: http://localhost:3000/api/foo/bar
 OpenAPI JSON: http://localhost:3000/api/bar/baz
 OpenAPI YAML: http://localhost:3000/api/baz/qux`)
-    );
+  );
 
-    await NextRestFramework({
-      exposeOpenApiSpec: false
-    }).defineCatchAllHandler()(req, res);
+  await NextRestFramework({
+    exposeOpenApiSpec: false
+  }).defineCatchAllHandler()(req, res);
 
-    expect(console.info).toHaveBeenNthCalledWith(
-      5,
-      chalk.green('Next REST Framework config changed, re-initializing!')
-    );
+  expect(console.info).toHaveBeenNthCalledWith(
+    5,
+    chalk.green('Next REST Framework config changed, re-initializing!')
+  );
 
-    expect(console.info).toHaveBeenNthCalledWith(
-      6,
-      chalk.yellowBright(
-        `OpenAPI spec is not exposed. To expose it, set ${chalk.bold(
-          'exposeOpenApiSpec'
-        )} to ${chalk.bold('true')} in the Next REST Framework config.`
-      )
-    );
+  expect(console.info).toHaveBeenNthCalledWith(
+    6,
+    chalk.yellowBright(
+      `OpenAPI spec is not exposed. To expose it, set ${chalk.bold(
+        'exposeOpenApiSpec'
+      )} to ${chalk.bold('true')} in the Next REST Framework config.`
+    )
+  );
+});
+
+it('returns OpenAPI YAML spec', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET',
+    path: '/api/openapi.yaml'
   });
 
-  it('returns OpenAPI YAML spec', async () => {
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'GET',
-      path: '/api/openapi.yaml'
-    });
+  await NextRestFramework().defineCatchAllHandler()(req, res);
 
-    await NextRestFramework().defineCatchAllHandler()(req, res);
-
-    const yaml = `openapi: 3.0.1
+  const yaml = `openapi: 3.0.1
 info:
   title: Next REST Framework
   description: This is an autogenerated OpenAPI spec by Next REST Framework.
@@ -126,164 +126,221 @@ components: {}
 paths: {}
 `;
 
-    expect(res._getData()).toEqual(yaml);
+  expect(res._getData()).toEqual(yaml);
+});
+
+it('returns OpenAPI JSON spec', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET',
+    path: '/api/openapi.json'
   });
 
-  it('returns OpenAPI JSON spec', async () => {
+  await NextRestFramework().defineCatchAllHandler()(req, res);
+
+  const json = {
+    openapi: '3.0.1',
+    info: {
+      title: 'Next REST Framework',
+      description:
+        'This is an autogenerated OpenAPI spec by Next REST Framework.',
+      version: VERSION
+    },
+    components: {},
+    paths: {}
+  };
+
+  expect(res._getJSONData()).toEqual(json);
+});
+
+it('returns Swagger UI', async () => {
+  const headers = {
+    'x-forwarded-proto': 'http',
+    host: 'localhost:3000'
+  };
+
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET',
+    path: '/api',
+    headers
+  });
+
+  await NextRestFramework().defineCatchAllHandler()(req, res);
+  const html = getHTMLForSwaggerUI({ headers });
+  expect(res._getData()).toEqual(html);
+});
+
+it.each(Object.values(ValidMethod))(
+  'works with HTTP method: %p',
+  async (method) => {
     const { req, res } = createNextRestFrameworkMocks({
-      method: 'GET',
-      path: '/api/openapi.json'
+      method
     });
 
-    await NextRestFramework().defineCatchAllHandler()(req, res);
+    const output = [
+      {
+        status: 200,
+        contentType: 'application/json',
+        schema: z.array(z.string())
+      }
+    ];
 
-    const json = {
-      openapi: '3.0.1',
-      info: {
-        title: 'Next REST Framework',
-        description:
-          'This is an autogenerated OpenAPI spec by Next REST Framework.',
-        version: VERSION
+    const data = ['All good!'];
+
+    await NextRestFramework().defineEndpoints({
+      [ValidMethod.GET]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
       },
-      components: {},
-      paths: {}
-    };
+      [ValidMethod.PUT]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
+      },
+      [ValidMethod.POST]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
+      },
+      [ValidMethod.DELETE]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
+      },
+      [ValidMethod.OPTIONS]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
+      },
+      [ValidMethod.HEAD]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
+      },
+      [ValidMethod.PATCH]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
+      },
+      [ValidMethod.TRACE]: {
+        output,
+        handler: ({ res }) => {
+          res.status(200).json(data);
+        }
+      }
+    })(req, res);
 
-    expect(res._getJSONData()).toEqual(json);
+    expect(res._getJSONData()).toEqual(data);
+  }
+);
+
+it('returns error for valid methods with no handlers', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'POST'
   });
 
-  it('returns Swagger UI', async () => {
-    const headers = {
-      'x-forwarded-proto': 'http',
-      host: 'localhost:3000'
-    };
+  await NextRestFramework().defineEndpoints({
+    [ValidMethod.GET]: {
+      output: [],
+      handler: () => {}
+    }
+  })(req, res);
 
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'GET',
-      path: '/api',
-      headers
-    });
+  expect(res._getStatusCode()).toEqual(405);
+  expect(res._getHeaders().allow).toEqual('GET');
 
-    await NextRestFramework().defineCatchAllHandler()(req, res);
-    const html = getHTMLForSwaggerUI({ headers });
-    expect(res._getData()).toEqual(html);
+  expect(JSON.parse(res._getData())).toEqual({
+    message: DEFAULT_ERRORS.methodNotAllowed
   });
 });
 
-describe('defineEndpoints', () => {
-  it.each(Object.values(ValidMethod))(
-    'works with HTTP method: %p',
-    async (method) => {
-      const { req, res } = createNextRestFrameworkMocks({
-        method
-      });
+it('works with a valid catch-all-handler', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'POST'
+  });
 
-      const responses = [
-        {
-          status: 200,
-          contentType: 'application/json',
-          schema: z.array(z.string())
-        }
-      ];
-
-      const data = ['All good!'];
-
-      await NextRestFramework().defineEndpoints({
-        [ValidMethod.GET]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        },
-        [ValidMethod.PUT]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        },
-        [ValidMethod.POST]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        },
-        [ValidMethod.DELETE]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        },
-        [ValidMethod.OPTIONS]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        },
-        [ValidMethod.HEAD]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        },
-        [ValidMethod.PATCH]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        },
-        [ValidMethod.TRACE]: {
-          responses,
-          handler: ({ res }) => {
-            res.status(200).json(data);
-          }
-        }
-      })(req, res);
-
-      expect(res._getJSONData()).toEqual(data);
+  await NextRestFramework().defineCatchAllHandler({
+    [ValidMethod.POST]: {
+      output: [],
+      handler: ({ res }) => {
+        res.status(200).json({ message: 'All good!' });
+      }
     }
-  );
+  })(req, res);
 
-  it('returns error for valid methods with no handlers', async () => {
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'POST'
-    });
+  expect(res._getStatusCode()).toEqual(200);
 
-    await NextRestFramework().defineEndpoints({
-      [ValidMethod.GET]: {
-        responses: [],
-        handler: () => {}
-      }
-    })(req, res);
+  expect(JSON.parse(res._getData())).toEqual({
+    message: 'All good!'
+  });
+});
 
-    expect(res._getStatusCode()).toEqual(405);
-    expect(res._getHeaders().allow).toEqual('GET');
-
-    expect(JSON.parse(res._getData())).toEqual({
-      message: DEFAULT_ERRORS.methodNotAllowed
-    });
+it('returns 404 for missing catch-all-handlers', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
   });
 
-  it('returns error for invalid methods', async () => {
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'FOO' as RequestMethod
-    });
+  await NextRestFramework().defineCatchAllHandler({
+    [ValidMethod.POST]: {
+      output: [],
+      handler: () => {}
+    }
+  })(req, res);
 
-    await NextRestFramework().defineEndpoints({
-      [ValidMethod.GET]: {
-        responses: [],
-        handler: () => {}
-      }
-    })(req, res);
+  expect(res._getStatusCode()).toEqual(404);
 
-    expect(res._getStatusCode()).toEqual(405);
-    expect(res._getHeaders().allow).toEqual('GET');
+  expect(JSON.parse(res._getData())).toEqual({
+    message: DEFAULT_ERRORS.notFound
+  });
+});
 
-    expect(JSON.parse(res._getData())).toEqual({
-      message: DEFAULT_ERRORS.methodNotAllowed
-    });
+it('returns error for invalid methods', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'FOO' as RequestMethod
   });
 
-  it('returns error for invalid request body', async () => {
+  await NextRestFramework().defineEndpoints({
+    [ValidMethod.GET]: {
+      output: [],
+      handler: () => {}
+    }
+  })(req, res);
+
+  expect(res._getStatusCode()).toEqual(405);
+  expect(res._getHeaders().allow).toEqual('GET');
+
+  expect(JSON.parse(res._getData())).toEqual({
+    message: DEFAULT_ERRORS.methodNotAllowed
+  });
+});
+
+it.each([
+  {
+    name: 'Zod',
+    schema: z.object({
+      foo: z.number()
+    }),
+    message: ['Expected number, received string']
+  },
+  {
+    name: 'Yup',
+    schema: yup.object({
+      foo: yup.number()
+    }),
+    message: [
+      'foo must be a `number` type, but the final value was: `NaN` (cast from the value `"bar"`).'
+    ]
+  }
+])(
+  'returns error for invalid request body: $name',
+  async ({ schema, message }) => {
     const { req, res } = createNextRestFrameworkMocks({
       method: 'POST',
       body: {
@@ -296,186 +353,199 @@ describe('defineEndpoints', () => {
 
     await NextRestFramework().defineEndpoints({
       [ValidMethod.POST]: {
-        responses: [],
-        handler: () => {},
-        requestBody: {
+        input: {
           contentType: 'application/json',
-          schema: z.object({
-            name: z.string()
-          })
-        }
+          schema
+        },
+        output: [],
+        handler: () => {}
       }
-    })(
-      // @ts-expect-error: Typed incorrectly on purpose.
-      req,
-      res
-    );
+    })(req, res);
 
     expect(res._getStatusCode()).toEqual(400);
 
     expect(res._getJSONData()).toEqual({
-      message: [
+      message
+    });
+  }
+);
+
+it('returns error for invalid content-type', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'POST',
+    body: {
+      foo: 'bar'
+    },
+    headers: {
+      'content-type': 'application/xml'
+    }
+  });
+
+  await NextRestFramework().defineEndpoints({
+    [ValidMethod.POST]: {
+      input: {
+        contentType: 'application/json',
+        schema: z.string()
+      },
+      output: [],
+      handler: () => {}
+    }
+  })(req, res);
+
+  expect(res._getStatusCode()).toEqual(415);
+
+  expect(res._getJSONData()).toEqual({
+    message: DEFAULT_ERRORS.invalidMediaType
+  });
+});
+
+it('works with middlewares', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  await NextRestFramework({
+    middleware: () => ({
+      foo: 'foo'
+    })
+  }).defineEndpoints({
+    middleware: ({ params: { foo } }) => ({ bar: 'bar', foo }),
+    GET: {
+      output: [
         {
-          code: 'invalid_type',
-          expected: 'string',
-          message: 'Required',
-          path: ['name'],
-          received: 'undefined'
+          status: 200,
+          contentType: 'application/json',
+          schema: z.object({
+            foo: z.string(),
+            bar: z.string(),
+            baz: z.string()
+          })
         }
-      ]
-    });
-  });
-
-  it('works with middlewares', async () => {
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'GET'
-    });
-
-    await NextRestFramework({
-      middleware: () => ({
-        foo: 'foo'
-      })
-    }).defineEndpoints({
-      middleware: ({ params: { foo } }) => ({ bar: 'bar', foo }),
-      GET: {
-        responses: [
-          {
-            status: 200,
-            contentType: 'application/json',
-            schema: z.object({
-              foo: z.string(),
-              bar: z.string(),
-              baz: z.string()
-            })
-          }
-        ],
-        middleware: ({ params: { foo, bar } }) => ({ foo, bar, baz: 'baz' }),
-        handler: ({ res, params: { foo, bar, baz } }) => {
-          res.status(200).json({ foo, bar, baz });
-        }
+      ],
+      middleware: ({ params: { foo, bar } }) => ({ foo, bar, baz: 'baz' }),
+      handler: ({ res, params: { foo, bar, baz } }) => {
+        res.status(200).json({ foo, bar, baz });
       }
-    })(req, res);
+    }
+  })(req, res);
 
-    expect(res._getStatusCode()).toEqual(200);
+  expect(res._getStatusCode()).toEqual(200);
 
-    expect(res._getJSONData()).toEqual({
-      foo: 'foo',
-      bar: 'bar',
-      baz: 'baz'
-    });
+  expect(res._getJSONData()).toEqual({
+    foo: 'foo',
+    bar: 'bar',
+    baz: 'baz'
+  });
+});
+
+it('returns a default error response', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
   });
 
-  describe('error handing', () => {
-    it('returns a default error response', async () => {
-      const { req, res } = createNextRestFrameworkMocks({
-        method: 'GET'
-      });
+  console.error = jest.fn();
 
-      console.error = jest.fn();
+  await NextRestFramework().defineEndpoints({
+    GET: {
+      output: [],
+      handler: () => {
+        throw Error('Something went wrong');
+      }
+    }
+  })(req, res);
 
-      await NextRestFramework().defineEndpoints({
-        GET: {
-          responses: [],
-          handler: () => {
-            throw new Error('Something went wrong');
-          }
-        }
-      })(req, res);
-
-      expect(res._getJSONData()).toEqual({
-        message: DEFAULT_ERRORS.unexpectedError
-      });
-    });
-
-    it('works with global error handler', async () => {
-      const { req, res } = createNextRestFrameworkMocks({
-        method: 'GET'
-      });
-
-      console.log = jest.fn();
-
-      await NextRestFramework({
-        errorHandler: () => {
-          console.log('foo');
-        }
-      }).defineEndpoints({
-        GET: {
-          responses: [],
-          handler: () => {
-            throw new Error('Something went wrong');
-          }
-        }
-      })(req, res);
-
-      expect(console.log).toBeCalledWith('foo');
-    });
-
-    it('works with route-specific error handler', async () => {
-      const { req, res } = createNextRestFrameworkMocks({
-        method: 'GET'
-      });
-
-      console.log = jest.fn();
-
-      await NextRestFramework().defineEndpoints({
-        errorHandler: () => {
-          console.log('bar');
-        },
-        GET: {
-          responses: [],
-          handler: () => {
-            throw new Error('Something went wrong');
-          }
-        }
-      })(req, res);
-
-      expect(console.log).toBeCalledWith('bar');
-    });
-
-    it('works with method-specific error handler', async () => {
-      const { req, res } = createNextRestFrameworkMocks({
-        method: 'GET'
-      });
-
-      console.log = jest.fn();
-
-      await NextRestFramework().defineEndpoints({
-        GET: {
-          responses: [],
-          handler: () => {
-            throw new Error('Something went wrong');
-          },
-          errorHandler: () => {
-            console.log('baz');
-          }
-        }
-      })(req, res);
-
-      expect(console.log).toBeCalledWith('baz');
-    });
-
-    it('suppresses errors in production mode by default', async () => {
-      const { req, res } = createNextRestFrameworkMocks({
-        method: 'GET'
-      });
-
-      console.error = jest.fn();
-      process.env = { ...process.env, NODE_ENV: 'production' };
-
-      await NextRestFramework().defineEndpoints({
-        GET: {
-          responses: [],
-          handler: () => {
-            throw new Error('Something went wrong');
-          }
-        }
-      })(req, res);
-
-      expect(console.error).toBeCalledWith(
-        chalk.red(
-          'Next REST Framework encountered an error - suppressed in production mode.'
-        )
-      );
-    });
+  expect(res._getJSONData()).toEqual({
+    message: DEFAULT_ERRORS.unexpectedError
   });
+});
+
+it('works with global error handler', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  console.log = jest.fn();
+
+  await NextRestFramework({
+    errorHandler: () => {
+      console.log('foo');
+    }
+  }).defineEndpoints({
+    GET: {
+      output: [],
+      handler: () => {
+        throw Error('Something went wrong');
+      }
+    }
+  })(req, res);
+
+  expect(console.log).toBeCalledWith('foo');
+});
+
+it('works with route-specific error handler', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  console.log = jest.fn();
+
+  await NextRestFramework().defineEndpoints({
+    errorHandler: () => {
+      console.log('bar');
+    },
+    GET: {
+      output: [],
+      handler: () => {
+        throw Error('Something went wrong');
+      }
+    }
+  })(req, res);
+
+  expect(console.log).toBeCalledWith('bar');
+});
+
+it('works with method-specific error handler', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  console.log = jest.fn();
+
+  await NextRestFramework().defineEndpoints({
+    GET: {
+      output: [],
+      handler: () => {
+        throw Error('Something went wrong');
+      },
+      errorHandler: () => {
+        console.log('baz');
+      }
+    }
+  })(req, res);
+
+  expect(console.log).toBeCalledWith('baz');
+});
+
+it('suppresses errors in production mode by default', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  console.error = jest.fn();
+  process.env = { ...process.env, NODE_ENV: 'production' };
+
+  await NextRestFramework().defineEndpoints({
+    GET: {
+      output: [],
+      handler: () => {
+        throw Error('Something went wrong');
+      }
+    }
+  })(req, res);
+
+  expect(console.error).toBeCalledWith(
+    chalk.red(
+      'Next REST Framework encountered an error - suppressed in production mode.'
+    )
+  );
 });

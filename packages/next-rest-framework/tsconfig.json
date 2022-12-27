@@ -1,18 +1,7 @@
 {
+  "extends": "@next-rest-framework/tsconfig/tsconfig.base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "declaration": true,
-    "outDir": "./dist",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "incremental": true,
-    "allowJs": true
+    "outDir": "./dist"
   },
   "include": ["src/**/*", "tests/**/*", "jest.config.ts"]
 }

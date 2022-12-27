@@ -1,5 +1,6 @@
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
+// Accept a string with any casing - used for validating headers.
 // Ref: https://stackoverflow.com/a/64932909
 export type AnyCase<T extends string> = string extends T
   ? string
