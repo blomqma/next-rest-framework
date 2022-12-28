@@ -270,7 +270,7 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
           }
 
           if (url === swaggerUiPath) {
-            const html = getHTMLForSwaggerUI({ headers });
+            const html = getHTMLForSwaggerUI({ headers, config });
             res.setHeader('Content-Type', 'text/html');
             res.status(200).send(html);
             return;
