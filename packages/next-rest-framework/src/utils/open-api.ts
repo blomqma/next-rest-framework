@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'fs';
+import { readdirSync } from 'fs';
 import { join } from 'path';
 import http from 'http';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -12,71 +12,107 @@ import {
   DEFAULT_ERRORS,
   NEXT_REST_FRAMEWORK_USER_AGENT,
   OPEN_API_VERSION,
-  ValidMethod
+  ValidMethod,
+  VERSION
 } from '../constants';
 import merge from 'lodash.merge';
 import { getJsonSchema } from './schemas';
 
 export const getHTMLForSwaggerUI = ({
-  headers
+  headers,
+  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath }
 }: {
   headers: http.IncomingHttpHeaders;
+  config: NextRestFrameworkConfig;
 }) => {
   const proto = headers['x-forwarded-proto'] ?? 'http';
   const host = headers.host;
   const url = `${proto}://${host}/api/openapi.yaml`;
 
-  const css = readFileSync(
-    join(
-      process.cwd(),
-      'node_modules/next-rest-framework/dist/swagger-ui/swagger-ui.css'
-    )
-  );
-
-  const swaggerUiBundle = readFileSync(
-    join(
-      process.cwd(),
-      'node_modules/next-rest-framework/dist/swagger-ui/swagger-ui-bundle.js'
-    )
-  );
-
-  const swaggerUiStandalonePreset = readFileSync(
-    join(
-      process.cwd(),
-      'node_modules/next-rest-framework/dist/swagger-ui/swagger-ui-standalone-preset.js'
-    )
-  );
-
   return `<!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="SwaggerUI"
-    />
-    <title>Next REST Framework | SwaggerUI</title>
-    <style>${css}</style>
-  </head>
-  <body>
-  <div id="swagger-ui"></div>
-  <script>${swaggerUiBundle}</script>
-  <script>${swaggerUiStandalonePreset}</script>
-  <script>
-    window.onload = () => {
-      window.ui = SwaggerUIBundle({
-          url: '${url}',
-          dom_id: '#swagger-ui',
-          presets: [
-            SwaggerUIBundle.presets.apis,
-            SwaggerUIStandalonePreset
-          ],
-          layout: "StandaloneLayout",
-      });
-    };
-  </script>
-  </body>
+  <html lang="en" data-theme="light">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta
+        name="description"
+        content="SwaggerUI"
+      />
+      <title>Next REST Framework | SwaggerUI</title>
+      <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
+      <link
+        href="https://cdn.jsdelivr.net/npm/daisyui@2.46.0/dist/full.css"
+        rel="stylesheet"
+        type="text/css"
+      />
+      <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+
+    <body class="min-h-screen flex flex-col items-center">
+      <div class="navbar bg-base-200 flex justify-center px-5">
+        <div class="max-w-7xl flex justify-between grow gap-5 h-24">
+          <a>
+            <img
+              src="https://raw.githubusercontent.com/blomqma/next-rest-framework/d02224b38d07ede85257b22ed50159a947681f99/packages/next-rest-framework/logo.svg"
+              alt="Next REST Framework logo"
+              class="w-32"
+            />
+          </a>
+          <p>v${VERSION}</p>
+        </div>
+      </div>
+
+      <main class="max-w-7xl grow w-full">
+        <div id="swagger-ui"></div>
+      </main>
+
+      <footer class="footer bg-base-200 p-5 flex justify-center">
+        <div class="container max-w-5xl flex flex-col items-center text-md gap-5">
+          <ul class="flex flex-col items-center">
+            <li>
+              <a
+                class="link"
+                href="https://next-rest-framework.vercel.app/"
+                target="_blank"
+              >
+                Docs
+              </a>
+            </li>
+            <li>
+              <a
+                class="link"
+                href="https://github.com/blomqma/next-rest-framework"
+                target="_blank"
+              >
+                GitHub
+              </a>
+            </li>
+            <li>
+              <a class="link" href="${openApiJsonPath}">OpenAPI JSON</a>
+            </li>
+            <li>
+              <a class="link" href="${openApiYamlPath}">OpenAPI YAML</a>
+            </li>
+            <li>
+              <a class="link" href="${swaggerUiPath}">Swagger UI</a>
+            </li>
+          </ul>
+          <p class="text-center">
+            Next REST Framework © Markus Blomqvist ${new Date().getFullYear()}
+          </p>
+        </div>
+      </footer>
+
+      <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-bundle.js" crossorigin></script>
+      <script>
+        window.onload = () => {
+          window.ui = SwaggerUIBundle({
+              url: '${url}',
+              dom_id: '#swagger-ui',
+          });
+        };
+      </script>
+    </body>
   </html>`;
 };
 

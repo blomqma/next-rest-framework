@@ -164,8 +164,9 @@ it('returns Swagger UI', async () => {
     headers
   });
 
-  await NextRestFramework().defineCatchAllHandler()(req, res);
-  const html = getHTMLForSwaggerUI({ headers });
+  const { config, defineCatchAllHandler } = await NextRestFramework();
+  await defineCatchAllHandler()(req, res);
+  const html = getHTMLForSwaggerUI({ headers, config });
   expect(res._getData()).toEqual(html);
 });
 
