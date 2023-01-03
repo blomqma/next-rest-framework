@@ -98,7 +98,6 @@ The complete API of the initialized client is the following:
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `defineCatchAllHandler` |  A function used to generate your single catch-all API route. Must be used in the root of your API routes folder in the following path `pages/api/[[...next-rest-framework]].ts`. |
 | `defineEndpoints`       | Used for all other API routes that you want to use Next REST Framework for. Can also be used in other catch-all API routes.                                                       |
-| `getOpenApiSpec`        | A function that exposes the generated OpenAPI spec combined with your own definitions. Useful if you want to e.g. export the OpenAPI spec to a separate file.                     |
 
 ### [Initialize catch-all handler](#initialize-catch-all-handler)
 
