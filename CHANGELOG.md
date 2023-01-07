@@ -3,7 +3,7 @@ We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ### Unreleased
 
-### Changed
+### 0.2.1 - 2023-01-07
 
 - Changed the Swagger UI layout by adding a custom navbar and footer components.
 - Changed the include Swagger UI by loading the assets from unpkg CDN and significantly reducing the bundle size.
