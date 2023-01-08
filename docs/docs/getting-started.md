@@ -51,7 +51,7 @@ All of these are configurable with the [Config options](#config-options) that yo
 import { defineEndpoints } from 'next-rest-framework/client';
 import { z } from 'zod';
 
-const todoSchema = object({
+const todoSchema = z.object({
   id: z.string(),
   name: z.string(),
   completed: z.boolean()
@@ -59,7 +59,7 @@ const todoSchema = object({
 
 export default defineEndpoints({
   GET: {
-    responses: [
+    output: [
       {
         status: 200,
         contentType: 'application/json',
@@ -67,8 +67,10 @@ export default defineEndpoints({
       }
     ],
     handler: ({ res }) => {
-      // Using any other content type, status code or response data format will lead to TS error.
+      // Any other content type will lead to TS error.
       res.setHeader('content-type', 'application/json');
+
+      // Any other status or JSON format will lead to TS error.
       res.status(200).json([
         {
           id: 'foo',
@@ -79,13 +81,13 @@ export default defineEndpoints({
     }
   },
   POST: {
-    request: {
+    input: {
       contentType: 'application/json',
       schema: z.object({
         name: z.string()
       })
     },
-    responses: [
+    output: [
       {
         status: 201,
         contentType: 'application/json',
@@ -100,10 +102,14 @@ export default defineEndpoints({
         }
       }
     }) => {
-      const todo = createYourTodo(name);
+      // Any other content type will lead to TS error.
       res.setHeader('content-type', 'application/json');
+
+      // Any other status or JSON format will lead to TS error.
       res.status(201).json({
-        data: todo
+        id: 'foo',
+        name,
+        completed: false
       });
     }
   }
@@ -129,7 +135,7 @@ The optional config options allow you to customize Next REST Framework. The foll
 
 ### [Route config](#route-config)
 
-In addition to your method handlers, `middleware` and `errorHandler`, you can also configure OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) parameters for your API route and they will automatically become part of your auto-generated OpenAPI spec The following options can be passed as a parameter for your `defineCatchAllHandler` and `defineEndpoints` in an object:
+The route config parameters define an individual route, applicable for all endpoints (methods) that are using that route:
 
 | Name                                                                | Description                                                                                                                                                                   | Required |
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -139,6 +145,8 @@ In addition to your method handlers, `middleware` and `errorHandler`, you can al
 | `openApiSpec`                                                       | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated and higher level specifications. | `false`  |
 
 ### [Method handlers](#method-handlers)
+
+The method handler parameters define an individual endpoint:
 
 | Name           | Description                                                                                                                                                                         | Required |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
