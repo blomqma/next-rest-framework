@@ -144,7 +144,6 @@ export default defineEndpoints({
     ],
     handler: ({ res }) => {
       // Any other content type will lead to TS error.
-
       res.setHeader('content-type', 'application/json');
 
       // Any other status or JSON format will lead to TS error.
