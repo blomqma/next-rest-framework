@@ -3,6 +3,12 @@ We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ### Unreleased
 
+### 0.2.2 - 2023-01-09
+
+### Fixed
+
+Fix documentation on readme included with the NPM package.
+
 ### 0.2.1 - 2023-01-07
 
 - Changed the Swagger UI layout by adding a custom navbar and footer components.
