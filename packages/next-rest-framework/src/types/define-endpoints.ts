@@ -3,120 +3,88 @@ import { ValidMethod } from '../constants';
 import { BaseSchemaType } from './schemas';
 import { Middleware } from './middleware';
 import { ErrorHandler } from './error-handler';
-import { BaseContentType, BaseStatus, MethodHandler } from './method-handlers';
+import { MethodHandler, OutputObject } from './method-handlers';
 
 export interface DefineEndpointsParams<
-  GetBodySchema extends BaseSchemaType = BaseSchemaType,
-  GetStatus extends BaseStatus = BaseStatus,
-  GetContentType extends BaseContentType = BaseContentType,
-  GetResponseSchema extends BaseSchemaType = BaseSchemaType,
+  GetInputSchema extends BaseSchemaType = BaseSchemaType,
+  GetOutput extends OutputObject = OutputObject,
   GetMiddlewareResponse = unknown,
-  PutBodySchema extends BaseSchemaType = BaseSchemaType,
-  PutStatus extends BaseStatus = BaseStatus,
-  PutContentType extends BaseContentType = BaseContentType,
-  PutResponseSchema extends BaseSchemaType = BaseSchemaType,
+  PutInputSchema extends BaseSchemaType = BaseSchemaType,
+  PutOutput extends OutputObject = OutputObject,
   PutMiddlewareResponse = unknown,
-  PostBodySchema extends BaseSchemaType = BaseSchemaType,
-  PostStatus extends BaseStatus = BaseStatus,
-  PostContentType extends BaseContentType = BaseContentType,
-  PostResponseSchema extends BaseSchemaType = BaseSchemaType,
+  PostInputSchema extends BaseSchemaType = BaseSchemaType,
+  PostOutput extends OutputObject = OutputObject,
   PostMiddlewareResponse = unknown,
-  DeleteBodySchema extends BaseSchemaType = BaseSchemaType,
-  DeleteStatus extends BaseStatus = BaseStatus,
-  DeleteContentType extends BaseContentType = BaseContentType,
-  DeleteResponseSchema extends BaseSchemaType = BaseSchemaType,
+  DeleteInputSchema extends BaseSchemaType = BaseSchemaType,
+  DeleteOutput extends OutputObject = OutputObject,
   DeleteMiddlewareResponse = unknown,
-  OptionsBodySchema extends BaseSchemaType = BaseSchemaType,
-  OptionsStatus extends BaseStatus = BaseStatus,
-  OptionsContentType extends BaseContentType = BaseContentType,
-  OptionsResponseSchema extends BaseSchemaType = BaseSchemaType,
+  OptionsInputSchema extends BaseSchemaType = BaseSchemaType,
+  OptionsOutput extends OutputObject = OutputObject,
   OptionsMiddlewareResponse = unknown,
-  HeadBodySchema extends BaseSchemaType = BaseSchemaType,
-  HeadStatus extends BaseStatus = BaseStatus,
-  HeadContentType extends BaseContentType = BaseContentType,
-  HeadResponseSchema extends BaseSchemaType = BaseSchemaType,
+  HeadInputSchema extends BaseSchemaType = BaseSchemaType,
+  HeadOutput extends OutputObject = OutputObject,
   HeadMiddlewareResponse = unknown,
-  PatchBodySchema extends BaseSchemaType = BaseSchemaType,
-  PatchStatus extends BaseStatus = BaseStatus,
-  PatchContentType extends BaseContentType = BaseContentType,
-  PatchResponseSchema extends BaseSchemaType = BaseSchemaType,
+  PatchInputSchema extends BaseSchemaType = BaseSchemaType,
+  PatchOutput extends OutputObject = OutputObject,
   PatchMiddlewareResponse = unknown,
-  TraceBodySchema extends BaseSchemaType = BaseSchemaType,
-  TraceStatus extends BaseStatus = BaseStatus,
-  TraceContentType extends BaseContentType = BaseContentType,
-  TraceResponseSchema extends BaseSchemaType = BaseSchemaType,
+  TraceInputSchema extends BaseSchemaType = BaseSchemaType,
+  TraceOutput extends OutputObject = OutputObject,
   TraceMiddlewareResponse = unknown,
   GlobalMiddlewareResponse = unknown,
   RouteMiddlewareResponse = unknown
 > {
   [ValidMethod.GET]?: MethodHandler<
-    GetBodySchema,
-    GetStatus,
-    GetContentType,
-    GetResponseSchema,
+    GetInputSchema,
+    GetOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     GetMiddlewareResponse
   >;
   [ValidMethod.PUT]?: MethodHandler<
-    PutBodySchema,
-    PutStatus,
-    PutContentType,
-    PutResponseSchema,
+    PutInputSchema,
+    PutOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     PutMiddlewareResponse
   >;
   [ValidMethod.POST]?: MethodHandler<
-    PostBodySchema,
-    PostStatus,
-    PostContentType,
-    PostResponseSchema,
+    PostInputSchema,
+    PostOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     PostMiddlewareResponse
   >;
   [ValidMethod.DELETE]?: MethodHandler<
-    DeleteBodySchema,
-    DeleteStatus,
-    DeleteContentType,
-    DeleteResponseSchema,
+    DeleteInputSchema,
+    DeleteOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     DeleteMiddlewareResponse
   >;
   [ValidMethod.OPTIONS]?: MethodHandler<
-    OptionsBodySchema,
-    OptionsStatus,
-    OptionsContentType,
-    OptionsResponseSchema,
+    OptionsInputSchema,
+    OptionsOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     OptionsMiddlewareResponse
   >;
   [ValidMethod.HEAD]?: MethodHandler<
-    HeadBodySchema,
-    HeadStatus,
-    HeadContentType,
-    HeadResponseSchema,
+    HeadInputSchema,
+    HeadOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     HeadMiddlewareResponse
   >;
   [ValidMethod.PATCH]?: MethodHandler<
-    PatchBodySchema,
-    PatchStatus,
-    PatchContentType,
-    PatchResponseSchema,
+    PatchInputSchema,
+    PatchOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     PatchMiddlewareResponse
   >;
   [ValidMethod.TRACE]?: MethodHandler<
-    TraceBodySchema,
-    TraceStatus,
-    TraceContentType,
-    TraceResponseSchema,
+    TraceInputSchema,
+    TraceOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     TraceMiddlewareResponse
