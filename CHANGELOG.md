@@ -3,6 +3,14 @@ We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ### Unreleased
 
+### 0.2.3 - 2023-01-09
+
+### Fixed
+
+- Fixed an issue when using multiple output objects with
+  different types - now the output types are combined
+  with a union type to allow multiple different outputs.
+
 ### 0.2.2 - 2023-01-09
 
 ### Fixed
