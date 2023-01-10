@@ -1,11 +1,9 @@
-import { NextApiResponse } from 'next';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import {
-  BaseContentType,
   BaseSchemaType,
-  BaseStatus,
   DefineEndpointsParams,
   NextRestFrameworkConfig,
+  OutputObject,
   SchemaReturnType,
   TypedNextApiRequest
 } from './types';
@@ -19,6 +17,7 @@ import {
   validateRequestBody
 } from './utils';
 import yaml from 'js-yaml';
+import { NextApiResponse } from 'next';
 
 export const defineEndpoints = <GlobalMiddlewareResponse>({
   config,
@@ -30,56 +29,40 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
   _returnNotFoundForMissingHandler?: boolean;
 }) => {
   return <
-    GetBodySchema extends BaseSchemaType,
-    GetStatus extends BaseStatus,
-    GetContentType extends BaseContentType,
-    GetResponseSchema extends BaseSchemaType,
+    GetInputSchema extends BaseSchemaType,
+    GetOutput extends OutputObject,
     GetMiddlewareResponse,
-    PutBodySchema extends BaseSchemaType,
-    PutStatus extends BaseStatus,
-    PutContentType extends BaseContentType,
-    PutResponseSchema extends BaseSchemaType,
+    PutInputSchema extends BaseSchemaType,
+    PutOutput extends OutputObject,
     PutMiddlewareResponse,
-    PostBodySchema extends BaseSchemaType,
-    PostStatus extends BaseStatus,
-    PostContentType extends BaseContentType,
-    PostResponseSchema extends BaseSchemaType,
+    PostInputSchema extends BaseSchemaType,
+    PostOutput extends OutputObject,
     PostMiddlewareResponse,
-    DeleteBodySchema extends BaseSchemaType,
-    DeleteStatus extends BaseStatus,
-    DeleteContentType extends BaseContentType,
-    DeleteResponseSchema extends BaseSchemaType,
+    DeleteInputSchema extends BaseSchemaType,
+    DeleteOutput extends OutputObject,
     DeleteMiddlewareResponse,
-    OptionsBodySchema extends BaseSchemaType,
-    OptionsStatus extends BaseStatus,
-    OptionsContentType extends BaseContentType,
-    OptionsResponseSchema extends BaseSchemaType,
+    OptionsInputSchema extends BaseSchemaType,
+    OptionsOutput extends OutputObject,
     OptionsMiddlewareResponse,
-    HeadBodySchema extends BaseSchemaType,
-    HeadStatus extends BaseStatus,
-    HeadContentType extends BaseContentType,
-    HeadResponseSchema extends BaseSchemaType,
+    HeadInputSchema extends BaseSchemaType,
+    HeadOutput extends OutputObject,
     HeadMiddlewareResponse,
-    PatchBodySchema extends BaseSchemaType,
-    PatchStatus extends BaseStatus,
-    PatchContentType extends BaseContentType,
-    PatchResponseSchema extends BaseSchemaType,
+    PatchInputSchema extends BaseSchemaType,
+    PatchOutput extends OutputObject,
     PatchMiddlewareResponse,
-    TraceBodySchema extends BaseSchemaType,
-    TraceStatus extends BaseStatus,
-    TraceContentType extends BaseContentType,
-    TraceResponseSchema extends BaseSchemaType,
+    TraceInputSchema extends BaseSchemaType,
+    TraceOutput extends OutputObject,
     TraceMiddlewareResponse,
     RouteMiddlewareResponse,
-    SchemaType extends GetBodySchema &
-      PutBodySchema &
-      PostBodySchema &
-      DeleteBodySchema &
-      OptionsBodySchema &
-      HeadBodySchema &
-      PatchBodySchema &
-      TraceBodySchema,
-    MethodMiddlewareResponse extends GetMiddlewareResponse &
+    InputSchema extends GetInputSchema &
+      PutInputSchema &
+      PostInputSchema &
+      DeleteInputSchema &
+      OptionsInputSchema &
+      HeadInputSchema &
+      PatchInputSchema &
+      TraceInputSchema,
+    MiddlewareResponse extends GetMiddlewareResponse &
       PutMiddlewareResponse &
       PostMiddlewareResponse &
       DeleteMiddlewareResponse &
@@ -89,94 +72,62 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
       TraceMiddlewareResponse
   >(
     methodHandlers: DefineEndpointsParams<
-      GetBodySchema,
-      GetStatus,
-      GetContentType,
-      GetResponseSchema,
+      GetInputSchema,
+      GetOutput,
       GetMiddlewareResponse,
-      PutBodySchema,
-      PutStatus,
-      PutContentType,
-      PutResponseSchema,
+      PutInputSchema,
+      PutOutput,
       PutMiddlewareResponse,
-      PostBodySchema,
-      PostStatus,
-      PostContentType,
-      PostResponseSchema,
+      PostInputSchema,
+      PostOutput,
       PostMiddlewareResponse,
-      DeleteBodySchema,
-      DeleteStatus,
-      DeleteContentType,
-      DeleteResponseSchema,
+      DeleteInputSchema,
+      DeleteOutput,
       DeleteMiddlewareResponse,
-      OptionsBodySchema,
-      OptionsStatus,
-      OptionsContentType,
-      OptionsResponseSchema,
+      OptionsInputSchema,
+      OptionsOutput,
       OptionsMiddlewareResponse,
-      HeadBodySchema,
-      HeadStatus,
-      HeadContentType,
-      HeadResponseSchema,
+      HeadInputSchema,
+      HeadOutput,
       HeadMiddlewareResponse,
-      PatchBodySchema,
-      PatchStatus,
-      PatchContentType,
-      PatchResponseSchema,
+      PatchInputSchema,
+      PatchOutput,
       PatchMiddlewareResponse,
-      TraceBodySchema,
-      TraceStatus,
-      TraceContentType,
-      TraceResponseSchema,
+      TraceInputSchema,
+      TraceOutput,
       TraceMiddlewareResponse,
       GlobalMiddlewareResponse,
       RouteMiddlewareResponse
     > = {}
   ) => {
     return async (
-      req: TypedNextApiRequest<SchemaReturnType<SchemaType>>,
+      req: TypedNextApiRequest<SchemaReturnType<InputSchema>>,
       res: NextApiResponse
     ): Promise<
       | DefineEndpointsParams<
-          GetBodySchema,
-          GetStatus,
-          GetContentType,
-          GetResponseSchema,
+          GetInputSchema,
+          GetOutput,
           GetMiddlewareResponse,
-          PutBodySchema,
-          PutStatus,
-          PutContentType,
-          PutResponseSchema,
+          PutInputSchema,
+          PutOutput,
           PutMiddlewareResponse,
-          PostBodySchema,
-          PostStatus,
-          PostContentType,
-          PostResponseSchema,
+          PostInputSchema,
+          PostOutput,
           PostMiddlewareResponse,
-          DeleteBodySchema,
-          DeleteStatus,
-          DeleteContentType,
-          DeleteResponseSchema,
+          DeleteInputSchema,
+          DeleteOutput,
           DeleteMiddlewareResponse,
-          OptionsBodySchema,
-          OptionsStatus,
-          OptionsContentType,
-          OptionsResponseSchema,
+          OptionsInputSchema,
+          OptionsOutput,
           OptionsMiddlewareResponse,
-          HeadBodySchema,
-          HeadStatus,
-          HeadContentType,
-          HeadResponseSchema,
+          HeadInputSchema,
+          HeadOutput,
           HeadMiddlewareResponse,
-          PatchBodySchema,
-          PatchStatus,
-          PatchContentType,
-          PatchResponseSchema,
+          PatchInputSchema,
+          PatchOutput,
           PatchMiddlewareResponse,
-          TraceBodySchema,
-          TraceStatus,
-          TraceContentType,
-          TraceResponseSchema,
+          TraceInputSchema,
+          TraceOutput,
           TraceMiddlewareResponse,
           GlobalMiddlewareResponse,
           RouteMiddlewareResponse
@@ -189,45 +140,29 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
 
       const handleRequest = async (): Promise<
         | DefineEndpointsParams<
-            GetBodySchema,
-            GetStatus,
-            GetContentType,
-            GetResponseSchema,
+            GetInputSchema,
+            GetOutput,
             GetMiddlewareResponse,
-            PutBodySchema,
-            PutStatus,
-            PutContentType,
-            PutResponseSchema,
+            PutInputSchema,
+            PutOutput,
             PutMiddlewareResponse,
-            PostBodySchema,
-            PostStatus,
-            PostContentType,
-            PostResponseSchema,
+            PostInputSchema,
+            PostOutput,
             PostMiddlewareResponse,
-            DeleteBodySchema,
-            DeleteStatus,
-            DeleteContentType,
-            DeleteResponseSchema,
+            DeleteInputSchema,
+            DeleteOutput,
             DeleteMiddlewareResponse,
-            OptionsBodySchema,
-            OptionsStatus,
-            OptionsContentType,
-            OptionsResponseSchema,
+            OptionsInputSchema,
+            OptionsOutput,
             OptionsMiddlewareResponse,
-            HeadBodySchema,
-            HeadStatus,
-            HeadContentType,
-            HeadResponseSchema,
+            HeadInputSchema,
+            HeadOutput,
             HeadMiddlewareResponse,
-            PatchBodySchema,
-            PatchStatus,
-            PatchContentType,
-            PatchResponseSchema,
+            PatchInputSchema,
+            PatchOutput,
             PatchMiddlewareResponse,
-            TraceBodySchema,
-            TraceStatus,
-            TraceContentType,
-            TraceResponseSchema,
+            TraceInputSchema,
+            TraceOutput,
             TraceMiddlewareResponse,
             GlobalMiddlewareResponse,
             RouteMiddlewareResponse
@@ -364,7 +299,7 @@ ${error}`);
             ...globalMiddlewareParams,
             ...routeMiddlewareParams
           }
-        })) as Awaited<MethodMiddlewareResponse>;
+        })) as Awaited<MiddlewareResponse>;
 
         const params = {
           ...globalMiddlewareParams,
@@ -379,7 +314,12 @@ ${error}`);
             params
           });
         } catch (error) {
-          await errorHandler?.({ req, res, error, params });
+          await errorHandler?.({
+            req,
+            res,
+            error,
+            params
+          });
           returnUnexpectedError();
         }
       };

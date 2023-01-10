@@ -269,7 +269,13 @@ it('works with a valid catch-all-handler', async () => {
 
   await NextRestFramework().defineCatchAllHandler({
     [ValidMethod.POST]: {
-      output: [],
+      output: [
+        {
+          status: 200,
+          contentType: 'application/json',
+          schema: z.object({ message: z.string() })
+        }
+      ],
       handler: ({ res }) => {
         res.status(200).json({ message: 'All good!' });
       }
