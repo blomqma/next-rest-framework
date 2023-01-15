@@ -10,6 +10,8 @@ import {
 } from './utils';
 import { NEXT_REST_FRAMEWORK_USER_AGENT } from '../src/constants';
 import chalk from 'chalk';
+import { z } from 'zod';
+import * as yup from 'yup';
 
 jest.mock('fs', () => ({
   readdirSync: () => [
@@ -30,7 +32,10 @@ const fooMethodHandlers = defineEndpoints({
   POST: {
     input: {
       contentType: 'application/json',
-      schema: complexZodSchema
+      body: complexZodSchema,
+      query: z.object({
+        foo: z.string()
+      })
     },
     output: [
       {
@@ -49,7 +54,10 @@ const fooBarMethodHandlers = defineEndpoints({
   PUT: {
     input: {
       contentType: 'application/json',
-      schema: complexYupSchema
+      body: complexYupSchema,
+      query: yup.object({
+        foo: yup.string()
+      })
     },
     output: [
       {
@@ -123,6 +131,9 @@ global.fetch = async (url: string) => {
   const { req, res } = createNextRestFrameworkMocks({
     method: 'GET',
     path,
+    query: {
+      foo: 'bar'
+    },
     headers: {
       'x-forwarded-proto': 'http',
       host: 'localhost:3000',
@@ -213,13 +224,21 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
     }
   };
 
+  const parameters = [
+    {
+      name: 'foo',
+      in: 'query'
+    }
+  ];
+
   expect(paths['/api/foo']).toEqual({
     post: {
       requestBody,
       responses: {
         '201': responseContent,
         default: defaultResponse
-      }
+      },
+      parameters
     }
   });
 
@@ -229,7 +248,8 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
       responses: {
         '203': responseContent,
         default: defaultResponse
-      }
+      },
+      parameters
     }
   });
 

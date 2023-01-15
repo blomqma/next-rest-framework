@@ -2,6 +2,7 @@ import { z } from 'zod';
 import * as yup from 'yup';
 
 export type BaseSchemaType = z.ZodSchema | yup.AnySchema;
+export type BaseObjectSchemaType = z.AnyZodObject | yup.AnyObjectSchema;
 
 export type SchemaReturnType<T extends BaseSchemaType> = T extends z.ZodSchema
   ? z.infer<T>

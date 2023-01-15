@@ -1,5 +1,6 @@
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import {
+  BaseObjectSchemaType,
   BaseSchemaType,
   DefineEndpointsParams,
   NextRestFrameworkConfig,
@@ -14,7 +15,7 @@ import {
   handleReservedPathWarnings,
   getHTMLForSwaggerUI,
   getOpenApiSpecWithPaths,
-  validateRequestBody
+  validateSchema
 } from './utils';
 import yaml from 'js-yaml';
 import { NextApiResponse } from 'next';
@@ -29,39 +30,55 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
   _returnNotFoundForMissingHandler?: boolean;
 }) => {
   return <
-    GetInputSchema extends BaseSchemaType,
+    GetBodySchema extends BaseSchemaType,
+    GetQuerySchema extends BaseObjectSchemaType,
     GetOutput extends OutputObject,
     GetMiddlewareResponse,
-    PutInputSchema extends BaseSchemaType,
+    PutBodySchema extends BaseSchemaType,
+    PutQuerySchema extends BaseObjectSchemaType,
     PutOutput extends OutputObject,
     PutMiddlewareResponse,
-    PostInputSchema extends BaseSchemaType,
+    PostBodySchema extends BaseSchemaType,
+    PostQuerySchema extends BaseObjectSchemaType,
     PostOutput extends OutputObject,
     PostMiddlewareResponse,
-    DeleteInputSchema extends BaseSchemaType,
+    DeleteBodySchema extends BaseSchemaType,
+    DeleteQuerySchema extends BaseObjectSchemaType,
     DeleteOutput extends OutputObject,
     DeleteMiddlewareResponse,
-    OptionsInputSchema extends BaseSchemaType,
+    OptionsBodySchema extends BaseSchemaType,
+    OptionsQuerySchema extends BaseObjectSchemaType,
     OptionsOutput extends OutputObject,
     OptionsMiddlewareResponse,
-    HeadInputSchema extends BaseSchemaType,
+    HeadBodySchema extends BaseSchemaType,
+    HeadQuerySchema extends BaseObjectSchemaType,
     HeadOutput extends OutputObject,
     HeadMiddlewareResponse,
-    PatchInputSchema extends BaseSchemaType,
+    PatchBodySchema extends BaseSchemaType,
+    PatchQuerySchema extends BaseObjectSchemaType,
     PatchOutput extends OutputObject,
     PatchMiddlewareResponse,
-    TraceInputSchema extends BaseSchemaType,
+    TraceBodySchema extends BaseSchemaType,
+    TraceQuerySchema extends BaseObjectSchemaType,
     TraceOutput extends OutputObject,
     TraceMiddlewareResponse,
     RouteMiddlewareResponse,
-    InputSchema extends GetInputSchema &
-      PutInputSchema &
-      PostInputSchema &
-      DeleteInputSchema &
-      OptionsInputSchema &
-      HeadInputSchema &
-      PatchInputSchema &
-      TraceInputSchema,
+    BodySchema extends GetBodySchema &
+      PutBodySchema &
+      PostBodySchema &
+      DeleteBodySchema &
+      OptionsBodySchema &
+      HeadBodySchema &
+      PatchBodySchema &
+      TraceBodySchema,
+    QuerySchema extends GetQuerySchema &
+      PutQuerySchema &
+      PostQuerySchema &
+      DeleteQuerySchema &
+      OptionsQuerySchema &
+      HeadQuerySchema &
+      PatchQuerySchema &
+      TraceQuerySchema,
     MiddlewareResponse extends GetMiddlewareResponse &
       PutMiddlewareResponse &
       PostMiddlewareResponse &
@@ -72,28 +89,36 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
       TraceMiddlewareResponse
   >(
     methodHandlers: DefineEndpointsParams<
-      GetInputSchema,
+      GetBodySchema,
+      GetQuerySchema,
       GetOutput,
       GetMiddlewareResponse,
-      PutInputSchema,
+      PutBodySchema,
+      PutQuerySchema,
       PutOutput,
       PutMiddlewareResponse,
-      PostInputSchema,
+      PostBodySchema,
+      PostQuerySchema,
       PostOutput,
       PostMiddlewareResponse,
-      DeleteInputSchema,
+      DeleteBodySchema,
+      DeleteQuerySchema,
       DeleteOutput,
       DeleteMiddlewareResponse,
-      OptionsInputSchema,
+      OptionsBodySchema,
+      OptionsQuerySchema,
       OptionsOutput,
       OptionsMiddlewareResponse,
-      HeadInputSchema,
+      HeadBodySchema,
+      HeadQuerySchema,
       HeadOutput,
       HeadMiddlewareResponse,
-      PatchInputSchema,
+      PatchBodySchema,
+      PatchQuerySchema,
       PatchOutput,
       PatchMiddlewareResponse,
-      TraceInputSchema,
+      TraceBodySchema,
+      TraceQuerySchema,
       TraceOutput,
       TraceMiddlewareResponse,
       GlobalMiddlewareResponse,
@@ -101,32 +126,43 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
     > = {}
   ) => {
     return async (
-      req: TypedNextApiRequest<SchemaReturnType<InputSchema>>,
+      req: TypedNextApiRequest<
+        SchemaReturnType<BodySchema>,
+        SchemaReturnType<QuerySchema>
+      >,
       res: NextApiResponse
     ): Promise<
       | DefineEndpointsParams<
-          GetInputSchema,
+          GetBodySchema,
+          GetQuerySchema,
           GetOutput,
           GetMiddlewareResponse,
-          PutInputSchema,
+          PutBodySchema,
+          PutQuerySchema,
           PutOutput,
           PutMiddlewareResponse,
-          PostInputSchema,
+          PostBodySchema,
+          PostQuerySchema,
           PostOutput,
           PostMiddlewareResponse,
-          DeleteInputSchema,
+          DeleteBodySchema,
+          DeleteQuerySchema,
           DeleteOutput,
           DeleteMiddlewareResponse,
-          OptionsInputSchema,
+          OptionsBodySchema,
+          OptionsQuerySchema,
           OptionsOutput,
           OptionsMiddlewareResponse,
-          HeadInputSchema,
+          HeadBodySchema,
+          HeadQuerySchema,
           HeadOutput,
           HeadMiddlewareResponse,
-          PatchInputSchema,
+          PatchBodySchema,
+          PatchQuerySchema,
           PatchOutput,
           PatchMiddlewareResponse,
-          TraceInputSchema,
+          TraceBodySchema,
+          TraceQuerySchema,
           TraceOutput,
           TraceMiddlewareResponse,
           GlobalMiddlewareResponse,
@@ -140,28 +176,36 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
 
       const handleRequest = async (): Promise<
         | DefineEndpointsParams<
-            GetInputSchema,
+            GetBodySchema,
+            GetQuerySchema,
             GetOutput,
             GetMiddlewareResponse,
-            PutInputSchema,
+            PutBodySchema,
+            PutQuerySchema,
             PutOutput,
             PutMiddlewareResponse,
-            PostInputSchema,
+            PostBodySchema,
+            PostQuerySchema,
             PostOutput,
             PostMiddlewareResponse,
-            DeleteInputSchema,
+            DeleteBodySchema,
+            DeleteQuerySchema,
             DeleteOutput,
             DeleteMiddlewareResponse,
-            OptionsInputSchema,
+            OptionsBodySchema,
+            OptionsQuerySchema,
             OptionsOutput,
             OptionsMiddlewareResponse,
-            HeadInputSchema,
+            HeadBodySchema,
+            HeadQuerySchema,
             HeadOutput,
             HeadMiddlewareResponse,
-            PatchInputSchema,
+            PatchBodySchema,
+            PatchQuerySchema,
             PatchOutput,
             PatchMiddlewareResponse,
-            TraceInputSchema,
+            TraceBodySchema,
+            TraceQuerySchema,
             TraceOutput,
             TraceMiddlewareResponse,
             GlobalMiddlewareResponse,
@@ -169,7 +213,7 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
           >
         | undefined
       > => {
-        const { method, body, headers, url } = req;
+        const { method, body, query, headers, url } = req;
 
         const {
           openApiJsonPath,
@@ -259,24 +303,44 @@ ${error}`);
         } = methodHandler;
 
         if (input) {
-          const { schema, contentType } = input;
+          const { body: bodySchema, query: querySchema, contentType } = input;
 
           if (headers['content-type'] !== contentType) {
             res.status(415).json({ message: DEFAULT_ERRORS.invalidMediaType });
             return;
           }
 
-          const validate = await validateRequestBody?.({
-            schema,
-            body
+          const validateBody = await validateSchema?.({
+            schema: bodySchema,
+            obj: body
           });
 
-          if (validate) {
-            const { valid, errors } = validate;
+          if (validateBody) {
+            const { valid, errors } = validateBody;
 
             if (!valid) {
-              res.status(400).json({ message: errors });
+              res
+                .status(400)
+                .json({ message: `Invalid request body: ${errors}` });
               return;
+            }
+          }
+
+          if (querySchema) {
+            const validateQuery = await validateSchema?.({
+              schema: querySchema,
+              obj: query
+            });
+
+            if (validateQuery) {
+              const { valid, errors } = validateQuery;
+
+              if (!valid) {
+                res
+                  .status(400)
+                  .json({ message: `Invalid query parameters: ${errors}` });
+                return;
+              }
             }
           }
         }
