@@ -1,89 +1,105 @@
 import { OpenAPIV3_1 } from 'openapi-types';
 import { ValidMethod } from '../constants';
-import { BaseSchemaType } from './schemas';
+import { BaseObjectSchemaType, BaseSchemaType } from './schemas';
 import { Middleware } from './middleware';
 import { ErrorHandler } from './error-handler';
 import { MethodHandler, OutputObject } from './method-handlers';
 
 export interface DefineEndpointsParams<
-  GetInputSchema extends BaseSchemaType = BaseSchemaType,
+  GetBodySchema extends BaseSchemaType = BaseSchemaType,
+  GetQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   GetOutput extends OutputObject = OutputObject,
   GetMiddlewareResponse = unknown,
-  PutInputSchema extends BaseSchemaType = BaseSchemaType,
+  PutBodySchema extends BaseSchemaType = BaseSchemaType,
+  PutQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   PutOutput extends OutputObject = OutputObject,
   PutMiddlewareResponse = unknown,
-  PostInputSchema extends BaseSchemaType = BaseSchemaType,
+  PostBodySchema extends BaseSchemaType = BaseSchemaType,
+  PostQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   PostOutput extends OutputObject = OutputObject,
   PostMiddlewareResponse = unknown,
-  DeleteInputSchema extends BaseSchemaType = BaseSchemaType,
+  DeleteBodySchema extends BaseSchemaType = BaseSchemaType,
+  DeleteQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   DeleteOutput extends OutputObject = OutputObject,
   DeleteMiddlewareResponse = unknown,
-  OptionsInputSchema extends BaseSchemaType = BaseSchemaType,
+  OptionsBodySchema extends BaseSchemaType = BaseSchemaType,
+  OptionsQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   OptionsOutput extends OutputObject = OutputObject,
   OptionsMiddlewareResponse = unknown,
-  HeadInputSchema extends BaseSchemaType = BaseSchemaType,
+  HeadBodySchema extends BaseSchemaType = BaseSchemaType,
+  HeadQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   HeadOutput extends OutputObject = OutputObject,
   HeadMiddlewareResponse = unknown,
-  PatchInputSchema extends BaseSchemaType = BaseSchemaType,
+  PatchBodySchema extends BaseSchemaType = BaseSchemaType,
+  PatchQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   PatchOutput extends OutputObject = OutputObject,
   PatchMiddlewareResponse = unknown,
-  TraceInputSchema extends BaseSchemaType = BaseSchemaType,
+  TraceBodySchema extends BaseSchemaType = BaseSchemaType,
+  TraceQuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   TraceOutput extends OutputObject = OutputObject,
   TraceMiddlewareResponse = unknown,
   GlobalMiddlewareResponse = unknown,
   RouteMiddlewareResponse = unknown
 > {
   [ValidMethod.GET]?: MethodHandler<
-    GetInputSchema,
+    GetBodySchema,
+    GetQuerySchema,
     GetOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     GetMiddlewareResponse
   >;
   [ValidMethod.PUT]?: MethodHandler<
-    PutInputSchema,
+    PutBodySchema,
+    PutQuerySchema,
     PutOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     PutMiddlewareResponse
   >;
   [ValidMethod.POST]?: MethodHandler<
-    PostInputSchema,
+    PostBodySchema,
+    PostQuerySchema,
     PostOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     PostMiddlewareResponse
   >;
   [ValidMethod.DELETE]?: MethodHandler<
-    DeleteInputSchema,
+    DeleteBodySchema,
+    DeleteQuerySchema,
     DeleteOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     DeleteMiddlewareResponse
   >;
   [ValidMethod.OPTIONS]?: MethodHandler<
-    OptionsInputSchema,
+    OptionsBodySchema,
+    OptionsQuerySchema,
     OptionsOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     OptionsMiddlewareResponse
   >;
   [ValidMethod.HEAD]?: MethodHandler<
-    HeadInputSchema,
+    HeadBodySchema,
+    HeadQuerySchema,
     HeadOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     HeadMiddlewareResponse
   >;
   [ValidMethod.PATCH]?: MethodHandler<
-    PatchInputSchema,
+    PatchBodySchema,
+    PatchQuerySchema,
     PatchOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,
     PatchMiddlewareResponse
   >;
   [ValidMethod.TRACE]?: MethodHandler<
-    TraceInputSchema,
+    TraceBodySchema,
+    TraceQuerySchema,
     TraceOutput,
     GlobalMiddlewareResponse,
     RouteMiddlewareResponse,

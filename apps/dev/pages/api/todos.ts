@@ -32,9 +32,12 @@ export default defineEndpoints({
   POST: {
     input: {
       contentType: 'application/json',
-      schema: z.object({
+      body: z.object({
         foo: z.string(),
         bar: z.number()
+      }),
+      query: z.object({
+        test: z.string()
       })
     },
     output: [
@@ -48,7 +51,10 @@ export default defineEndpoints({
             z.object({
               qux: z.string()
             })
-          )
+          ),
+          query: z.object({
+            test: z.string()
+          })
         })
       }
     ],
@@ -57,24 +63,28 @@ export default defineEndpoints({
     }),
     handler: async ({
       req: {
-        body: { foo, bar }
+        body: { foo, bar },
+        query: { test }
       },
       res,
       params: { qux }
     }) => {
-      res.status(201).json({ foo, bar, qux: [{ qux }] });
+      res.status(201).json({ foo, bar, qux: [{ qux }], query: { test } });
     }
   },
   PUT: {
     input: {
       contentType: 'application/json',
-      schema: yup.object({
+      body: yup.object({
         foo: yup.array(
           yup.object({
             bar: yup.string()
           })
         ),
         baz: yup.number()
+      }),
+      query: yup.object({
+        test: yup.string()
       })
     },
     output: [
@@ -88,7 +98,10 @@ export default defineEndpoints({
             })
           ),
           bar: yup.number(),
-          qux: yup.string()
+          qux: yup.string(),
+          query: yup.object({
+            test: yup.string()
+          })
         })
       }
     ],
@@ -97,12 +110,13 @@ export default defineEndpoints({
     }),
     handler: async ({
       req: {
-        body: { foo }
+        body: { foo },
+        query: { test }
       },
       res,
       params: { qux }
     }) => {
-      res.status(201).json({ foo, bar: 0, qux });
+      res.status(201).json({ foo, bar: 0, qux, query: { test } });
     }
   }
 });

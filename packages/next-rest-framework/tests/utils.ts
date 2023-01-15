@@ -15,13 +15,13 @@ export const resetCustomGlobals = () => {
   global.reservedSwaggerUiPathWarningLogged = false;
 };
 
-export const createNextRestFrameworkMocks = <Body>(
-  reqOptions?: Modify<RequestOptions, { body?: Body }>,
+export const createNextRestFrameworkMocks = <Body, Params>(
+  reqOptions?: Modify<RequestOptions, { body?: Body; query?: Params }>,
   resOptions?: ResponseOptions
 ) =>
   createMocks<
     // @ts-expect-error: Our custom response types are not compatible with node-mocks-http.
-    TypedNextApiRequest<Body>,
+    TypedNextApiRequest<Body, Params>,
     // @ts-expect-error: Same as above.
     TypedNextApiResponse
   >(reqOptions as RequestOptions, resOptions);

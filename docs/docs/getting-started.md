@@ -83,8 +83,11 @@ export default defineEndpoints({
   POST: {
     input: {
       contentType: 'application/json',
-      schema: z.object({
+      body: z.object({
         name: z.string()
+      }),
+      query: z.object({
+        page: z.number()
       })
     },
     output: [
@@ -99,6 +102,9 @@ export default defineEndpoints({
       req: {
         body: {
           name // Any other attribute will lead to TS error.
+        },
+        query: {
+          page // Any other attribute will lead to TS error.
         }
       }
     }) => {
@@ -161,10 +167,11 @@ The method handler parameters define an individual endpoint:
 
 The input object is used for the validation of the incoming request:
 
-| Name          | Description                                                                                                                           | Required |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.      | `true`   |
-| `schema`      | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body. | `true`   |
+| Name          | Description                                                                                                                               | Required |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.          | `true`   |
+| `body`        | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body.     | `true`   |
+| `query`       | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the query parameters. | `false`  |
 
 #### [Output object](#output-object)
 
@@ -182,7 +189,7 @@ The handler function takes care of your actual business logic, supporting both s
 
 | Name     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `req`    |  A strongly-typed `NextApiRequest` object containing the typed body of your request.                                                                                                                                                                                                                                                                                                                                                                                         |
+| `req`    |  A strongly-typed `NextApiRequest` object containing the typed body and query parameters of your request.                                                                                                                                                                                                                                                                                                                                                                    |
 | `res`    | A strongly-typed `NextApiResponse` object that allows you to use only pre-defined status codes, `Content-Type` headers and response data formats from the current method handler.                                                                                                                                                                                                                                                                                            |
 | `params` | An object containing the strongly-typed combined response of your [Global middleware](#global-middleware), [Route middleware](#route-middleware) and [Method middleware](#method-middleware). The parameters can also be overridden in the different middleware layers with the [Method middleware](#method-middleware) taking precedence over the [Route middleware](#route-middleware) and route middleware taking precedence over [Global middleware](#global-middleware) |
 
@@ -230,7 +237,7 @@ The method middleware function takes in an object with three attributes and opti
 
 | Name     | Description                                                                                                                                                                       |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `req`    |  A strongly-typed `NextApiRequest` object containing the typed body of your request.                                                                                              |
+| `req`    |  A strongly-typed `NextApiRequest` object containing the typed body and query parameters of your request.                                                                         |
 | `res`    | A strongly-typed `NextApiResponse` object that allows you to use only pre-defined status codes, `Content-Type` headers and response data formats from the current method handler. |
 | `params` |  The type of a combined object returned by both your [Global middleware](#global-middleware) and [Route middleware](#route-middleware).                                           |
 
@@ -270,6 +277,6 @@ Method error handler can be used to override both your global error handler and 
 
 | Name     | Description                                                                                                                                                                       |
 | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `req`    |  A strongly-typed `NextApiRequest` object containing the typed body of your request.                                                                                              |
+| `req`    |  A strongly-typed `NextApiRequest` object containing the typed body and query parameters of your request.                                                                         |
 | `res`    | A strongly-typed `NextApiResponse` object that allows you to use only pre-defined status codes, `Content-Type` headers and response data formats from the current method handler. |
 | `params` |  The type of a combined object returned by your [Global middleware](#global-middleware), [Route middleware](#route-middleware) and [Method middleware](#method-middleware).       |
