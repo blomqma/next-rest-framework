@@ -1,7 +1,14 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
-### Unreleased
+### 0.3.0 - 2023-01-15
+
+### Added
+
+- Added support for typed query parameters. This changes the `input`
+  object API by renaming the `schema` attribute to `body` and adding a
+  `query` attribute that can be used to type and validate
+  query parameters for endpoints.
 
 ### 0.2.3 - 2023-01-09
 
