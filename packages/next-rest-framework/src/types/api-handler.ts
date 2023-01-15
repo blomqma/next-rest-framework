@@ -3,6 +3,7 @@ import { TypedNextApiResponse } from './response';
 
 export type ApiHandler<
   Body,
+  Params,
   Status,
   ContentType,
   Response,
@@ -10,7 +11,7 @@ export type ApiHandler<
   RouteMiddlewareResponse,
   MethodMiddlewareResponse
 > = (params: {
-  req: TypedNextApiRequest<Body>;
+  req: TypedNextApiRequest<Body, Params>;
   res: TypedNextApiResponse<Status, ContentType, Response>;
   params:
     | Record<string, never>

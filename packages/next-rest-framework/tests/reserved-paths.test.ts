@@ -35,7 +35,7 @@ const openApiSpecHandler = defineEndpoints({
   POST: {
     input: {
       contentType: 'application/json',
-      schema: inputSchema
+      body: inputSchema
     },
     output: [
       {
@@ -54,7 +54,7 @@ const swaggerUiHandler = defineEndpoints({
   PUT: {
     input: {
       contentType: 'application/json',
-      schema: inputSchema
+      body: inputSchema
     },
     output: [
       {

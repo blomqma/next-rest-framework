@@ -5,16 +5,22 @@ import { ErrorHandler } from './error-handler';
 import { Middleware } from './middleware';
 import { TypedNextApiRequest } from './request';
 import { TypedNextApiResponse } from './response';
-import { BaseSchemaType, SchemaReturnType } from './schemas';
+import {
+  BaseObjectSchemaType,
+  BaseSchemaType,
+  SchemaReturnType
+} from './schemas';
 
 export type BaseStatus = number;
 export type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
 
 export interface InputObject<
-  InputSchema extends BaseSchemaType = BaseSchemaType
+  BodySchema extends BaseSchemaType = BaseSchemaType,
+  QuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType
 > {
   contentType: BaseContentType;
-  schema: InputSchema;
+  body: BodySchema;
+  query?: QuerySchema;
 }
 
 export interface OutputObject<
@@ -28,20 +34,24 @@ export interface OutputObject<
 }
 
 export interface MethodHandler<
-  InputSchema extends BaseSchemaType = BaseSchemaType,
+  BodySchema extends BaseSchemaType = BaseSchemaType,
+  QuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
   Output extends OutputObject = OutputObject,
   GlobalMiddlewareResponse = unknown,
   RouteMiddlewareResponse = unknown,
   MethodMiddlewareResponse = unknown
 > {
-  input?: InputObject<InputSchema>;
+  input?: InputObject<BodySchema, QuerySchema>;
   output?: Output[];
   middleware?: Middleware<
     MethodMiddlewareResponse,
     {
       params: GlobalMiddlewareResponse & RouteMiddlewareResponse;
     },
-    TypedNextApiRequest<SchemaReturnType<InputSchema>>,
+    TypedNextApiRequest<
+      SchemaReturnType<BodySchema>,
+      SchemaReturnType<QuerySchema>
+    >,
     TypedNextApiResponse<
       Output['status'],
       Output['contentType'],
@@ -49,7 +59,8 @@ export interface MethodHandler<
     >
   >;
   handler: ApiHandler<
-    SchemaReturnType<InputSchema>,
+    SchemaReturnType<BodySchema>,
+    SchemaReturnType<QuerySchema>,
     Output['status'],
     Output['contentType'],
     SchemaReturnType<Output['schema']>,
@@ -63,7 +74,10 @@ export interface MethodHandler<
         RouteMiddlewareResponse &
         MethodMiddlewareResponse;
     },
-    TypedNextApiRequest<SchemaReturnType<InputSchema>>,
+    TypedNextApiRequest<
+      SchemaReturnType<BodySchema>,
+      SchemaReturnType<QuerySchema>
+    >,
     TypedNextApiResponse<
       Output['status'],
       Output['contentType'],

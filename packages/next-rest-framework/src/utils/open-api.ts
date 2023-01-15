@@ -16,7 +16,7 @@ import {
   VERSION
 } from '../constants';
 import merge from 'lodash.merge';
-import { getJsonSchema } from './schemas';
+import { getJsonSchema, getSchemaKeys } from './schemas';
 
 export const getHTMLForSwaggerUI = ({
   headers,
@@ -259,7 +259,7 @@ export const getPathsFromMethodHandlers = ({
       let requestBodyContent: Record<string, OpenAPIV3_1.MediaTypeObject> = {};
 
       if (input) {
-        const schema = getJsonSchema({ schema: input.schema });
+        const schema = getJsonSchema({ schema: input.body });
 
         requestBodyContent = {
           [input.contentType]: {
@@ -294,6 +294,15 @@ export const getPathsFromMethodHandlers = ({
           default: defaultResponse
         }
       };
+
+      if (input?.query) {
+        generatedOperationObject.parameters = getSchemaKeys({
+          schema: input.query
+        }).map((key) => ({
+          name: key,
+          in: 'query'
+        }));
+      }
 
       paths[route] = {
         ...paths[route],

@@ -331,14 +331,14 @@ it('returns error for invalid methods', async () => {
 it.each([
   {
     name: 'Zod',
-    schema: z.object({
+    body: z.object({
       foo: z.number()
     }),
     message: ['Expected number, received string']
   },
   {
     name: 'Yup',
-    schema: yup.object({
+    body: yup.object({
       foo: yup.number()
     }),
     message: [
@@ -347,7 +347,7 @@ it.each([
   }
 ])(
   'returns error for invalid request body: $name',
-  async ({ schema, message }) => {
+  async ({ body, message }) => {
     const { req, res } = createNextRestFrameworkMocks({
       method: 'POST',
       body: {
@@ -362,7 +362,7 @@ it.each([
       [ValidMethod.POST]: {
         input: {
           contentType: 'application/json',
-          schema
+          body
         },
         output: [],
         handler: () => {}
@@ -372,7 +372,66 @@ it.each([
     expect(res._getStatusCode()).toEqual(400);
 
     expect(res._getJSONData()).toEqual({
-      message
+      message: `Invalid request body: ${message}`
+    });
+  }
+);
+
+it.each([
+  {
+    name: 'Zod',
+    body: z.object({
+      foo: z.number()
+    }),
+    query: z.object({
+      foo: z.number()
+    }),
+    message: ['Expected number, received string']
+  },
+  {
+    name: 'Yup',
+    body: yup.object({
+      foo: yup.number()
+    }),
+    query: yup.object({
+      foo: yup.number()
+    }),
+    message: [
+      'foo must be a `number` type, but the final value was: `NaN` (cast from the value `"bar"`).'
+    ]
+  }
+])(
+  'returns error for invalid query parameters: $name',
+  async ({ body, query, message }) => {
+    const { req, res } = createNextRestFrameworkMocks({
+      method: 'POST',
+      body: {
+        foo: 1
+      },
+      query: {
+        foo: 'bar'
+      },
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    await NextRestFramework().defineEndpoints({
+      [ValidMethod.POST]: {
+        input: {
+          contentType: 'application/json',
+          body,
+          query
+        },
+        output: [],
+        handler: () => {}
+      }
+    })(req, res);
+
+    expect(res._getStatusCode()).toEqual(400);
+
+    expect(res._getJSONData()).toEqual({
+      message: `Invalid query parameters: ${message}`
     });
   }
 );
@@ -392,7 +451,7 @@ it('returns error for invalid content-type', async () => {
     [ValidMethod.POST]: {
       input: {
         contentType: 'application/json',
-        schema: z.string()
+        body: z.string()
       },
       output: [],
       handler: () => {}
