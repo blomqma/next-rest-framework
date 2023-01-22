@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.3.1 - 2023-01-23
+
+### Changed
+
+- Change miscellaneous copyright texts and contact emails.
+
 ### 0.3.0 - 2023-01-15
 
 ### Added
