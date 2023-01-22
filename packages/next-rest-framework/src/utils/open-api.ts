@@ -98,7 +98,7 @@ export const getHTMLForSwaggerUI = ({
             </li>
           </ul>
           <p class="text-center">
-            Next REST Framework © Markus Blomqvist ${new Date().getFullYear()}
+            Next REST Framework © ${new Date().getFullYear()}
           </p>
         </div>
       </footer>
