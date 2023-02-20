@@ -129,17 +129,13 @@ const generatePaths = async ({
   const filterApiRoutes = (file: string) => {
     const isCatchAllRoute = file.includes('...');
 
-    const isOpenApiJsonRoute = file.endsWith(
-      `${openApiJsonPath?.split('/').at(-1)}.ts`
-    );
+    const isOpenApiJsonRoute =
+      file === `${openApiJsonPath?.split('/').at(-1)}.ts`;
 
-    const isOpenApiYamlRoute = file.endsWith(
-      `${openApiYamlPath?.split('/').at(-1)}.ts`
-    );
+    const isOpenApiYamlRoute =
+      file === `${openApiYamlPath?.split('/').at(-1)}.ts`;
 
-    const isSwaggerUiRoute = file.endsWith(
-      `${swaggerUiPath?.split('/').at(-1)}.ts`
-    );
+    const isSwaggerUiRoute = file === `${swaggerUiPath?.split('/').at(-1)}.ts`;
 
     if (
       isCatchAllRoute ||
@@ -170,23 +166,40 @@ const generatePaths = async ({
       const proto = headers['x-forwarded-proto'] ?? 'http';
       const host = headers.host;
       const url = `${proto}://${host}${route}`;
+      const controller = new AbortController();
 
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT
+      // Abort the request if it takes longer than 200ms.
+      const abortRequest = setTimeout(() => {
+        controller.abort();
+      }, 200);
+
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT
+          },
+          signal: controller.signal
+        });
+
+        clearTimeout(abortRequest);
+
+        const data: {
+          nextRestFrameworkPaths: Record<string, OpenAPIV3_1.PathItemObject>;
+        } = await res.json();
+
+        const isPathItemObject = (
+          obj: unknown
+        ): obj is OpenAPIV3_1.PathItemObject => {
+          return (
+            !!obj && typeof obj === 'object' && 'nextRestFrameworkPaths' in obj
+          );
+        };
+
+        if (res.status === 200 && isPathItemObject(data)) {
+          paths = { ...paths, ...data.nextRestFrameworkPaths };
         }
-      });
-
-      const data: Record<string, OpenAPIV3_1.PathItemObject> = await res.json();
-
-      const isPathItemObject = (
-        obj: unknown
-      ): obj is OpenAPIV3_1.PathItemObject => {
-        return typeof obj === 'object' && !!obj && !('message' in obj);
-      };
-
-      if (res.status === 200 && isPathItemObject(data)) {
-        paths = { ...paths, ...data };
+      } catch {
+        // A user defined API route returned an error.
       }
     })
   );

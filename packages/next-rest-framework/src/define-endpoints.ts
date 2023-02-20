@@ -267,13 +267,13 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
           const route = url ?? '';
 
           try {
-            const paths = getPathsFromMethodHandlers({
+            const nextRestFrameworkPaths = getPathsFromMethodHandlers({
               config,
               methodHandlers: methodHandlers as DefineEndpointsParams,
               route
             });
 
-            res.status(200).json(paths);
+            res.status(200).json({ nextRestFrameworkPaths });
             return;
           } catch (error) {
             throw Error(`OpenAPI spec generation failed for route: ${route}
