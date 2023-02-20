@@ -214,6 +214,7 @@ The optional config options allow you to customize Next REST Framework. The foll
 | `middleware`        | A global middleware for all of your API routes. See [Global middleware](#global-middleware) for more information.                                        |
 | `errorHandler`      | A [Global error handler](#global-error-handler) for all of your API routes. Defaults to a basic error handler logging the errors in non-production mode. |
 | `suppressInfo`      | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                               |
+| `apiRoutesPath`     |  Absolute path to the directory where your API routes are located - defaults to `pages/api`.                                                             |
 
 ## [Route config](#route-config)
 

@@ -120,7 +120,7 @@ export const getHTMLForSwaggerUI = ({
 // If a single path fails to generate, the entire process will fail.
 const generatePaths = async ({
   req: { headers },
-  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath }
+  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath, apiRoutesPath }
 }: {
   req: NextApiRequest;
   res: NextApiResponse;
@@ -153,7 +153,7 @@ const generatePaths = async ({
     }
   };
 
-  const mapApiRoutes = readdirSync(join(process.cwd(), 'pages/api'))
+  const mapApiRoutes = readdirSync(join(process.cwd(), apiRoutesPath ?? ''))
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`

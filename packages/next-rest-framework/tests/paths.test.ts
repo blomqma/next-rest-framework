@@ -102,24 +102,24 @@ const fooBarBazQuxMethodHandlers = defineEndpoints({
   }
 });
 
-jest.mock('../../../apps/dev/pages/api/foo', () => fooMethodHandlers, {
+jest.mock('../../../apps/src/dev/pages/api/foo', () => fooMethodHandlers, {
   virtual: true
 });
 
 jest.mock(
-  '../../../apps/dev/pages/api/foo/bar',
+  '../../../apps/src/dev/pages/api/foo/bar',
   () => fooBarBazMethodHandlers,
   { virtual: true }
 );
 
 jest.mock(
-  '../../../apps/dev/pages/api/foo/bar/baz',
+  '../../../apps/src/dev/pages/api/foo/bar/baz',
   () => fooBarBazMethodHandlers,
   { virtual: true }
 );
 
 jest.mock(
-  '../../../apps/dev/pages/api/foo/bar/[qux]/index',
+  '../../../apps/src/dev/pages/api/foo/bar/[qux]/index',
   () => fooBarBazQuxMethodHandlers,
   { virtual: true }
 );
@@ -171,7 +171,9 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
     }
   });
 
-  await NextRestFramework().defineCatchAllHandler()(req, res);
+  await NextRestFramework({
+    apiRoutesPath: 'src/pages/api'
+  }).defineCatchAllHandler()(req, res);
   const { paths } = res._getJSONData();
 
   const schema = {

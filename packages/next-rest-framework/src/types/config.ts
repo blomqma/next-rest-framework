@@ -21,4 +21,5 @@ export interface NextRestFrameworkConfig<GlobalMiddlewareResponse = unknown> {
   middleware?: Middleware<GlobalMiddlewareResponse>; // A middleware used for all of your APIs - useful for e.g. authentication. The return object will be passed to your request handlers.
   errorHandler?: ErrorHandler; // A function that will be called when an error occurs. By default, it will return a 500 status code and a default error unless your provide a custom response.
   suppressInfo?: boolean; // Setting this to `true` will suppress all informational logs from Next REST Framework.
+  apiRoutesPath?: string; // Absolute path to the directory where your API routes are located - defaults to `pages/api`.
 }

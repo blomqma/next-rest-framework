@@ -28,5 +28,6 @@ export const getDefaultConfig = ({
   swaggerUiPath: '/api',
   exposeOpenApiSpec: true,
   errorHandler: logNextRestFrameworkError,
-  suppressInfo: false
+  suppressInfo: false,
+  apiRoutesPath: 'pages/api'
 });
