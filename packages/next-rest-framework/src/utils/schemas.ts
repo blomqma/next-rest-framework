@@ -1,16 +1,33 @@
 import { OpenAPIV3_1 } from 'openapi-types';
-import { z } from 'zod';
-import * as yup from 'yup';
+import {
+  AnySchema,
+  ArraySchema,
+  BooleanSchema,
+  NumberSchema,
+  ObjectSchema,
+  StringSchema,
+  ValidationError
+} from 'yup';
+import {
+  AnyZodObject,
+  ZodArray,
+  ZodBoolean,
+  ZodNumber,
+  ZodRawShape,
+  ZodSchema,
+  ZodString,
+  ZodTypeAny
+} from 'zod';
 import { BaseObjectSchemaType, BaseSchemaType } from '../types';
 
-export const isZodSchema = (schema: unknown): schema is z.ZodSchema =>
+export const isZodSchema = (schema: unknown): schema is ZodSchema =>
   !!schema && typeof schema === 'object' && '_def' in schema;
 
 const zodSchemaValidator = ({
   schema,
   obj
 }: {
-  schema: z.ZodSchema;
+  schema: ZodSchema;
   obj: unknown;
 }) => {
   const data = schema.safeParse(obj);
@@ -25,30 +42,30 @@ const zodSchemaValidator = ({
   };
 };
 
-const isZodString = (schema: z.ZodTypeAny): schema is z.ZodString => {
+const isZodString = (schema: ZodTypeAny): schema is ZodString => {
   return schema._def.typeName === 'ZodString';
 };
 
-const isZodNumber = (schema: z.ZodTypeAny): schema is z.ZodNumber => {
+const isZodNumber = (schema: ZodTypeAny): schema is ZodNumber => {
   return schema._def.typeName === 'ZodNumber';
 };
 
-const isZodBoolean = (schema: z.ZodTypeAny): schema is z.ZodBoolean => {
+const isZodBoolean = (schema: ZodTypeAny): schema is ZodBoolean => {
   return schema._def.typeName === 'ZodBoolean';
 };
 
-const isZodArray = (schema: z.ZodTypeAny): schema is z.ZodArray<any> => {
+const isZodArray = (schema: ZodTypeAny): schema is ZodArray<any> => {
   return schema._def.typeName === 'ZodArray';
 };
 
-const isZodObject = (schema: z.ZodTypeAny): schema is z.AnyZodObject => {
+const isZodObject = (schema: ZodTypeAny): schema is AnyZodObject => {
   return schema._def.typeName === 'ZodObject';
 };
 
-export const convertZodSchema = (schema: z.ZodSchema) => {
+export const convertZodSchema = (schema: ZodSchema) => {
   let jsonSchema = {};
 
-  const convertZodShape = (shape: z.ZodRawShape) => {
+  const convertZodShape = (shape: ZodRawShape) => {
     const jsonSchema: OpenAPIV3_1.SchemaObject = {};
 
     Object.entries(shape).forEach(([key, value]) => {
@@ -123,14 +140,17 @@ export const convertZodSchema = (schema: z.ZodSchema) => {
   return jsonSchema;
 };
 
-const isYupSchema = (schema: unknown): schema is yup.AnySchema =>
+const isYupSchema = (schema: unknown): schema is AnySchema =>
   !!schema && typeof schema === 'object' && 'spec' in schema;
+
+const isYupValidationError = (error: unknown): error is ValidationError =>
+  error instanceof Error && 'inner' in error;
 
 const yupSchemaValidator = async ({
   schema,
   obj
 }: {
-  schema: yup.AnySchema;
+  schema: AnySchema;
   obj: unknown;
 }) => {
   let valid = true;
@@ -141,7 +161,7 @@ const yupSchemaValidator = async ({
   } catch (e) {
     valid = false;
 
-    if (e instanceof yup.ValidationError) {
+    if (isYupValidationError(e)) {
       errors = e.errors;
     } else {
       errors = ['Unexpected error.'];
@@ -154,32 +174,30 @@ const yupSchemaValidator = async ({
   };
 };
 
-const isYupString = (schema: yup.AnySchema): schema is yup.StringSchema => {
+const isYupString = (schema: AnySchema): schema is StringSchema => {
   return schema.type === 'string';
 };
 
-const isYupNumber = (schema: yup.AnySchema): schema is yup.NumberSchema => {
+const isYupNumber = (schema: AnySchema): schema is NumberSchema => {
   return schema.type === 'number';
 };
 
-const isYupBoolean = (schema: yup.AnySchema): schema is yup.BooleanSchema => {
+const isYupBoolean = (schema: AnySchema): schema is BooleanSchema => {
   return schema.type === 'boolean';
 };
 
-const isYupArray = (schema: yup.AnySchema): schema is yup.ArraySchema<any> => {
+const isYupArray = (schema: AnySchema): schema is ArraySchema<any> => {
   return schema.type === 'array';
 };
 
-const isYupObject = (
-  schema: yup.AnySchema
-): schema is yup.ObjectSchema<any> => {
+const isYupObject = (schema: AnySchema): schema is ObjectSchema<any> => {
   return schema.type === 'object';
 };
 
-const convertYupSchema = (schema: yup.AnySchema) => {
+const convertYupSchema = (schema: AnySchema) => {
   let jsonSchema = {};
 
-  const convertYupFields = (fields: yup.ObjectSchema<any>) => {
+  const convertYupFields = (fields: ObjectSchema<any>) => {
     const jsonSchema: OpenAPIV3_1.SchemaObject = {};
 
     Object.entries(fields).forEach(([key, value]) => {
