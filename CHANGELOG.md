@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.3.4 - 2023-02-20
+
+### Fixed
+
+- Fix Zod/Yup typings so that both of those dependencies are no longer needed for using the framework.
+
 ### 0.3.3 - 2023-02-20
 
 ### Fixed
