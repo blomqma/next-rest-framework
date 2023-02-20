@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.3.2 - 2023-02-20
+
+### Added
+
+- Add support for projects using a `src` folder with a new config option called `apiRoutesPath`.
+
 ### 0.3.1 - 2023-01-23
 
 ### Changed
