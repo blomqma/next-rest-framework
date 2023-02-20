@@ -1,6 +1,20 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.3.3 - 2023-02-20
+
+### Fixed
+
+- This fixes some compability issues with user-defined
+  API routes that are not using Next REST Framework.
+  There was a bug in the API route path matching where
+  the comparison to the reserved paths was not exact,
+  making some user-defined API routes to be completely
+  skipped in some cases.
+- Other fix here is that the instrumentation requests are now
+  aborted after 200ms in case the user-defined APIs do not
+  respond in that time.
+
 ### 0.3.2 - 2023-02-20
 
 ### Added
