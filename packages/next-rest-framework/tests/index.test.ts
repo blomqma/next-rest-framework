@@ -465,6 +465,49 @@ it('returns error for invalid content-type', async () => {
   });
 });
 
+it.each([
+  {
+    definedContentType: 'application/json',
+    requestContentType: 'application/json'
+  },
+  {
+    definedContentType: 'application/json',
+    requestContentType: 'application/json; charset=utf-8'
+  },
+  {
+    definedContentType: 'application/form-data',
+    requestContentType: 'application/form-data; name: "foo"'
+  }
+])(
+  'works with different content types: %s',
+  async ({ definedContentType, requestContentType }) => {
+    const { req, res } = createNextRestFrameworkMocks({
+      method: 'POST',
+      body: {
+        foo: 'bar'
+      },
+      headers: {
+        'content-type': requestContentType
+      }
+    });
+
+    await NextRestFramework().defineEndpoints({
+      [ValidMethod.POST]: {
+        input: {
+          contentType: definedContentType,
+          body: z.object({
+            foo: z.string()
+          })
+        },
+        output: [],
+        handler: () => {}
+      }
+    })(req, res);
+
+    expect(res._getStatusCode()).toEqual(200);
+  }
+);
+
 it('works with middlewares', async () => {
   const { req, res } = createNextRestFrameworkMocks({
     method: 'GET'
