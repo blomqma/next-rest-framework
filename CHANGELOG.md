@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.3.5 - 2023-02-21
+
+### Fixed
+
+- Fix content type header bug by removing the content type header parameters from the header validation logic. This caused e.g. form data requests to fail at runtime.
+
 ### 0.3.4 - 2023-02-20
 
 ### Fixed
