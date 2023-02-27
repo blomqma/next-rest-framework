@@ -13,13 +13,17 @@ import chalk from 'chalk';
 import { z } from 'zod';
 import * as yup from 'yup';
 
+const createDirent = (name: string) => ({
+  isDirectory: () => name === 'foo',
+  isFile: () => name !== 'foo',
+  name
+});
+
 jest.mock('fs', () => ({
-  readdirSync: () => [
-    'foo.ts',
-    'foo/bar.ts',
-    'foo/bar/baz.ts',
-    'foo/bar/[qux]/index.ts'
-  ]
+  readdirSync: () =>
+    ['foo.ts', 'foo/bar.ts', 'foo/bar/baz.ts', 'foo/bar/[qux]/index.ts'].map(
+      createDirent
+    )
 }));
 
 beforeEach(() => {

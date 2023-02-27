@@ -1,4 +1,3 @@
-import { readdirSync } from 'fs';
 import { join } from 'path';
 import http from 'http';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -17,6 +16,7 @@ import {
 } from '../constants';
 import merge from 'lodash.merge';
 import { getJsonSchema, getSchemaKeys } from './schemas';
+import { readdirSync } from 'fs';
 
 export const getHTMLForSwaggerUI = ({
   headers,
@@ -116,6 +116,17 @@ export const getHTMLForSwaggerUI = ({
   </html>`;
 };
 
+const getNestedApiRoutes = (basePath: string, dir: string): string[] => {
+  const dirents = readdirSync(join(basePath, dir), { withFileTypes: true });
+
+  const files = dirents.map((dirent) => {
+    const res = join(dir, dirent.name);
+    return dirent.isDirectory() ? getNestedApiRoutes(basePath, res) : res;
+  });
+
+  return files.flat();
+};
+
 // Generate the OpenAPI paths from the Next.js API routes.
 // If a single path fails to generate, the entire process will fail.
 const generatePaths = async ({
@@ -149,7 +160,9 @@ const generatePaths = async ({
     }
   };
 
-  const mapApiRoutes = readdirSync(join(process.cwd(), apiRoutesPath ?? ''))
+  const basePath = join(process.cwd(), apiRoutesPath ?? '');
+
+  const mapApiRoutes = getNestedApiRoutes(basePath, '')
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`
