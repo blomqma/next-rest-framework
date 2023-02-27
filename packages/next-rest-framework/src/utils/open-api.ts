@@ -116,6 +116,16 @@ export const getHTMLForSwaggerUI = ({
   </html>`;
 };
 
+function getFiles(prefix:string, dir: string): string[] {
+  const results: string[] = [];
+  var dirents = readdirSync(join(prefix, dir), { withFileTypes: true });
+  const files = dirents.map((dirent) => {
+    const res = join(dir, dirent.name);
+    return dirent.isDirectory() ? getFiles(prefix, res) : res;
+  })
+  return Array.prototype.concat(...files);
+}
+
 // Generate the OpenAPI paths from the Next.js API routes.
 // If a single path fails to generate, the entire process will fail.
 const generatePaths = async ({
@@ -149,7 +159,9 @@ const generatePaths = async ({
     }
   };
 
-  const mapApiRoutes = readdirSync(join(process.cwd(), apiRoutesPath ?? ''))
+
+
+  const mapApiRoutes = getFiles(join(process.cwd(), apiRoutesPath ?? ''), '')
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`
