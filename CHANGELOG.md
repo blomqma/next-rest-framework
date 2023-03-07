@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.3.6 - 2023-03-08
+
+### Fixed
+
+- Fix a bug that prevented nested API routes from being included into the OpenAPI spec.
+
 ### 0.3.5 - 2023-02-21
 
 ### Fixed
