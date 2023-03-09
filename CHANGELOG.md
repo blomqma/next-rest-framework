@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.3.7 - 2023-03-09
+
+### Fixed
+
+- Fix previous release not reflecting the latest changes introduced in the release notes of v0.3.6.
+
 ### 0.3.6 - 2023-03-08
 
 ### Fixed
