@@ -264,7 +264,7 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
         };
 
         if (headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT) {
-          const route = url ?? '';
+          const route = decodeURIComponent(url ?? '');
 
           try {
             const nextRestFrameworkPaths = getPathsFromMethodHandlers({
@@ -310,19 +310,21 @@ ${error}`);
             return;
           }
 
-          const validateBody = await validateSchema?.({
-            schema: bodySchema,
-            obj: body
-          });
+          if (bodySchema) {
+            const validateBody = await validateSchema?.({
+              schema: bodySchema,
+              obj: body
+            });
 
-          if (validateBody) {
-            const { valid, errors } = validateBody;
+            if (validateBody) {
+              const { valid, errors } = validateBody;
 
-            if (!valid) {
-              res
-                .status(400)
-                .json({ message: `Invalid request body: ${errors}` });
-              return;
+              if (!valid) {
+                res
+                  .status(400)
+                  .json({ message: `Invalid request body: ${errors}` });
+                return;
+              }
             }
           }
 

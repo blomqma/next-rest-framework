@@ -18,8 +18,8 @@ export interface InputObject<
   BodySchema extends BaseSchemaType = BaseSchemaType,
   QuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType
 > {
-  contentType: BaseContentType;
-  body: BodySchema;
+  contentType?: BaseContentType;
+  body?: BodySchema;
   query?: QuerySchema;
 }
 

@@ -284,7 +284,7 @@ export const getPathsFromMethodHandlers = ({
 
       let requestBodyContent: Record<string, OpenAPIV3_1.MediaTypeObject> = {};
 
-      if (input) {
+      if (input?.body && input?.contentType) {
         const schema = getJsonSchema({ schema: input.body });
 
         requestBodyContent = {
