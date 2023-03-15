@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.4.0 - 2023-03-15
+
+### Fixed
+
+- Fix the OpenAPI instrumentation for dynamic routes containing parameters that were not displayed correctly in the Swagger UI.
+
+### Changed
+
+- Defining content type and request body are no longer required in the `input` object. Making the endpoint definition friendlier for different types of requests.
+
 ### 0.3.7 - 2023-03-09
 
 ### Fixed
