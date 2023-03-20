@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.4.1 - 2023-03-20
+
+### Fixed
+
+- Fix the getting started docs containing a typo that caused an error.
+
 ### 0.4.0 - 2023-03-15
 
 ### Fixed
