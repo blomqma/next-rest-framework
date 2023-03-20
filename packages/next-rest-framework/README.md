@@ -89,7 +89,9 @@ To use Next REST Framework you need to initialize the client somewhere in your N
 
 import { NextRestFramework } from 'next-rest-framework';
 
-export const { defineCatchAllHandler, defineEndpoints } = NextRestFramework();
+export const { defineCatchAllHandler, defineEndpoints } = NextRestFramework({
+  //  apiRoutesPath: "src/pages/api", // Only needed if using the src/ folder.
+});
 ```
 
 The complete API of the initialized client is the following:
@@ -162,9 +164,9 @@ export default defineEndpoints({
       body: z.object({
         name: z.string()
       }),
-      query: {
+      query: z.object({
         page: z.number()
-      }
+      })
     },
     output: [
       {
