@@ -352,11 +352,19 @@ ${error}`);
           res
         })) as Awaited<GlobalMiddlewareResponse>;
 
+        if (res.writableEnded) {
+          return;
+        }
+
         const routeMiddlewareParams = (await methodHandlers.middleware?.({
           req,
           res,
           params: globalMiddlewareParams
         })) as Awaited<RouteMiddlewareResponse>;
+
+        if (res.writableEnded) {
+          return;
+        }
 
         const methodMiddlewareParams = (await methodHandler.middleware?.({
           req,
@@ -366,6 +374,10 @@ ${error}`);
             ...routeMiddlewareParams
           }
         })) as Awaited<MiddlewareResponse>;
+
+        if (res.writableEnded) {
+          return;
+        }
 
         const params = {
           ...globalMiddlewareParams,
@@ -386,6 +398,11 @@ ${error}`);
             error,
             params
           });
+
+          if (res.writableEnded) {
+            return;
+          }
+
           returnUnexpectedError();
         }
       };
