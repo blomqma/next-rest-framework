@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.4.2 - 2023-03-21
+
+### Fixed
+
+- Fix bug with middlewares and error handlers that responded to the API request and the execution was not stopped.
+
 ### 0.4.1 - 2023-03-20
 
 ### Fixed
