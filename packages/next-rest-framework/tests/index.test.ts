@@ -508,7 +508,7 @@ it.each([
   }
 );
 
-it('works with middlewares', async () => {
+it('works with middleware parameters', async () => {
   const { req, res } = createNextRestFrameworkMocks({
     method: 'GET'
   });
@@ -547,6 +547,79 @@ it('works with middlewares', async () => {
   });
 });
 
+it('works with a global middleware that ends the request', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  await NextRestFramework({
+    middleware: ({ res }) => {
+      res.status(400).json({ message: 'foo' });
+      return {};
+    }
+  }).defineEndpoints({
+    GET: {
+      handler: ({ res }) => {
+        res.status(200).json({ foo: 'bar' });
+      }
+    }
+  })(req, res);
+
+  expect(res._getStatusCode()).toEqual(400);
+
+  expect(res._getJSONData()).toEqual({
+    message: 'foo'
+  });
+});
+
+it('works with a route middleware that ends the request', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  await NextRestFramework().defineEndpoints({
+    middleware: ({ res }) => {
+      res.status(400).json({ message: 'foo' });
+      return {};
+    },
+    GET: {
+      handler: ({ res }) => {
+        res.status(200).json({ foo: 'bar' });
+      }
+    }
+  })(req, res);
+
+  expect(res._getStatusCode()).toEqual(400);
+
+  expect(res._getJSONData()).toEqual({
+    message: 'foo'
+  });
+});
+
+it('works with a method middleware that ends the request', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'GET'
+  });
+
+  await NextRestFramework().defineEndpoints({
+    GET: {
+      middleware: ({ res }) => {
+        res.status(400).json({ message: 'foo' });
+        return {};
+      },
+      handler: ({ res }) => {
+        res.status(200).json({ foo: 'bar' });
+      }
+    }
+  })(req, res);
+
+  expect(res._getStatusCode()).toEqual(400);
+
+  expect(res._getJSONData()).toEqual({
+    message: 'foo'
+  });
+});
+
 it('returns a default error response', async () => {
   const { req, res } = createNextRestFrameworkMocks({
     method: 'GET'
@@ -576,8 +649,9 @@ it('works with global error handler', async () => {
   console.log = jest.fn();
 
   await NextRestFramework({
-    errorHandler: () => {
+    errorHandler: ({ res }) => {
       console.log('foo');
+      res.status(500).json({ message: 'foo' });
     }
   }).defineEndpoints({
     GET: {
@@ -589,6 +663,11 @@ it('works with global error handler', async () => {
   })(req, res);
 
   expect(console.log).toBeCalledWith('foo');
+  expect(res._getStatusCode()).toEqual(500);
+
+  expect(res._getJSONData()).toEqual({
+    message: 'foo'
+  });
 });
 
 it('works with route-specific error handler', async () => {
@@ -599,8 +678,9 @@ it('works with route-specific error handler', async () => {
   console.log = jest.fn();
 
   await NextRestFramework().defineEndpoints({
-    errorHandler: () => {
+    errorHandler: ({ res }) => {
       console.log('bar');
+      res.status(500).json({ message: 'bar' });
     },
     GET: {
       output: [],
@@ -611,6 +691,11 @@ it('works with route-specific error handler', async () => {
   })(req, res);
 
   expect(console.log).toBeCalledWith('bar');
+  expect(res._getStatusCode()).toEqual(500);
+
+  expect(res._getJSONData()).toEqual({
+    message: 'bar'
+  });
 });
 
 it('works with method-specific error handler', async () => {
@@ -622,17 +707,22 @@ it('works with method-specific error handler', async () => {
 
   await NextRestFramework().defineEndpoints({
     GET: {
-      output: [],
       handler: () => {
         throw Error('Something went wrong');
       },
-      errorHandler: () => {
+      errorHandler: ({ res }) => {
         console.log('baz');
+        res.status(500).json({ message: 'baz' });
       }
     }
   })(req, res);
 
   expect(console.log).toBeCalledWith('baz');
+  expect(res._getStatusCode()).toEqual(500);
+
+  expect(res._getJSONData()).toEqual({
+    message: 'baz'
+  });
 });
 
 it('suppresses errors in production mode by default', async () => {
