@@ -13,7 +13,6 @@ export const getDefaultConfig = ({
     openApiSpecOverrides: OpenAPIV3_1.Document;
   }
 > => ({
-  localOpenApiSpecPath: 'openapi.json',
   openApiSpecOverrides: {
     openapi: OPEN_API_VERSION,
     info: {

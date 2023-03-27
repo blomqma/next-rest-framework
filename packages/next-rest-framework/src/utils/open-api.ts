@@ -229,8 +229,6 @@ export const getOpenApiSpecWithPaths = async ({
   res: NextApiResponse;
   config: NextRestFrameworkConfig;
 }) => {
-  const localOpenApiSpecPath = config.localOpenApiSpecPath ?? '';
-
   let spec;
 
   if (process.env.NODE_ENV !== 'production') {
@@ -243,16 +241,18 @@ export const getOpenApiSpecWithPaths = async ({
     };
 
     writeFileSync(
-      join(process.cwd(), localOpenApiSpecPath),
+      join(process.cwd(), 'openapi.json'),
       JSON.stringify(spec, null, 2),
       null
     );
   } else {
     try {
-      const data = readFileSync(join(process.cwd(), localOpenApiSpecPath));
+      const data = readFileSync(join(process.cwd(), 'openapi.json'));
       spec = JSON.parse(data.toString());
-    } catch {
+    } catch (e) {
       // No generated paths found.
+
+      console.error(e);
     }
   }
 
