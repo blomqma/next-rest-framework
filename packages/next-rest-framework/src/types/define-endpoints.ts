@@ -112,5 +112,5 @@ export interface DefineEndpointsParams<
   errorHandler?: ErrorHandler<{
     params: GlobalMiddlewareResponse & RouteMiddlewareResponse;
   }>;
-  openApiSpec?: OpenAPIV3_1.PathItemObject;
+  openApiSpecOverrides?: OpenAPIV3_1.PathItemObject;
 }

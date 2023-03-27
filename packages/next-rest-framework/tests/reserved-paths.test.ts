@@ -6,7 +6,8 @@ import * as yup from 'yup';
 
 jest.mock('fs', () => ({
   readdirSync: () => ['openapi.json.ts', 'openapi.yaml.ts', 'docs.ts'],
-  readFileSync: () => ''
+  readFileSync: () => '',
+  writeFileSync: () => {}
 }));
 
 beforeEach(() => {

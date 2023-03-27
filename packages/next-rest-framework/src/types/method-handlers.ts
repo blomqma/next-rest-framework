@@ -84,5 +84,5 @@ export interface MethodHandler<
       SchemaReturnType<Output['schema']>
     >
   >;
-  openApiSpec?: OpenAPIV3_1.OperationObject;
+  openApiSpecOverrides?: OpenAPIV3_1.OperationObject;
 }

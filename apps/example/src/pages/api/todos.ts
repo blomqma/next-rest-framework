@@ -30,7 +30,7 @@ export default defineEndpoints({
   POST: {
     input: {
       contentType: 'application/json',
-      schema: z.object({
+      body: z.object({
         name: z.string()
       })
     },

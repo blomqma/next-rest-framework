@@ -23,7 +23,8 @@ jest.mock('fs', () => ({
   readdirSync: () =>
     ['foo.ts', 'foo/bar.ts', 'foo/bar/baz.ts', 'foo/bar/[qux]/index.ts'].map(
       createDirent
-    )
+    ),
+  writeFileSync: () => {}
 }));
 
 beforeEach(() => {
