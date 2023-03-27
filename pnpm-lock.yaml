@@ -49,9 +49,9 @@ importers:
 
   apps/example:
     specifiers:
-      next-rest-framework: ^0.4.2
+      next-rest-framework: 0.5.0
     dependencies:
-      next-rest-framework: 0.4.2
+      next-rest-framework: link:../../packages/next-rest-framework
 
   docs:
     specifiers:
@@ -7568,15 +7568,6 @@ packages:
 
   /neo-async/2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
-
-  /next-rest-framework/0.4.2:
-    resolution: {integrity: sha512-ygyfARa7dJX7cgNzRcE9+oJ9V5cSQ5H9tMCE5MAgj6qUHZ04Nam7ns6Kxc2iRO9vqHWrXrXIcd9g5S+CVntyYQ==}
-    dependencies:
-      chalk: 4.1.2
-      js-yaml: 4.1.0
-      lodash.isequalwith: 4.4.0
-      lodash.merge: 4.6.2
-    dev: false
 
   /next/13.0.2_biqbaboplfbrettd7655fr4n2y:
     resolution: {integrity: sha512-uQ5z5e4D9mOe8+upy6bQdYYjo/kk1v3jMW87kTy2TgAyAsEO+CkwRnMgyZ4JoHEnhPZLHwh7dk0XymRNLe1gFw==}

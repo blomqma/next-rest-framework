@@ -118,7 +118,7 @@ This is enough to get you started. By default Next REST Framework gives you thre
 - `/api`: Swagger UI using the auto-generated OpenAPI spec.
 - `/api/openapi.json`: An auto-generated openapi.json document.
 - `/api/openapi.yaml`: An auto-generated openapi.yaml document.
-- A local `openapi.json` file that will be generated as you call any of the above endpoints. This file should be under version control and you should always keep it in the path defined by the `localOpenApiSpecPath` [Config option](#config-options). It will dynamically update itself as you develop your application locally and is used by Next REST Framework when you run your application in production. Remember that it will be dynamically regenerated every time you call any of the above endpoints in development mode!
+- A local `openapi.json` file that will be generated as you call any of the above endpoints. This file should be under version control and you should always keep it in the project root. It will dynamically update itself as you develop your application locally and is used by Next REST Framework when you run your application in production. Remember that it will be dynamically regenerated every time you call any of the above endpoints in development mode.
 
 All of these are configurable with the [Config options](#config-options) that you can pass for your `NextRestFramework` client. You can also use your existing catch-all logic simply by passing a [Route config](#route-config) to your `defineCatchAllHandler` if you want to use e.g. custom 404 handlers, redirections etc.
 
@@ -207,18 +207,16 @@ These type-safe endpoints will be now auto-generated to your OpenAPI spec and Sw
 
 The optional config options allow you to customize Next REST Framework. The following options can be passed as a parameter for your `NextRestFramework` client in an object:
 
-| Name                   | Description                                                                                                                                              |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `localOpenApiSpecPath` | Absolute path to the auto-generated local OpenAPI spec file - defaults to `openapi.json`.                                                                |
-| `openApiSpecOverrides` | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.          |
-| `openApiJsonPath`      | Custom path for serving `openapi.json` file. Defaults to `/api/openapi.json`.                                                                            |
-| `openApiYamlPath`      | Custom path for serving `openapi.yaml` file. Defaults to `/api/openapi.yaml`.                                                                            |
-| `swaggerUiPath`        | Custom path for service Swagger UI. Defaults to `/api`.                                                                                                  |
-| `exposeOpenApiSpec`    | Setting this to `false` will serve none of the OpenAPI documents neither the Swagger UI. Defaults to `true`.                                             |
-| `middleware`           | A global middleware for all of your API routes. See [Global middleware](#global-middleware) for more information.                                        |
-| `errorHandler`         | A [Global error handler](#global-error-handler) for all of your API routes. Defaults to a basic error handler logging the errors in non-production mode. |
-| `suppressInfo`         | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                               |
-| `apiRoutesPath`        |  Absolute path to the directory where your API routes are located - defaults to `pages/api`.                                                             |
+| Name                | Description                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openApiJsonPath`   | Custom path for serving `openapi.json` file. Defaults to `/api/openapi.json`.                                                                            |
+| `openApiYamlPath`   | Custom path for serving `openapi.yaml` file. Defaults to `/api/openapi.yaml`.                                                                            |
+| `swaggerUiPath`     | Custom path for service Swagger UI. Defaults to `/api`.                                                                                                  |
+| `exposeOpenApiSpec` | Setting this to `false` will serve none of the OpenAPI documents neither the Swagger UI. Defaults to `true`.                                             |
+| `middleware`        | A global middleware for all of your API routes. See [Global middleware](#global-middleware) for more information.                                        |
+| `errorHandler`      | A [Global error handler](#global-error-handler) for all of your API routes. Defaults to a basic error handler logging the errors in non-production mode. |
+| `suppressInfo`      | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                               |
+| `apiRoutesPath`     |  Absolute path to the directory where your API routes are located - defaults to `pages/api`.                                                             |
 
 ## [Route config](#route-config)
 
