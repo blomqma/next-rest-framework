@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.5.0 - 2023-03-28
+
+### Changed
+
+- Change OpenAPI generation by generating a local OpenAPI spec file that is dynamically updated in local development and used in production for the OpenAPI endpoints. Rename the `openApiSpec` config option to `openApiSpecOverrides` for better clarity with the added `localOpenApiSpec` path option.
+
 ### 0.4.2 - 2023-03-21
 
 ### Fixed
