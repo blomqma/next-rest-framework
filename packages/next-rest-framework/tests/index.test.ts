@@ -11,7 +11,8 @@ import * as yup from 'yup';
 
 jest.mock('fs', () => ({
   readdirSync: () => [],
-  readFileSync: () => ''
+  readFileSync: () => '',
+  writeFileSync: () => {}
 }));
 
 beforeEach(() => {
@@ -25,7 +26,7 @@ it('uses the default config by default', () => {
 
 it('sets the global config', () => {
   const customConfig: NextRestFrameworkConfig = {
-    openApiSpec: {
+    openApiSpecOverrides: {
       info: {
         title: 'Some Title',
         version: '1.2.3'

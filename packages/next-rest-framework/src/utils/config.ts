@@ -10,10 +10,11 @@ export const getDefaultConfig = ({
 } = {}): Modify<
   NextRestFrameworkConfig,
   {
-    openApiSpec: OpenAPIV3_1.Document;
+    openApiSpecOverrides: OpenAPIV3_1.Document;
   }
 > => ({
-  openApiSpec: {
+  localOpenApiSpecPath: 'openapi.json',
+  openApiSpecOverrides: {
     openapi: OPEN_API_VERSION,
     info: {
       title: 'Next REST Framework',

@@ -16,7 +16,7 @@ import {
 } from '../constants';
 import merge from 'lodash.merge';
 import { getJsonSchema, getSchemaKeys } from './schemas';
-import { readdirSync } from 'fs';
+import { readdirSync, readFileSync, writeFileSync } from 'fs';
 
 export const getHTMLForSwaggerUI = ({
   headers,
@@ -229,13 +229,32 @@ export const getOpenApiSpecWithPaths = async ({
   res: NextApiResponse;
   config: NextRestFrameworkConfig;
 }) => {
-  const paths = await generatePaths({ req, res, config });
+  const localOpenApiSpecPath = config.localOpenApiSpecPath ?? '';
 
-  const spec = {
-    ...config.openApiSpec,
-    openapi: OPEN_API_VERSION,
-    paths: merge(config.openApiSpec?.paths, paths)
-  };
+  let spec;
+
+  if (process.env.NODE_ENV !== 'production') {
+    const paths = await generatePaths({ req, res, config });
+
+    spec = {
+      ...config.openApiSpecOverrides,
+      openapi: OPEN_API_VERSION,
+      paths: merge(config.openApiSpecOverrides?.paths, paths)
+    };
+
+    writeFileSync(
+      join(process.cwd(), localOpenApiSpecPath),
+      JSON.stringify(spec, null, 2),
+      null
+    );
+  } else {
+    try {
+      const data = readFileSync(join(process.cwd(), localOpenApiSpecPath));
+      spec = JSON.parse(data.toString());
+    } catch {
+      // No generated paths found.
+    }
+  }
 
   return spec;
 };
@@ -266,17 +285,17 @@ export const getPathsFromMethodHandlers = ({
   methodHandlers: DefineEndpointsParams;
   route: string;
 }) => {
-  const { openApiSpec } = methodHandlers;
+  const { openApiSpecOverrides } = methodHandlers;
   const paths: OpenAPIV3_1.PathsObject = {};
 
   paths[route] = {
-    ...openApiSpec
+    ...openApiSpecOverrides
   };
 
   Object.keys(methodHandlers)
     .filter(isValidMethod)
     .forEach((_method) => {
-      const { openApiSpec, input, output } = methodHandlers[
+      const { openApiSpecOverrides, input, output } = methodHandlers[
         _method
       ] as MethodHandler;
 
@@ -332,7 +351,7 @@ export const getPathsFromMethodHandlers = ({
 
       paths[route] = {
         ...paths[route],
-        [method]: merge(generatedOperationObject, openApiSpec)
+        [method]: merge(generatedOperationObject, openApiSpecOverrides)
       };
     });
 

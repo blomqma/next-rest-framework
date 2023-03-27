@@ -5,7 +5,7 @@ export default defineEndpoints({
   POST: {
     input: {
       contentType: 'application/json',
-      schema: object({
+      body: object({
         foo: string()
       })
     },
