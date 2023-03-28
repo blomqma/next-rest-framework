@@ -1,6 +1,6 @@
 ---
-slug: version-0-3-4-released
-title: Version 0.3.4. released
+slug: next-rest-framework-0-3-4
+title: Next REST Framework 0.3.4
 authors: blomqma
 tags: [Next.js, REST, API, TypeScript, object-schema validation, OpenAPI]
 ---
