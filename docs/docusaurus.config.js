@@ -64,6 +64,11 @@ const config = {
           },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
+            href: 'https://next-rest-framework-demo.vercel.app/api',
+            label: 'Live demo',
+            position: 'left'
+          },
+          {
             href: 'https://github.com/blomqma/next-rest-framework',
             label: 'GitHub',
             position: 'right'
