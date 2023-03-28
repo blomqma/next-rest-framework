@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.5.1 - 2023-03-28
+
+### Fixed
+
+- Revert the addition of the `localOpenApiSpec` config option. Using a user-defined route resulted in the generated OpenAPI spec file not being included in the Vercel build artifacts, thus making it not work. This issue is fixed by using a static path for the spec file so it will be always called `openapi.json` and lies in the project root.
+
 ### 0.5.0 - 2023-03-28
 
 ### Changed
