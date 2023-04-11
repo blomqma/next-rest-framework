@@ -26,6 +26,14 @@ export const getDefaultConfig = ({
   openApiJsonPath: '/api/openapi.json',
   openApiYamlPath: '/api/openapi.yaml',
   swaggerUiPath: '/api',
+  swaggerUiConfig: {
+    title: 'Next REST Framework | SwaggerUI',
+    description: 'Next REST Framework SwaggerUI',
+    faviconHref:
+      'https://raw.githubusercontent.com/blomqma/next-rest-framework/main/docs/static/img/favicon.ico',
+    logoHref:
+      'https://raw.githubusercontent.com/blomqma/next-rest-framework/d02224b38d07ede85257b22ed50159a947681f99/packages/next-rest-framework/logo.svg'
+  },
   exposeOpenApiSpec: true,
   errorHandler: logNextRestFrameworkError,
   suppressInfo: false,

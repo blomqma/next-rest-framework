@@ -20,7 +20,12 @@ import { readdirSync, readFileSync, writeFileSync } from 'fs';
 
 export const getHTMLForSwaggerUI = ({
   headers,
-  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath }
+  config: {
+    openApiJsonPath,
+    openApiYamlPath,
+    swaggerUiPath,
+    swaggerUiConfig: { title, description, faviconHref, logoHref } = {}
+  }
 }: {
   headers: http.IncomingHttpHeaders;
   config: NextRestFrameworkConfig;
@@ -34,11 +39,12 @@ export const getHTMLForSwaggerUI = ({
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>${title}</title>
       <meta
         name="description"
-        content="SwaggerUI"
+        content="${description}"
       />
-      <title>Next REST Framework | SwaggerUI</title>
+      <link rel="icon" type="image/x-icon" href="${faviconHref}">
       <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
       <link
         href="https://cdn.jsdelivr.net/npm/daisyui@2.46.0/dist/full.css"
@@ -53,8 +59,8 @@ export const getHTMLForSwaggerUI = ({
         <div class="max-w-7xl flex justify-between grow gap-5 h-24">
           <a>
             <img
-              src="https://raw.githubusercontent.com/blomqma/next-rest-framework/d02224b38d07ede85257b22ed50159a947681f99/packages/next-rest-framework/logo.svg"
-              alt="Next REST Framework logo"
+              src="${logoHref}"
+              alt="Logo"
               class="w-32"
             />
           </a>
