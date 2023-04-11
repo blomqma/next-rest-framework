@@ -216,7 +216,7 @@ The optional config options allow you to customize Next REST Framework. The foll
 | `openApiJsonPath`   | Custom path for serving `openapi.json` file. Defaults to `/api/openapi.json`.                                                                            |
 | `openApiYamlPath`   | Custom path for serving `openapi.yaml` file. Defaults to `/api/openapi.yaml`.                                                                            |
 | `swaggerUiPath`     | Custom path for service Swagger UI. Defaults to `/api`.                                                                                                  |
-| `swaggerUiConfig`   | A [SwaggerUI config](#swagger-ui-config) object for customizing the generated SwaggerUI.                                                                 |
+| `swaggerUiConfig`   | A [SwaggerUI config](#swaggerui-config) object for customizing the generated SwaggerUI.                                                                  |
 | `exposeOpenApiSpec` | Setting this to `false` will serve none of the OpenAPI documents neither the Swagger UI. Defaults to `true`.                                             |
 | `middleware`        | A global middleware for all of your API routes. See [Global middleware](#global-middleware) for more information.                                        |
 | `errorHandler`      | A [Global error handler](#global-error-handler) for all of your API routes. Defaults to a basic error handler logging the errors in non-production mode. |
@@ -365,7 +365,7 @@ Method error handler can be used to override both your global error handler and 
 | `res`    | A strongly-typed `NextApiResponse` object that allows you to use only pre-defined status codes, `Content-Type` headers and response data formats from the current method handler. |
 | `params` |  The type of a combined object returned by your [Global middleware](#global-middleware), [Route middleware](#route-middleware) and [Method middleware](#method-middleware).       |
 
-## [SwaggerUI config](#swagger-ui-config)
+## [SwaggerUI config](#swaggerui-config)
 
 The SwaggerUI config object can be used to customize the generated Swagger UI:
 
