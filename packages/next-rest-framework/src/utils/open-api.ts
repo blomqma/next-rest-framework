@@ -27,7 +27,7 @@ export const getHTMLForSwaggerUI = ({
 }) => {
   const proto = headers['x-forwarded-proto'] ?? 'http';
   const host = headers.host;
-  const url = `${proto}://${host}/api/openapi.yaml`;
+  const url = `${proto}://${host}/${openApiYamlPath}`;
 
   return `<!DOCTYPE html>
   <html lang="en" data-theme="light">
