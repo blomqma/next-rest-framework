@@ -169,7 +169,7 @@ export default defineEndpoints({
         name: z.string()
       }),
       query: z.object({
-        page: z.number()
+        page: z.string()
       })
     },
     output: [
@@ -249,11 +249,11 @@ The method handler parameters define an individual endpoint:
 
 The input object is used for the validation of the incoming request:
 
-| Name          | Description                                                                                                                               | Required |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.          | `true`   |
-| `body`        | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body.     | `true`   |
-| `query`       | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the query parameters. | `false`  |
+| Name          | Description                                                                                                                                                                                                                                        | Required |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.                                                                                                                   | `true`   |
+| `body`        | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body.                                                                                                              | `true`   |
+| `query`       | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the query parameters. Note that Next.js parses the query string into an object containing either strings or arrays of strings. | `false`  |
 
 #### [Output object](#output-object)
 
