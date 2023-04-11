@@ -1,6 +1,17 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.6.0 - 2023-04-11
+
+### Added
+
+- Add SwaggerUI customization options for using custom title, description, logo and favicon.
+
+### Fixed
+
+- Fix bug that caused custom OpenAPI YAML file paths not working.
+- Fix documentation and examples that were using Zod number schemas for query parameter validation, resulting in an error when following the examples.
+
 ### 0.5.1 - 2023-03-28
 
 ### Fixed
