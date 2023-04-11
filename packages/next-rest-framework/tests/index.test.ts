@@ -81,11 +81,21 @@ OpenAPI YAML: http://localhost:3000/api/openapi.yaml`)
 
   expect(console.info).toHaveBeenNthCalledWith(
     3,
-    chalk.green('Next REST Framework config changed, re-initializing!')
+    chalk.yellowBright('No API spec found, generating openapi.json')
   );
 
   expect(console.info).toHaveBeenNthCalledWith(
     4,
+    chalk.green('API spec generated successfully!')
+  );
+
+  expect(console.info).toHaveBeenNthCalledWith(
+    5,
+    chalk.green('Next REST Framework config changed, re-initializing!')
+  );
+
+  expect(console.info).toHaveBeenNthCalledWith(
+    6,
     chalk.yellowBright(`Swagger UI: http://localhost:3000/api/foo/bar
 OpenAPI JSON: http://localhost:3000/api/bar/baz
 OpenAPI YAML: http://localhost:3000/api/baz/qux`)
@@ -96,12 +106,12 @@ OpenAPI YAML: http://localhost:3000/api/baz/qux`)
   }).defineCatchAllHandler()(req, res);
 
   expect(console.info).toHaveBeenNthCalledWith(
-    5,
+    7,
     chalk.green('Next REST Framework config changed, re-initializing!')
   );
 
   expect(console.info).toHaveBeenNthCalledWith(
-    6,
+    8,
     chalk.yellowBright(
       `OpenAPI spec is not exposed. To expose it, set ${chalk.bold(
         'exposeOpenApiSpec'

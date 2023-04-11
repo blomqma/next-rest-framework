@@ -13,6 +13,7 @@ export const getDefaultConfig = ({
     openApiSpecOverrides: OpenAPIV3_1.Document;
   }
 > => ({
+  apiRoutesPath: 'pages/api',
   openApiSpecOverrides: {
     openapi: OPEN_API_VERSION,
     info: {
@@ -36,6 +37,5 @@ export const getDefaultConfig = ({
   },
   exposeOpenApiSpec: true,
   errorHandler: logNextRestFrameworkError,
-  suppressInfo: false,
-  apiRoutesPath: 'pages/api'
+  suppressInfo: false
 });
