@@ -22,7 +22,7 @@ export default defineEndpoints({
     input: {
       // ...
       query: z.object({
-        page: z.number()
+        page: z.string()
       })
     }
     // Rest of your logic.
