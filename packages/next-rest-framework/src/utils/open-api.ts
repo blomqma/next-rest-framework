@@ -1,6 +1,5 @@
 import { join } from 'path';
 import http from 'http';
-import { NextApiRequest, NextApiResponse } from 'next';
 import {
   DefineEndpointsParams,
   MethodHandler,
@@ -17,6 +16,9 @@ import {
 import merge from 'lodash.merge';
 import { getJsonSchema, getSchemaKeys } from './schemas';
 import { readdirSync, readFileSync, writeFileSync } from 'fs';
+import isEqualWith from 'lodash.isequalwith';
+import chalk from 'chalk';
+import { NextApiRequest } from 'next';
 
 export const getHTMLForSwaggerUI = ({
   headers,
@@ -134,14 +136,12 @@ const getNestedApiRoutes = (basePath: string, dir: string): string[] => {
 };
 
 // Generate the OpenAPI paths from the Next.js API routes.
-// If a single path fails to generate, the entire process will fail.
 const generatePaths = async ({
-  req: { headers },
-  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath, apiRoutesPath }
+  config: { apiRoutesPath, openApiJsonPath, openApiYamlPath, swaggerUiPath },
+  req: { headers }
 }: {
-  req: NextApiRequest;
-  res: NextApiResponse;
   config: NextRestFrameworkConfig;
+  req: NextApiRequest;
 }): Promise<OpenAPIV3_1.PathsObject> => {
   const filterApiRoutes = (file: string) => {
     const isCatchAllRoute = file.includes('...');
@@ -168,7 +168,7 @@ const generatePaths = async ({
 
   const basePath = join(process.cwd(), apiRoutesPath ?? '');
 
-  const mapApiRoutes = getNestedApiRoutes(basePath, '')
+  const apiRoutes = getNestedApiRoutes(basePath, '')
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`
@@ -181,7 +181,7 @@ const generatePaths = async ({
   let paths: OpenAPIV3_1.PathsObject = {};
 
   await Promise.all(
-    mapApiRoutes.map(async (route) => {
+    apiRoutes.map(async (route) => {
       const proto = headers['x-forwarded-proto'] ?? 'http';
       const host = headers.host;
       const url = `${proto}://${host}${route}`;
@@ -226,43 +226,61 @@ const generatePaths = async ({
   return paths;
 };
 
-export const getOpenApiSpecWithPaths = async ({
-  req,
-  res,
-  config
+// In prod use the existing openapi.json file - in development mode update it whenever the generated API spec changes.
+export const getOrCreateOpenApiSpec = async ({
+  config,
+  req
 }: {
-  req: NextApiRequest;
-  res: NextApiResponse;
   config: NextRestFrameworkConfig;
+  req: NextApiRequest;
 }) => {
-  let spec;
+  let specFileFound = false;
+
+  try {
+    const data = readFileSync(join(process.cwd(), 'openapi.json'));
+    global.openApiSpec = JSON.parse(data.toString());
+    specFileFound = true;
+  } catch {}
 
   if (process.env.NODE_ENV !== 'production') {
-    const paths = await generatePaths({ req, res, config });
+    const paths = await generatePaths({ config, req });
 
-    spec = {
+    const newSpec = {
       ...config.openApiSpecOverrides,
       openapi: OPEN_API_VERSION,
       paths: merge(config.openApiSpecOverrides?.paths, paths)
     };
 
-    writeFileSync(
-      join(process.cwd(), 'openapi.json'),
-      JSON.stringify(spec, null, 2),
-      null
-    );
-  } else {
-    try {
-      const data = readFileSync(join(process.cwd(), 'openapi.json'));
-      spec = JSON.parse(data.toString());
-    } catch (e) {
-      // No generated paths found.
+    if (!isEqualWith(global.openApiSpec, newSpec)) {
+      if (!specFileFound) {
+        console.info(
+          chalk.yellowBright('No API spec found, generating openapi.json')
+        );
+      } else {
+        console.info(
+          chalk.yellowBright('API spec changed, regenerating openapi.json')
+        );
+      }
 
-      console.error(e);
+      writeFileSync(
+        join(process.cwd(), 'openapi.json'),
+        JSON.stringify(newSpec, null, 2) + '\n',
+        null
+      );
+
+      if (!global.apiSpecGeneratedLogged) {
+        console.info(chalk.green('API spec generated successfully!'));
+      }
+
+      global.openApiSpec = newSpec;
+    } else if (!global.apiSpecGeneratedLogged) {
+      console.info(chalk.green('API spec up to date, skipping generation.'));
     }
+
+    global.apiSpecGeneratedLogged = true;
   }
 
-  return spec;
+  return global.openApiSpec;
 };
 
 export const defaultResponse: OpenAPIV3_1.ResponseObject = {

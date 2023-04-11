@@ -14,8 +14,8 @@ import {
   getPathsFromMethodHandlers,
   handleReservedPathWarnings,
   getHTMLForSwaggerUI,
-  getOpenApiSpecWithPaths,
-  validateSchema
+  validateSchema,
+  getOrCreateOpenApiSpec
 } from './utils';
 import yaml from 'js-yaml';
 import { NextApiResponse } from 'next';
@@ -235,7 +235,7 @@ export const defineEndpoints = <GlobalMiddlewareResponse>({
             handleReservedPathWarnings({ url, config });
           }
 
-          const spec = await getOpenApiSpecWithPaths({ req, res, config });
+          const spec = await getOrCreateOpenApiSpec({ config, req });
 
           if (url === openApiJsonPath) {
             res.status(200).json(spec);
