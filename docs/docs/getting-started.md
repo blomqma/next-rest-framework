@@ -42,9 +42,9 @@ This is enough to get you started. By default Next REST Framework gives you thre
 - `/api`: Swagger UI using the auto-generated OpenAPI spec.
 - `/api/openapi.json`: An auto-generated openapi.json document.
 - `/api/openapi.yaml`: An auto-generated openapi.yaml document.
-- A local `openapi.json` file that will be generated as you call any of the above endpoints. This file should be under version control and you should always keep it in the project root. It will dynamically update itself as you develop your application locally and is used by Next REST Framework when you run your application in production. Remember that it will be dynamically regenerated every time you call any of the above endpoints in development mode.
+- A local `openapi.json` file that will be generated as you run `npx next-rest-framework generate` or call any of the above endpoints in development mode. This file should be under version control and you should always keep it in the project root. It will dynamically update itself as you develop your application locally and is used by Next REST Framework when you run your application in production. Remember that it will be dynamically regenerated every time you call any of the above endpoints in development mode. A good practice is also to generate this file before you run `next build` when going to production, so your build script would look something like: `npx next-rest-framework generate && next build`.
 
-All of these are configurable with the [Config options](#config-options) that you can pass for your `NextRestFramework` client. You can also use your existing catch-all logic simply by passing a [Route config](#route-config) to your `defineCatchAllHandler` if you want to use e.g. custom 404 handlers, redirections etc.
+The reserved OpenAPI paths are configurable with the [Config options](#config-options) that you can pass for your `NextRestFramework` client. You can also use your existing catch-all logic simply by passing a [Route config](#route-config) to your `defineCatchAllHandler` if you want to use e.g. custom 404 handlers, redirections etc.
 
 ### [Add an API Route](#add-an-api-route)
 
