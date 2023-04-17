@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "prebuild": "cd ../.. && pnpm build && cd apps/example",
+    "prebuild": "cd ../.. && pnpm build && cd apps/example && pnpm dlx next-rest-framework generate",
     "build": "pnpm prebuild && next build",
     "start": "next start",
     "type-check": "tsc --noEmit"
