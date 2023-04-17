@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.7.0 - 2023-04-17
+
+### Added
+
+- Add a binary script that can be used programmatically to generate the OpenAPI spec e.g. before running `next build`.
+
 ### 0.6.0 - 2023-04-11
 
 ### Added
