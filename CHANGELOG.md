@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.7.1 - 2023-05-09
+
+### Fixed
+
+- Fix miscellaneous bugs with Zod schemas, where `intersection`, `nullable` and `enum` types were not working with the OpenAPI spec generation.
+
 ### 0.7.0 - 2023-04-17
 
 ### Added
