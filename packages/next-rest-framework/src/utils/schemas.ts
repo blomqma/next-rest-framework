@@ -12,6 +12,9 @@ import {
   AnyZodObject,
   ZodArray,
   ZodBoolean,
+  ZodEnum,
+  ZodIntersection,
+  ZodNullable,
   ZodNumber,
   ZodRawShape,
   ZodSchema,
@@ -62,6 +65,20 @@ const isZodObject = (schema: ZodTypeAny): schema is AnyZodObject => {
   return schema._def.typeName === 'ZodObject';
 };
 
+const isZodEnum = (schema: ZodTypeAny): schema is ZodEnum<any> => {
+  return schema._def.typeName === 'ZodEnum';
+};
+
+const isZodNullable = (schema: ZodTypeAny): schema is ZodNullable<any> => {
+  return schema._def.typeName === 'ZodNullable';
+};
+
+const isZodIntersection = (
+  schema: ZodTypeAny
+): schema is ZodIntersection<any, any> => {
+  return schema._def.typeName === 'ZodIntersection';
+};
+
 export const convertZodSchema = (schema: ZodSchema) => {
   let jsonSchema = {};
 
@@ -100,6 +117,32 @@ export const convertZodSchema = (schema: ZodSchema) => {
           properties: convertZodShape(value._def.shape())
         };
       }
+
+      if (isZodEnum(value)) {
+        jsonSchema[key as keyof typeof jsonSchema] = {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: value._def.values
+          }
+        };
+      }
+
+      if (isZodIntersection(value)) {
+        jsonSchema[key as keyof typeof jsonSchema] = {
+          type: 'array',
+          items: {
+            ...convertZodSchema(value._def.left),
+            ...convertZodSchema(value._def.right)
+          }
+        };
+      }
+
+      if (isZodNullable(value)) {
+        jsonSchema[key as keyof typeof jsonSchema] = convertZodSchema(
+          value._def.innerType
+        );
+      }
     });
 
     return jsonSchema;
@@ -135,6 +178,27 @@ export const convertZodSchema = (schema: ZodSchema) => {
       type: 'object',
       properties: convertZodShape(schema._def.shape())
     };
+  }
+
+  if (isZodEnum(schema)) {
+    jsonSchema = {
+      type: 'string',
+      enum: convertZodShape(schema._def.values)
+    };
+  }
+
+  if (isZodIntersection(schema)) {
+    jsonSchema = {
+      type: 'array',
+      items: {
+        ...convertZodSchema(schema._def.left),
+        ...convertZodSchema(schema._def.right)
+      }
+    };
+  }
+
+  if (isZodNullable(schema)) {
+    jsonSchema = convertZodSchema(schema._def.innerType);
   }
 
   return jsonSchema;
