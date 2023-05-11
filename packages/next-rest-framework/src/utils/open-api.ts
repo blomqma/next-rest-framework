@@ -172,7 +172,7 @@ const generatePaths = async ({
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`
-        .replace('/index', '')
+        .replace(/[/\\]index/, '')
         .replace('[', '{')
         .replace(']', '}')
         .replace('.ts', '')
