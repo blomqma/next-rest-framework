@@ -364,23 +364,23 @@ export const getPathsFromMethodHandlers = ({
         }
       };
 
-      if (input?.query) {
-        generatedOperationObject.parameters = getSchemaKeys({
-          schema: input.query
-        }).map((key) => ({
-          name: key,
-          in: 'query'
+      const pathParameters = route.match(/{([^}]+)}/g);
+      if (pathParameters) {
+        generatedOperationObject.parameters = pathParameters.map((param) => ({
+          name: param.replace(/[{}]/g, ''),
+          in: 'path',
+          required: true
         }));
       }
 
-      const pathParameters = route.match(/{([^}]+)}/g);
-      if (pathParameters) {
+      if (input?.query) {
         generatedOperationObject.parameters = [
           ...(generatedOperationObject.parameters ?? []),
-          ...pathParameters.map((param) => ({
-            name: param.replace(/[{}]/g, ''),
-            in: 'path',
-            required: true
+          ...getSchemaKeys({
+            schema: input.query
+          }).map((key) => ({
+            name: key,
+            in: 'query'
           }))
         ];
       }
