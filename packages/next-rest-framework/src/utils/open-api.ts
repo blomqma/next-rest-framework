@@ -373,6 +373,18 @@ export const getPathsFromMethodHandlers = ({
         }));
       }
 
+      const pathParameters = route.match(/{([^}]+)}/g);
+      if (pathParameters) {
+        generatedOperationObject.parameters = [
+          ...(generatedOperationObject.parameters ?? []),
+          ...pathParameters.map((param) => ({
+            name: param.replace(/[{}]/g, ''),
+            in: 'path',
+            required: true
+          }))
+        ];
+      }
+
       paths[route] = {
         ...paths[route],
         [method]: merge(generatedOperationObject, openApiSpecOverrides)
