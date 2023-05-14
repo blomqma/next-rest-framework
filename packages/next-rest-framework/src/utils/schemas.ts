@@ -12,6 +12,7 @@ import {
   AnyZodObject,
   ZodArray,
   ZodBoolean,
+  ZodDate,
   ZodEnum,
   ZodIntersection,
   ZodNullable,
@@ -79,6 +80,10 @@ const isZodIntersection = (
   return schema._def.typeName === 'ZodIntersection';
 };
 
+const isZodDate = (schema: ZodTypeAny): schema is ZodDate => {
+  return schema._def.typeName === 'ZodDate';
+};
+
 export const convertZodSchema = (schema: ZodSchema) => {
   let jsonSchema = {};
 
@@ -142,6 +147,13 @@ export const convertZodSchema = (schema: ZodSchema) => {
         jsonSchema[key as keyof typeof jsonSchema] = convertZodSchema(
           value._def.innerType
         );
+      }
+
+      if (isZodDate(value)) {
+        jsonSchema[key as keyof typeof jsonSchema] = {
+          type: 'string',
+          format: 'date-time'
+        };
       }
     });
 
