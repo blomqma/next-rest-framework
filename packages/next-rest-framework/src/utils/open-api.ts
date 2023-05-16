@@ -319,7 +319,7 @@ export const getPathsFromMethodHandlers = ({
   Object.keys(methodHandlers)
     .filter(isValidMethod)
     .forEach((_method) => {
-      const { openApiSpecOverrides, input, output } = methodHandlers[
+      const { openApiSpecOverrides, tags, input, output } = methodHandlers[
         _method
       ] as MethodHandler;
 
@@ -355,6 +355,7 @@ export const getPathsFromMethodHandlers = ({
       );
 
       const generatedOperationObject: OpenAPIV3_1.OperationObject = {
+        tags,
         requestBody: {
           content: requestBodyContent
         },
