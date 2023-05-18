@@ -274,6 +274,13 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
 
   expect(paths['/api/foo/bar/{qux}']).toEqual({
     get: {
+      parameters: [
+        {
+          in: 'path',
+          name: 'qux',
+          required: true
+        }
+      ],
       requestBody: {
         content: {}
       },

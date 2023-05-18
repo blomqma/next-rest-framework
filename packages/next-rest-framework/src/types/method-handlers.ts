@@ -41,6 +41,7 @@ export interface MethodHandler<
   RouteMiddlewareResponse = unknown,
   MethodMiddlewareResponse = unknown
 > {
+  tags?: string[];
   input?: InputObject<BodySchema, QuerySchema>;
   output?: Output[];
   middleware?: Middleware<

@@ -172,6 +172,7 @@ const generatePaths = async ({
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`
+        .replace(/\\/g, '/')
         .replace('/index', '')
         .replace('[', '{')
         .replace(']', '}')
@@ -319,7 +320,7 @@ export const getPathsFromMethodHandlers = ({
   Object.keys(methodHandlers)
     .filter(isValidMethod)
     .forEach((_method) => {
-      const { openApiSpecOverrides, input, output } = methodHandlers[
+      const { openApiSpecOverrides, tags, input, output } = methodHandlers[
         _method
       ] as MethodHandler;
 
@@ -355,6 +356,7 @@ export const getPathsFromMethodHandlers = ({
       );
 
       const generatedOperationObject: OpenAPIV3_1.OperationObject = {
+        tags,
         requestBody: {
           content: requestBodyContent
         },
@@ -364,13 +366,25 @@ export const getPathsFromMethodHandlers = ({
         }
       };
 
-      if (input?.query) {
-        generatedOperationObject.parameters = getSchemaKeys({
-          schema: input.query
-        }).map((key) => ({
-          name: key,
-          in: 'query'
+      const pathParameters = route.match(/{([^}]+)}/g);
+      if (pathParameters) {
+        generatedOperationObject.parameters = pathParameters.map((param) => ({
+          name: param.replace(/[{}]/g, ''),
+          in: 'path',
+          required: true
         }));
+      }
+
+      if (input?.query) {
+        generatedOperationObject.parameters = [
+          ...(generatedOperationObject.parameters ?? []),
+          ...getSchemaKeys({
+            schema: input.query
+          }).map((key) => ({
+            name: key,
+            in: 'query'
+          }))
+        ];
       }
 
       paths[route] = {
