@@ -82,7 +82,12 @@ const isZodIntersection = (
 };
 
 const isZodDate = (schema: ZodTypeAny): schema is ZodDate => {
-  return schema._def.typeName === 'ZodDate';
+  return (
+    schema._def.typeName === 'ZodDate' ||
+    (schema._def.typeName === 'ZodString' &&
+      schema._def.checks.filter((check: any) => check.kind === 'datetime')
+        .length > 0)
+  );
 };
 
 const isZodOptional = (schema: ZodTypeAny): schema is ZodOptional<any> => {
