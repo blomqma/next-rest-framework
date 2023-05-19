@@ -15,6 +15,7 @@ import {
   ZodDate,
   ZodEnum,
   ZodIntersection,
+  ZodNativeEnum,
   ZodNullable,
   ZodNumber,
   ZodOptional,
@@ -69,6 +70,10 @@ const isZodObject = (schema: ZodTypeAny): schema is AnyZodObject => {
 
 const isZodEnum = (schema: ZodTypeAny): schema is ZodEnum<any> => {
   return schema._def.typeName === 'ZodEnum';
+};
+
+const isZodNativeEnum = (schema: ZodTypeAny): schema is ZodNativeEnum<any> => {
+  return schema._def.typeName === 'ZodNativeEnum';
 };
 
 const isZodNullable = (schema: ZodTypeAny): schema is ZodNullable<any> => {
@@ -130,11 +135,15 @@ export const convertZodSchema = (schema: ZodSchema) => {
 
       if (isZodEnum(value)) {
         jsonSchema[key as keyof typeof jsonSchema] = {
-          type: 'array',
-          items: {
             type: 'string',
             enum: value._def.values
+        };
           }
+
+      if (isZodNativeEnum(value)) {
+        jsonSchema[key as keyof typeof jsonSchema] = {
+          type: 'string',
+          enum: value._def.values
         };
       }
 
