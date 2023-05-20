@@ -124,12 +124,19 @@ export const getHTMLForSwaggerUI = ({
   </html>`;
 };
 
-const getNestedApiRoutes = (basePath: string, dir: string): string[] => {
+const getNestedApiRoutes = (
+  basePath: string,
+  excludeSubPaths: string[] | undefined,
+  dir: string
+): string[] => {
   const dirents = readdirSync(join(basePath, dir), { withFileTypes: true });
 
   const files = dirents.map((dirent) => {
-    const res = join(dir, dirent.name);
-    return dirent.isDirectory() ? getNestedApiRoutes(basePath, res) : res;
+    const res = join(dir, dirent.name).replace(/\\/g, '/');
+    if (excludeSubPaths?.includes(res)) return [];
+    return dirent.isDirectory()
+      ? getNestedApiRoutes(basePath, excludeSubPaths, res)
+      : res;
   });
 
   return files.flat();
@@ -137,7 +144,13 @@ const getNestedApiRoutes = (basePath: string, dir: string): string[] => {
 
 // Generate the OpenAPI paths from the Next.js API routes.
 const generatePaths = async ({
-  config: { apiRoutesPath, openApiJsonPath, openApiYamlPath, swaggerUiPath },
+  config: {
+    apiRoutesPath,
+    excludeSubPaths,
+    openApiJsonPath,
+    openApiYamlPath,
+    swaggerUiPath
+  },
   req: { headers }
 }: {
   config: NextRestFrameworkConfig;
@@ -168,11 +181,10 @@ const generatePaths = async ({
 
   const basePath = join(process.cwd(), apiRoutesPath ?? '');
 
-  const apiRoutes = getNestedApiRoutes(basePath, '')
+  const apiRoutes = getNestedApiRoutes(basePath, excludeSubPaths, '')
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`
-        .replace(/\\/g, '/')
         .replace('/index', '')
         .replace('[', '{')
         .replace(']', '}')

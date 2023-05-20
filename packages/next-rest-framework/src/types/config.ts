@@ -14,6 +14,7 @@ type NextRestFrameworkOpenApiSpec = Partial<
 
 export interface NextRestFrameworkConfig<GlobalMiddlewareResponse = unknown> {
   apiRoutesPath?: string; // Absolute path to the directory where your API routes are located - defaults to `pages/api`.
+  excludeSubPaths?: string[]; // An array of paths that should be excluded from the OpenAPI spec.
   openApiSpecOverrides?: NextRestFrameworkOpenApiSpec; // Fully typed OpenAPI spec for your API.
   openApiJsonPath?: string; // Path that will be used for the OpenAPI spec - defaults tp `/api/openapi.json`.
   openApiYamlPath?: string; // Path that will be used for the OpenAPI spec - defaults tp `/api/openapi.json`.
