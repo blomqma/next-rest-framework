@@ -105,7 +105,7 @@ const config = {
             ]
           }
         ],
-        copyright: `Next REST Framework © Markus Blomqvist ${new Date().getFullYear()}`
+        copyright: `Next REST Framework © ${new Date().getFullYear()}`
       },
       prism: {
         theme: lightCodeTheme,
