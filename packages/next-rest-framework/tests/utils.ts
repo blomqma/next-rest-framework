@@ -5,7 +5,6 @@ import {
   TypedNextApiResponse
 } from '../src/types';
 import { z } from 'zod';
-import * as yup from 'yup';
 
 export const resetCustomGlobals = () => {
   global.nextRestFrameworkConfig = undefined;
@@ -15,7 +14,12 @@ export const resetCustomGlobals = () => {
   global.reservedSwaggerUiPathWarningLogged = false;
 };
 
-export const createNextRestFrameworkMocks = <Body, Params>(
+export const createNextRestFrameworkMocks = <
+  Body,
+  Params = Partial<{
+    [key: string]: string | string[];
+  }>
+>(
   reqOptions?: Modify<RequestOptions, { body?: Body; query?: Params }>,
   resOptions?: ResponseOptions
 ) =>
@@ -38,22 +42,6 @@ export const complexZodSchema = z.object({
       })
     })
   )
-});
-
-export const complexYupSchema = yup.object({
-  name: yup.string().required(),
-  age: yup.number().required(),
-  isCool: yup.boolean().required(),
-  hobbies: yup
-    .array(
-      yup.object({
-        name: yup.string().required(),
-        properties: yup.object({
-          foo: yup.string().required()
-        })
-      })
-    )
-    .required()
 });
 
 export const complexSchemaData = {

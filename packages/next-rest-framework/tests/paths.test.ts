@@ -3,7 +3,6 @@ import * as openApiUtils from '../src/utils/open-api';
 import { defaultResponse } from '../src/utils';
 import {
   complexSchemaData,
-  complexYupSchema,
   complexZodSchema,
   createNextRestFrameworkMocks,
   resetCustomGlobals
@@ -11,7 +10,6 @@ import {
 import { NEXT_REST_FRAMEWORK_USER_AGENT } from '../src/constants';
 import chalk from 'chalk';
 import { z } from 'zod';
-import * as yup from 'yup';
 
 const createDirent = (name: string) => ({
   isDirectory: () => name === 'foo',
@@ -45,7 +43,7 @@ const fooMethodHandlers = defineEndpoints({
     output: [
       {
         status: 201,
-        schema: complexYupSchema,
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],
@@ -59,9 +57,9 @@ const fooBarMethodHandlers = defineEndpoints({
   PUT: {
     input: {
       contentType: 'application/json',
-      body: complexYupSchema,
-      query: yup.object({
-        foo: yup.string()
+      body: complexZodSchema,
+      query: z.object({
+        foo: z.string()
       })
     },
     output: [
@@ -97,7 +95,7 @@ const fooBarBazQuxMethodHandlers = defineEndpoints({
     output: [
       {
         status: 200,
-        schema: complexYupSchema,
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],

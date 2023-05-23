@@ -49,21 +49,21 @@ The method handler parameters define an individual endpoint:
 
 The input object is used for the validation of the incoming request:
 
-| Name          | Description                                                                                                                                                                                                                                        | Required |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.                                                                                                                   | `true`   |
-| `body`        | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body.                                                                                                              | `true`   |
-| `query`       | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the query parameters. Note that Next.js parses the query string into an object containing either strings or arrays of strings. | `false`  |
+| Name          | Description                                                                                                                                                                                               | Required |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.                                                                          | `true`   |
+| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body.                                                                                                              | `true`   |
+| `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters. Note that Next.js parses the query string into an object containing either strings or arrays of strings. | `false`  |
 
 #### [Output object](#output-object)
 
 The output objects define what kind of responses you are allowed to return from your API handlers:
 
-| Name          | Description                                                                                                                                                                                                  | Required |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| `status`      | A possible status code that your API can return - using other status codes will lead to a TS error.                                                                                                          | `true`   |
-| `contentType` | The content type of the response - using other content-types will lead to a TS error.                                                                                                                        | `true`   |
-| `schema`      | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the response data. A response format not matching to the schema will lead to a TS error. |  `true`  |
+| Name          | Description                                                                                                                                                         | Required |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `status`      | A possible status code that your API can return - using other status codes will lead to a TS error.                                                                 | `true`   |
+| `contentType` | The content type of the response - using other content-types will lead to a TS error.                                                                               | `true`   |
+| `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. A response format not matching to the schema will lead to a TS error. |  `true`  |
 
 #### [Handler](#handler)
 

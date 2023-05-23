@@ -15,7 +15,7 @@ Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set
 #### Lightweight, type-safe, easy to use
 
 - Designed to work with TypeScript so that your request bodies, responses, headers etc. are strongly typed.
-- Object-schema validation with popular libraries like [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup)
+- Object-schema validation with [Zod](https://github.com/colinhacks/zod).
 - Supports auto-generated openapi.json and openapi.yaml documents for which you can include your existing OpenAPI specification.
 - Supports any kind of middleware logic that you want to use for authentication etc. See more in [Middlewares](#middlewares). Also works with other Next.js server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
 - Fully customizable - You can decide which routes Next REST Framework will use to serve your API docs etc. and it can be easily customized to work with any kind of existing Next.js REST API.

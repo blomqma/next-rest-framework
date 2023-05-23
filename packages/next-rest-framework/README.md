@@ -72,7 +72,7 @@ This is a monorepo containing the following packages / projects:
 ### Lightweight, type-safe, easy to use
 
 - Designed to work with TypeScript so that your request bodies, responses, headers etc. are strongly typed.
-- Object-schema validation with popular libraries like [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup). These schemas are automatically converted to JSON schema format for the auto-generated OpenAPI specifications.
+- Object-schema validation with [Zod](https://github.com/colinhacks/zod). The schemas are automatically converted to JSON schema format for the auto-generated OpenAPI specifications.
 - Supports auto-generated openapi.json and openapi.yaml documents for which you can include your existing OpenAPI specification.
 - Supports any kind of middleware logic that you want to use for authentication etc. See more in [Middlewares](#middlewares). Also works with other Next.js server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
 - Fully customizable - You can decide which routes Next REST Framework will use to serve your API docs etc. and it can be easily customized to work with any kind of existing Next.js REST API.
@@ -254,21 +254,21 @@ The method handler parameters define an individual endpoint:
 
 The input object is used for the validation of the incoming request:
 
-| Name          | Description                                                                                                                                                                                                                                        | Required |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.                                                                                                                   | `true`   |
-| `body`        | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the request body.                                                                                                              | `true`   |
-| `query`       | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the query parameters. Note that Next.js parses the query string into an object containing either strings or arrays of strings. | `false`  |
+| Name          | Description                                                                                                                                                                                               | Required |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `contentType` | The content type that the request must have - request with no content type or incorrect content type will get an error response.                                                                          | `true`   |
+| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body.                                                                                                              | `true`   |
+| `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters. Note that Next.js parses the query string into an object containing either strings or arrays of strings. | `false`  |
 
 ##### [Output object](#output-object)
 
 The output objects define what kind of responses you are allowed to return from your API handlers:
 
-| Name          | Description                                                                                                                                                                                                  | Required |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| `status`      | A possible status code that your API can return - using other status codes will lead to a TS error.                                                                                                          | `true`   |
-| `contentType` | The content type of the response - using other content-types will lead to a TS error.                                                                                                                        | `true`   |
-| `schema`      | A [Zod](https://github.com/colinhacks/zod) or [Yup](https://github.com/jquense/yup) schema describing the format of the response data. A response format not matching to the schema will lead to a TS error. |  `true`  |
+| Name          | Description                                                                                                                                                         | Required |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `status`      | A possible status code that your API can return - using other status codes will lead to a TS error.                                                                 | `true`   |
+| `contentType` | The content type of the response - using other content-types will lead to a TS error.                                                                               | `true`   |
+| `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. A response format not matching to the schema will lead to a TS error. |  `true`  |
 
 ##### [Handler](#handler)
 
