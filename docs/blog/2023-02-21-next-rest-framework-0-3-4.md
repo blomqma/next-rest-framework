@@ -16,4 +16,4 @@ Here are some of the improvements that Next.js has experienced so far since the 
 - Custom Swagger UI layout.
 - Other minor improvements.
 
-v0.3.4 being out with additional improvements to the typings, you no longer need to have both [Zod](https://zod.dev/) and [Yup](https://github.com/jquense/yup) installed to use the framework, resulting in a more lightweight approach wo use the framework.
+v0.3.4 being out with additional improvements to the typings, you no longer need to have both [Zod](https://zod.dev/) and installed to use the framework, resulting in a more lightweight approach wo use the framework.

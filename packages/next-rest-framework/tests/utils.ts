@@ -5,7 +5,6 @@ import {
   TypedNextApiResponse
 } from '../src/types';
 import { z } from 'zod';
-import * as yup from 'yup';
 
 export const resetCustomGlobals = () => {
   global.nextRestFrameworkConfig = undefined;
@@ -15,7 +14,12 @@ export const resetCustomGlobals = () => {
   global.reservedSwaggerUiPathWarningLogged = false;
 };
 
-export const createNextRestFrameworkMocks = <Body, Params>(
+export const createNextRestFrameworkMocks = <
+  Body,
+  Params = Partial<{
+    [key: string]: string | string[];
+  }>
+>(
   reqOptions?: Modify<RequestOptions, { body?: Body; query?: Params }>,
   resOptions?: ResponseOptions
 ) =>
@@ -26,39 +30,92 @@ export const createNextRestFrameworkMocks = <Body, Params>(
     TypedNextApiResponse
   >(reqOptions as RequestOptions, resOptions);
 
+enum NativeEnum {
+  Foo = 'foo',
+  Bar = 'bar',
+  Baz = 'baz'
+}
+
+const primitives = z.object({
+  string: z.string(),
+  number: z.number(),
+  bigint: z.bigint(),
+  date: z.date(),
+  symbol: z.symbol(),
+  undefined: z.undefined(),
+  null: z.null(),
+  nan: z.nan(),
+  void: z.void(),
+  any: z.any(),
+  unknown: z.unknown(),
+  never: z.never(),
+  enum: z.enum(['foo', 'bar', 'baz']),
+  nativeEnum: z.nativeEnum(NativeEnum),
+  nullable: z.nullable(z.string())
+});
+
 export const complexZodSchema = z.object({
-  name: z.string(),
-  age: z.number(),
-  isCool: z.boolean(),
-  hobbies: z.array(
+  primitives,
+  objects: z.object({
+    primitives
+  }),
+  arrays: z.array(primitives),
+  tuples: z.tuple([z.string(), z.number()]),
+  unions: z.union([z.string(), z.number()]),
+  discriminatedUnions: z.discriminatedUnion('type', [
     z.object({
-      name: z.string(),
-      properties: z.object({
-        foo: z.string()
-      })
+      type: z.literal('object1'),
+      foo: z.string(),
+      bar: z.number()
+    }),
+    z.object({
+      type: z.literal('object2'),
+      foo: z.number(),
+      bar: z.boolean()
+    })
+  ]),
+  record: z.record(z.string()),
+  maps: z.map(z.string(), z.number()),
+  sets: z.set(z.string()),
+  intersections: z.intersection(
+    z.object({
+      name: z.string()
+    }),
+    z.object({
+      role: z.string()
     })
   )
 });
 
-export const complexYupSchema = yup.object({
-  name: yup.string().required(),
-  age: yup.number().required(),
-  isCool: yup.boolean().required(),
-  hobbies: yup
-    .array(
-      yup.object({
-        name: yup.string().required(),
-        properties: yup.object({
-          foo: yup.string().required()
-        })
-      })
-    )
-    .required()
-});
+const primitivesData = {
+  string: 'foo',
+  number: 123,
+  bigint: BigInt(123),
+  date: new Date('2021-01-01'),
+  symbol: Symbol('foo'),
+  undefined,
+  null: null,
+  nan: NaN,
+  void: undefined,
+  any: 'any',
+  unknown: 'unknown',
+  never: z.NEVER,
+  enum: 'foo' as 'foo' | 'bar' | 'baz',
+  nativeEnum: NativeEnum.Foo,
+  nullable: 'foo'
+};
 
 export const complexSchemaData = {
-  name: 'foo',
-  age: 1,
-  isCool: true,
-  hobbies: [{ name: 'bar', properties: { foo: 'bar' } }]
+  primitives: primitivesData,
+  objects: {
+    primitives: primitivesData
+  },
+  arrays: [primitivesData],
+  tuples: ['foo', 123] as [string, number],
+  unions: 'foo',
+  discriminatedUnions: { type: 'object1', foo: 'foo', bar: 123 } as const,
+  record: { key: 'value' },
+  maps: new Map().set('foo', 123),
+  sets: new Set('foo'),
+  intersections: { name: 'John', role: 'Admin' }
 };

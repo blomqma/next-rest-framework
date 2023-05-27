@@ -1,8 +1,10 @@
 import { NextRestFramework } from '../src';
 import chalk from 'chalk';
-import { createNextRestFrameworkMocks, resetCustomGlobals } from './utils';
-import { z } from 'zod';
-import * as yup from 'yup';
+import {
+  complexZodSchema,
+  createNextRestFrameworkMocks,
+  resetCustomGlobals
+} from './utils';
 
 jest.mock('fs', () => ({
   readdirSync: () => ['openapi.json.ts', 'openapi.yaml.ts', 'docs.ts'],
@@ -18,30 +20,16 @@ const { defineEndpoints } = NextRestFramework({
   swaggerUiPath: '/api/docs'
 });
 
-const inputSchema = z.object({
-  name: z.string(),
-  age: z.number(),
-  isCool: z.boolean(),
-  hobbies: z.array(z.object({ name: z.string() }))
-});
-
-const outputSchema = yup.object({
-  name: yup.string(),
-  age: yup.number(),
-  isCool: yup.boolean(),
-  hobbies: yup.array(yup.object({ name: yup.string() }))
-});
-
 const openApiSpecHandler = defineEndpoints({
   POST: {
     input: {
       contentType: 'application/json',
-      body: inputSchema
+      body: complexZodSchema
     },
     output: [
       {
         status: 201,
-        schema: outputSchema,
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],
@@ -55,12 +43,12 @@ const swaggerUiHandler = defineEndpoints({
   PUT: {
     input: {
       contentType: 'application/json',
-      body: inputSchema
+      body: complexZodSchema
     },
     output: [
       {
         status: 203,
-        schema: outputSchema,
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],

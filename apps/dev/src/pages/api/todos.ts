@@ -1,6 +1,5 @@
 import { defineEndpoints } from 'next-rest-framework/client';
 import { z } from 'zod';
-import * as yup from 'yup';
 
 export default defineEndpoints({
   middleware: ({ params: { foo, bar, baz } }) => ({
@@ -75,32 +74,32 @@ export default defineEndpoints({
   PUT: {
     input: {
       contentType: 'application/json',
-      body: yup.object({
-        foo: yup.array(
-          yup.object({
-            bar: yup.string()
+      body: z.object({
+        foo: z.array(
+          z.object({
+            bar: z.string()
           })
         ),
-        baz: yup.number()
+        baz: z.number()
       }),
-      query: yup.object({
-        test: yup.string()
+      query: z.object({
+        test: z.string()
       })
     },
     output: [
       {
         status: 201,
         contentType: 'application/json',
-        schema: yup.object({
-          foo: yup.array(
-            yup.object({
-              bar: yup.string()
+        schema: z.object({
+          foo: z.array(
+            z.object({
+              bar: z.string()
             })
           ),
-          bar: yup.number(),
-          qux: yup.string(),
-          query: yup.object({
-            test: yup.string()
+          bar: z.number(),
+          qux: z.string(),
+          query: z.object({
+            test: z.string()
           })
         })
       }

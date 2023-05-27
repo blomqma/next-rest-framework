@@ -2,7 +2,7 @@
 slug: validating-nextjs-api-routes-with-object-schemas
 title: Validating Next.js API routes with object schemas
 authors: blomqma
-tags: [Next.js, API routes, object schemas, Zod, Yup, validation, TypeScript]
+tags: [Next.js, API routes, object schemas, Zod, validation, TypeScript]
 ---
 
 Next.js [API routes](https://nextjs.org/docs/api-routes/introduction) offer a nice way to define HTTP REST endpoints for your Next.js backend. The TypeScript support is also there, even though by default, your requests are untyped. Instead of casting your request to certain types, we first need to validate the requests to achieve full type-safety with TypeScript.
@@ -17,7 +17,7 @@ yarn create next-app --typescript
 pnpm create next-app --typescript
 ```
 
-Next, let's add Next REST Framework as a dependency with our object schema validation library of choice. At the time of writing this, [Zod](https://github.com/colinhacks/zod) and [Yup](https://github.com/jquense/yup) are both supported so let's pick the former one:
+Next, let's add Next REST Framework as a dependency with our object schema validation library [Zod](https://github.com/colinhacks/zod):
 
 ```
 yarn add next-rest-framework zod

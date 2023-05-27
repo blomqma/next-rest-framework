@@ -9,7 +9,7 @@ With the help of the early community of Next REST Framework, we've made the fram
 
 ### Query parameter validation
 
-You can now validate also query parameters with [Zod](https://zod.dev/) and [Yup](https://github.com/jquense/yup) schemas in addition to validating only the request bodies simply by passing the validation schema to your input object:
+You can now validate also query parameters with [Zod](https://zod.dev/) schemas in addition to validating only the request bodies simply by passing the validation schema to your input object:
 
 ```typescript
 // src/pages/api/todos.ts

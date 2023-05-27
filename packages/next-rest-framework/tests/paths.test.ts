@@ -3,7 +3,6 @@ import * as openApiUtils from '../src/utils/open-api';
 import { defaultResponse } from '../src/utils';
 import {
   complexSchemaData,
-  complexYupSchema,
   complexZodSchema,
   createNextRestFrameworkMocks,
   resetCustomGlobals
@@ -11,7 +10,6 @@ import {
 import { NEXT_REST_FRAMEWORK_USER_AGENT } from '../src/constants';
 import chalk from 'chalk';
 import { z } from 'zod';
-import * as yup from 'yup';
 
 const createDirent = (name: string) => ({
   isDirectory: () => name === 'foo',
@@ -45,7 +43,7 @@ const fooMethodHandlers = defineEndpoints({
     output: [
       {
         status: 201,
-        schema: complexYupSchema,
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],
@@ -59,9 +57,9 @@ const fooBarMethodHandlers = defineEndpoints({
   PUT: {
     input: {
       contentType: 'application/json',
-      body: complexYupSchema,
-      query: yup.object({
-        foo: yup.string()
+      body: complexZodSchema,
+      query: z.object({
+        foo: z.string()
       })
     },
     output: [
@@ -97,7 +95,7 @@ const fooBarBazQuxMethodHandlers = defineEndpoints({
     output: [
       {
         status: 200,
-        schema: complexYupSchema,
+        schema: complexZodSchema,
         contentType: 'application/json'
       }
     ],
@@ -181,36 +179,94 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
   }).defineCatchAllHandler()(req, res);
   const { paths } = res._getJSONData();
 
+  const primitives = {
+    type: 'object',
+    properties: {
+      string: { type: 'string' },
+      number: { type: 'number' },
+      bigint: { type: 'number' },
+      date: { type: 'string', format: 'date-time' },
+      symbol: { type: 'string' },
+      undefined: { type: 'null' },
+      null: { type: 'null' },
+      nan: { type: 'null' },
+      void: { type: 'null' },
+      any: {},
+      unknown: {},
+      never: { type: 'null' },
+      enum: { enum: ['foo', 'bar', 'baz'] },
+      nativeEnum: { enum: ['foo', 'bar', 'baz'] },
+      nullable: { type: ['string', 'null'] }
+    }
+  };
+
   const schema = {
     type: 'object',
     properties: {
-      name: {
-        type: 'string'
+      primitives,
+      objects: {
+        type: 'object',
+        properties: {
+          primitives
+        }
       },
-      age: {
-        type: 'number'
+      arrays: {
+        type: 'array',
+        items: primitives
       },
-      hobbies: {
-        items: {
-          type: 'object',
-          properties: {
-            name: {
-              type: 'string'
-            },
+      tuples: {
+        type: 'array',
+        items: [{ type: 'string' }, { type: 'number' }]
+      },
+      unions: { anyOf: [{ type: 'string' }, { type: 'number' }] },
+      discriminatedUnions: {
+        oneOf: [
+          {
+            type: 'object',
             properties: {
-              type: 'object',
-              properties: {
-                foo: {
-                  type: 'string'
-                }
-              }
+              type: { enum: ['object1'], type: 'string' },
+              foo: { type: 'string' },
+              bar: { type: 'number' }
+            }
+          },
+          {
+            type: 'object',
+            properties: {
+              type: { enum: ['object2'], type: 'string' },
+              foo: { type: 'number' },
+              bar: { type: 'boolean' }
             }
           }
-        },
-        type: 'array'
+        ]
       },
-      isCool: {
-        type: 'boolean'
+      record: {
+        type: 'object',
+        additionalProperties: { type: 'string' }
+      },
+      maps: {
+        type: 'object',
+        additionalProperties: { type: 'number' }
+      },
+      sets: {
+        type: 'array',
+        items: { type: 'string' },
+        uniqueItems: true
+      },
+      intersections: {
+        allOf: [
+          {
+            type: 'object',
+            properties: {
+              name: { type: 'string' }
+            }
+          },
+          {
+            type: 'object',
+            properties: {
+              role: { type: 'string' }
+            }
+          }
+        ]
       }
     }
   };

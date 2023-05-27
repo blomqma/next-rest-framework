@@ -7,7 +7,6 @@ import merge from 'lodash.merge';
 import chalk from 'chalk';
 import { createNextRestFrameworkMocks, resetCustomGlobals } from './utils';
 import { z } from 'zod';
-import * as yup from 'yup';
 
 jest.mock('fs', () => ({
   readdirSync: () => [],
@@ -347,113 +346,74 @@ it('returns error for invalid methods', async () => {
   });
 });
 
-it.each([
-  {
-    name: 'Zod',
-    body: z.object({
-      foo: z.number()
-    }),
-    message: ['Expected number, received string']
-  },
-  {
-    name: 'Yup',
-    body: yup.object({
-      foo: yup.number()
-    }),
-    message: [
-      'foo must be a `number` type, but the final value was: `NaN` (cast from the value `"bar"`).'
-    ]
-  }
-])(
-  'returns error for invalid request body: $name',
-  async ({ body, message }) => {
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'POST',
-      body: {
-        foo: 'bar'
+it('returns error for invalid request body', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'POST',
+    body: {
+      foo: 'bar'
+    },
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
+
+  await NextRestFramework().defineEndpoints({
+    [ValidMethod.POST]: {
+      input: {
+        contentType: 'application/json',
+        body: z.object({
+          foo: z.number()
+        })
       },
-      headers: {
-        'content-type': 'application/json'
-      }
-    });
+      output: [],
+      handler: () => {}
+    }
+  })(req, res);
 
-    await NextRestFramework().defineEndpoints({
-      [ValidMethod.POST]: {
-        input: {
-          contentType: 'application/json',
-          body
-        },
-        output: [],
-        handler: () => {}
-      }
-    })(req, res);
+  expect(res._getStatusCode()).toEqual(400);
 
-    expect(res._getStatusCode()).toEqual(400);
+  expect(res._getJSONData()).toEqual({
+    message: 'Invalid request body: Expected number, received string'
+  });
+});
 
-    expect(res._getJSONData()).toEqual({
-      message: `Invalid request body: ${message}`
-    });
-  }
-);
+it('returns error for invalid query parameters', async () => {
+  const { req, res } = createNextRestFrameworkMocks({
+    method: 'POST',
+    body: {
+      foo: 1
+    },
+    query: {
+      foo: 'bar'
+    },
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
 
-it.each([
-  {
-    name: 'Zod',
-    body: z.object({
-      foo: z.number()
-    }),
-    query: z.object({
-      foo: z.number()
-    }),
-    message: ['Expected number, received string']
-  },
-  {
-    name: 'Yup',
-    body: yup.object({
-      foo: yup.number()
-    }),
-    query: yup.object({
-      foo: yup.number()
-    }),
-    message: [
-      'foo must be a `number` type, but the final value was: `NaN` (cast from the value `"bar"`).'
-    ]
-  }
-])(
-  'returns error for invalid query parameters: $name',
-  async ({ body, query, message }) => {
-    const { req, res } = createNextRestFrameworkMocks({
-      method: 'POST',
-      body: {
-        foo: 1
+  await NextRestFramework().defineEndpoints({
+    [ValidMethod.POST]: {
+      input: {
+        contentType: 'application/json',
+        body: z.object({
+          foo: z.number()
+        }),
+        query: z.object({
+          foo: z.number()
+        })
       },
-      query: {
-        foo: 'bar'
-      },
-      headers: {
-        'content-type': 'application/json'
-      }
-    });
+      output: [],
+      handler: () => {}
+    }
+    // @ts-expect-error: Intentionally invalid.
+  })(req, res);
 
-    await NextRestFramework().defineEndpoints({
-      [ValidMethod.POST]: {
-        input: {
-          contentType: 'application/json',
-          body,
-          query
-        },
-        output: [],
-        handler: () => {}
-      }
-    })(req, res);
+  expect(res._getStatusCode()).toEqual(400);
 
-    expect(res._getStatusCode()).toEqual(400);
-
-    expect(res._getJSONData()).toEqual({
-      message: `Invalid query parameters: ${message}`
-    });
-  }
-);
+  expect(res._getJSONData()).toEqual({
+    message: 'Invalid query parameters: Expected number, received string'
+  });
+});
 
 it('returns error for invalid content-type', async () => {
   const { req, res } = createNextRestFrameworkMocks({
