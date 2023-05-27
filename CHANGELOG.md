@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 0.8.0 - 2023-05-27
+
+### Removed
+
+- Drop support for Yup schemas in order to better support Zod that is the main object-schema validation library used with the framework.
+
+### Added
+
+- Add support for all applicable Zod schema types listed in their docs: https://zod.dev
+
 ### 0.7.2 - 2023-05-19
 
 ### Fixed
