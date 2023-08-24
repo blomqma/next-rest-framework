@@ -1,7 +1,6 @@
-import { OpenAPIV3_1 } from 'openapi-types';
-import { ErrorHandler } from './error-handler';
-import { Middleware } from './middleware';
-import { Modify } from './utility-types';
+import { type OpenAPIV3_1 } from 'openapi-types';
+import { type Modify } from './utility-types';
+import { type ErrorHandler } from './error-handler';
 
 type NextRestFrameworkOpenApiSpec = Partial<
   Modify<
@@ -12,8 +11,11 @@ type NextRestFrameworkOpenApiSpec = Partial<
   >
 >;
 
-export interface NextRestFrameworkConfig<GlobalMiddlewareResponse = unknown> {
-  apiRoutesPath?: string; // Absolute path to the directory where your API routes are located - defaults to `pages/api`.
+export interface NextRestFrameworkConfig {
+  // Absolute path to the app directory where your routes are located, usually either `app` or `src/app`.
+  appDirPath?: string;
+  // Absolute path to the directory where your API routes are located, usually `pages/api` or `src/pages/api`.
+  apiRoutesPath?: string;
   openApiSpecOverrides?: NextRestFrameworkOpenApiSpec; // Fully typed OpenAPI spec for your API.
   openApiJsonPath?: string; // Path that will be used for the OpenAPI spec - defaults tp `/api/openapi.json`.
   openApiYamlPath?: string; // Path that will be used for the OpenAPI spec - defaults tp `/api/openapi.json`.
@@ -26,7 +28,7 @@ export interface NextRestFrameworkConfig<GlobalMiddlewareResponse = unknown> {
     logoHref?: string;
   };
   exposeOpenApiSpec?: boolean; // Setting this to `false` will expose neither the API docs nor the OpenAPI specs.
-  middleware?: Middleware<GlobalMiddlewareResponse>; // A middleware used for all of your APIs - useful for e.g. authentication. The return object will be passed to your request handlers.
   errorHandler?: ErrorHandler; // A function that will be called when an error occurs. By default, it will return a 500 status code and a default error unless your provide a custom response.
   suppressInfo?: boolean; // Setting this to `true` will suppress all informational logs from Next REST Framework.
+  generatePathsTimeout?: number; // Timeout in milliseconds for generating the OpenAPI spec. Defaults to 5000. For large applications you might have to increase this.
 }

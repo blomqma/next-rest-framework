@@ -1,15 +1,12 @@
-import { OpenAPIV3_1 } from 'openapi-types';
-import { ApiHandler } from './api-handler';
-import { AnyContentTypeWithAutocompleteForMostCommonOnes } from './content-types';
-import { ErrorHandler } from './error-handler';
-import { Middleware } from './middleware';
-import { TypedNextApiRequest } from './request';
-import { TypedNextApiResponse } from './response';
+import { type OpenAPIV3_1 } from 'openapi-types';
+import { type ApiRouteHandler, type RouteHandler } from './route-handler';
+import { type AnyContentTypeWithAutocompleteForMostCommonOnes } from './content-types';
 import {
-  BaseObjectSchemaType,
-  BaseSchemaType,
-  SchemaReturnType
+  type BaseObjectSchemaType,
+  type BaseSchemaType,
+  type SchemaReturnType
 } from './schemas';
+import { type Modify } from './utility-types';
 
 export type BaseStatus = number;
 export type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
@@ -24,66 +21,42 @@ export interface InputObject<
 }
 
 export interface OutputObject<
+  ResponseSchema extends BaseSchemaType = BaseSchemaType,
   Status extends BaseStatus = BaseStatus,
-  ContentType extends BaseContentType = BaseContentType,
-  ResponseSchema extends BaseSchemaType = BaseSchemaType
+  ContentType extends BaseContentType = BaseContentType
 > {
-  status: Status;
   schema: ResponseSchema;
+  status: Status;
   contentType: ContentType;
 }
 
 export interface MethodHandler<
   BodySchema extends BaseSchemaType = BaseSchemaType,
   QuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
-  Output extends OutputObject = OutputObject,
-  GlobalMiddlewareResponse = unknown,
-  RouteMiddlewareResponse = unknown,
-  MethodMiddlewareResponse = unknown
+  Output extends OutputObject = OutputObject
 > {
   tags?: string[];
   input?: InputObject<BodySchema, QuerySchema>;
   output?: Output[];
-  middleware?: Middleware<
-    MethodMiddlewareResponse,
-    {
-      params: GlobalMiddlewareResponse & RouteMiddlewareResponse;
-    },
-    TypedNextApiRequest<
-      SchemaReturnType<BodySchema>,
-      SchemaReturnType<QuerySchema>
-    >,
-    TypedNextApiResponse<
-      Output['status'],
-      Output['contentType'],
-      SchemaReturnType<Output['schema']>
-    >
-  >;
-  handler: ApiHandler<
+  handler: RouteHandler<
     SchemaReturnType<BodySchema>,
     SchemaReturnType<QuerySchema>,
-    Output['status'],
-    Output['contentType'],
-    SchemaReturnType<Output['schema']>,
-    GlobalMiddlewareResponse,
-    RouteMiddlewareResponse,
-    MethodMiddlewareResponse
-  >;
-  errorHandler?: ErrorHandler<
-    {
-      params: GlobalMiddlewareResponse &
-        RouteMiddlewareResponse &
-        MethodMiddlewareResponse;
-    },
-    TypedNextApiRequest<
-      SchemaReturnType<BodySchema>,
-      SchemaReturnType<QuerySchema>
-    >,
-    TypedNextApiResponse<
-      Output['status'],
-      Output['contentType'],
-      SchemaReturnType<Output['schema']>
-    >
+    SchemaReturnType<Output['schema']>
   >;
   openApiSpecOverrides?: OpenAPIV3_1.OperationObject;
 }
+
+export type ApiRouteMethodHandler<
+  BodySchema extends BaseSchemaType = BaseSchemaType,
+  QuerySchema extends BaseObjectSchemaType = BaseObjectSchemaType,
+  Output extends OutputObject = OutputObject
+> = Modify<
+  MethodHandler<BodySchema, QuerySchema, Output>,
+  {
+    handler: ApiRouteHandler<
+      SchemaReturnType<BodySchema>,
+      SchemaReturnType<QuerySchema>,
+      SchemaReturnType<Output['schema']>
+    >;
+  }
+>;

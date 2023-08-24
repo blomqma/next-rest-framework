@@ -1,35 +1,35 @@
-import { OpenAPIV3_1 } from 'openapi-types';
+import { type OpenAPIV3_1 } from 'openapi-types';
 import {
-  ZodAny,
-  ZodArray,
-  ZodBigInt,
-  ZodBoolean,
-  ZodDate,
-  ZodEnum,
-  ZodIntersection,
-  ZodLiteral,
-  ZodMap,
-  ZodNaN,
-  ZodNativeEnum,
-  ZodNull,
-  ZodNullable,
-  ZodNumber,
-  ZodOptional,
-  ZodRecord,
-  ZodSchema,
-  ZodSet,
-  ZodString,
-  ZodSymbol,
-  ZodTuple,
-  ZodUndefined,
-  ZodUnion,
-  ZodUnknown,
-  ZodVoid,
-  ZodObject,
-  ZodNever,
-  ZodTypeAny
+  type ZodAny,
+  type ZodArray,
+  type ZodBigInt,
+  type ZodBoolean,
+  type ZodDate,
+  type ZodEnum,
+  type ZodIntersection,
+  type ZodLiteral,
+  type ZodMap,
+  type ZodNaN,
+  type ZodNativeEnum,
+  type ZodNull,
+  type ZodNullable,
+  type ZodNumber,
+  type ZodOptional,
+  type ZodRecord,
+  type ZodSchema,
+  type ZodSet,
+  type ZodString,
+  type ZodSymbol,
+  type ZodTuple,
+  type ZodUndefined,
+  type ZodUnion,
+  type ZodUnknown,
+  type ZodVoid,
+  type ZodObject,
+  type ZodNever,
+  type ZodTypeAny
 } from 'zod';
-import { BaseObjectSchemaType, BaseSchemaType } from '../types';
+import { type BaseObjectSchemaType, type BaseSchemaType } from '../types';
 import chalk from 'chalk';
 
 export const isZodSchema = (schema: unknown): schema is ZodSchema =>
@@ -259,8 +259,6 @@ export const convertZodSchema = (
       ]
     };
   }
-
-  console.log('schema', schema, schema instanceof ZodObject);
 
   if (process.env.NODE_ENV !== 'production' && 'typeName' in schema._def) {
     console.warn(

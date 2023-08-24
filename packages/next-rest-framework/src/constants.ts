@@ -19,8 +19,7 @@ export enum ValidMethod {
   DELETE = 'DELETE',
   OPTIONS = 'OPTIONS',
   HEAD = 'HEAD',
-  PATCH = 'PATCH',
-  TRACE = 'TRACE'
+  PATCH = 'PATCH'
 }
 
 export const NEXT_REST_FRAMEWORK_USER_AGENT = 'next-rest-framework';

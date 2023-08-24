@@ -1,18 +1,9 @@
+import { merge } from 'lodash';
 import { OPEN_API_VERSION, VERSION } from '../constants';
-import { OpenAPIV3_1 } from 'openapi-types';
-import { Modify, NextRestFrameworkConfig } from '../types';
 import { logNextRestFrameworkError } from './logging';
+import { type NextRestFrameworkConfig } from '../types';
 
-export const getDefaultConfig = ({
-  config
-}: {
-  config?: NextRestFrameworkConfig;
-} = {}): Modify<
-  NextRestFrameworkConfig,
-  {
-    openApiSpecOverrides: OpenAPIV3_1.Document;
-  }
-> => ({
+export const DEFAULT_CONFIG = {
   apiRoutesPath: 'pages/api',
   openApiSpecOverrides: {
     openapi: OPEN_API_VERSION,
@@ -37,5 +28,9 @@ export const getDefaultConfig = ({
   },
   exposeOpenApiSpec: true,
   errorHandler: logNextRestFrameworkError,
-  suppressInfo: false
-});
+  suppressInfo: false,
+  generatePathsTimeout: 5000
+};
+
+export const getConfig = (config?: NextRestFrameworkConfig) =>
+  merge({}, DEFAULT_CONFIG, config);
