@@ -1,15 +1,12 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+/* eslint-disable @typescript-eslint/no-invalid-void-type */
 
-export type ErrorHandler<
-  ExtraParams = unknown,
-  Req = NextApiRequest,
-  Res = NextApiResponse
-> = ({
+import { type NextResponse, type NextRequest } from 'next/server';
+import { type NextApiRequest } from 'next/types';
+
+export type ErrorHandler = ({
   req,
-  res,
   error
 }: {
-  req: Req;
-  res: Res;
+  req: NextRequest | NextApiRequest;
   error: unknown;
-} & ExtraParams) => Promise<void> | void;
+}) => Promise<NextResponse | void> | NextResponse | void;

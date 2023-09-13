@@ -2,9 +2,10 @@
   "name": "example",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
-    "prebuild": "cd ../.. && pnpm build && cd apps/example && pnpm dlx next-rest-framework generate",
+    "prebuild": "cd ../.. && pnpm build && cd apps/example",
+    "dev": "pnpm prebuild && next dev",
     "build": "pnpm prebuild && next build",
+    "generate": "pnpm prebuild && next-rest-framework generate",
     "start": "next start",
     "type-check": "tsc --noEmit"
   },

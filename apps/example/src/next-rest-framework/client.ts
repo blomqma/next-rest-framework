@@ -1,6 +1,13 @@
 import { NextRestFramework } from 'next-rest-framework';
 
-export const { defineCatchAllHandler, defineEndpoints } = NextRestFramework({
+export const {
+  defineCatchAllRoute,
+  defineRoute,
+  defineCatchAllApiRoute,
+  defineApiRoute
+} = NextRestFramework({
+  appDirPath: 'src/app',
   apiRoutesPath: 'src/pages/api',
-  errorHandler: ({ error }) => console.error(error)
+  openApiJsonPath: '/api/foo/openapi.json',
+  openApiYamlPath: '/api/bar/openapi.yaml'
 });

@@ -1,24 +1,17 @@
-import { defineEndpoints } from './define-endpoints';
-import { NextRestFrameworkConfig } from './types';
-import merge from 'lodash.merge';
-import { getDefaultConfig, logInitInfo } from './utils';
+import { defineRoute } from './define-route';
+import { type NextRestFrameworkConfig } from './types';
+import { getConfig } from './utils';
+import { defineApiRoute } from './define-api-route';
+import { defineCatchAllRoute } from './define-catch-all-route';
+import { defineCatchAllApiRoute } from './define-catch-all-api-route';
 
-export const NextRestFramework = <GlobalMiddlewareResponse>(
-  _config?: NextRestFrameworkConfig<GlobalMiddlewareResponse>
-) => {
-  const config = merge(getDefaultConfig({ config: _config }), _config);
-
-  if (!config.suppressInfo) {
-    logInitInfo({ config });
-  }
+export const NextRestFramework = (_config?: NextRestFrameworkConfig) => {
+  const config = getConfig(_config);
 
   return {
-    config,
-    defineCatchAllHandler: defineEndpoints({
-      config,
-      _warnAboutReservedPaths: false,
-      _returnNotFoundForMissingHandler: true
-    }),
-    defineEndpoints: defineEndpoints({ config })
+    defineCatchAllRoute: defineCatchAllRoute({ config }),
+    defineCatchAllApiRoute: defineCatchAllApiRoute({ config }),
+    defineRoute: defineRoute({ config }),
+    defineApiRoute: defineApiRoute({ config })
   };
 };

@@ -1,22 +1,6 @@
 import chalk from 'chalk';
-import { NextRestFrameworkConfig } from '../types';
-import http from 'http';
-import isEqualWith from 'lodash.isequalwith';
-
-export const logNextRestFrameworkError = ({ error }: { error: unknown }) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.error(
-      chalk.red(`Next REST Framework encountered an error:
-${error}`)
-    );
-  } else {
-    console.error(
-      chalk.red(
-        'Next REST Framework encountered an error - suppressed in production mode.'
-      )
-    );
-  }
-};
+import { type NextRestFrameworkConfig } from '../types';
+import { isEqualWith } from 'lodash';
 
 export const logInitInfo = ({
   config
@@ -48,15 +32,11 @@ export const logInitInfo = ({
 
 export const logReservedPaths = ({
   config,
-  headers
+  baseUrl
 }: {
   config: NextRestFrameworkConfig;
-  headers: http.IncomingHttpHeaders;
+  baseUrl: string;
 }) => {
-  const proto = headers['x-forwarded-proto'] ?? 'http';
-  const host = headers.host;
-  const baseUrl = `${proto}://${host}`;
-
   if (config.exposeOpenApiSpec) {
     console.info(
       chalk.yellowBright(`Swagger UI: ${baseUrl}${config.swaggerUiPath}
@@ -112,13 +92,16 @@ export const warnAboutReservedPath = ({
 };
 
 export const handleReservedPathWarnings = ({
-  url,
+  pathname,
   config: { openApiJsonPath, openApiYamlPath, swaggerUiPath }
 }: {
-  url?: string;
+  pathname?: string;
   config: NextRestFrameworkConfig;
 }) => {
-  if (url === openApiJsonPath && !global.reservedOpenApiJsonPathWarningLogged) {
+  if (
+    pathname === openApiJsonPath &&
+    !global.reservedOpenApiJsonPathWarningLogged
+  ) {
     warnAboutReservedPath({
       path: openApiJsonPath,
       name: 'OpenAPI JSON spec',
@@ -126,7 +109,10 @@ export const handleReservedPathWarnings = ({
     });
   }
 
-  if (url === openApiYamlPath && !global.reservedOpenApiYamlPathWarningLogged) {
+  if (
+    pathname === openApiYamlPath &&
+    !global.reservedOpenApiYamlPathWarningLogged
+  ) {
     warnAboutReservedPath({
       path: openApiYamlPath,
       name: 'OpenAPI YAML spec',
@@ -134,11 +120,29 @@ export const handleReservedPathWarnings = ({
     });
   }
 
-  if (url === swaggerUiPath && !global.reservedSwaggerUiPathWarningLogged) {
+  if (
+    pathname === swaggerUiPath &&
+    !global.reservedSwaggerUiPathWarningLogged
+  ) {
     warnAboutReservedPath({
       path: swaggerUiPath,
       name: 'Swagger UI',
       configName: 'swaggerUiPath'
     });
+  }
+};
+
+export const logNextRestFrameworkError = ({ error }: { error: unknown }) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(
+      chalk.red(`Next REST Framework encountered an error:
+${error}`)
+    );
+  } else {
+    console.error(
+      chalk.red(
+        'Next REST Framework encountered an error - suppressed in production mode.'
+      )
+    );
   }
 };

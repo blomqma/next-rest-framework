@@ -25,20 +25,25 @@ program
   .description(
     'Run the OpenAPI generation from your Next REST Framework client.'
   )
-  .action(async (_, options) => {
+  .action(async (options) => {
     const port = options.port ?? '3000';
     const path = options.path ?? '/api';
-    const timeout = options.timeout ?? '10000';
+    const timeout = options.timeout ?? 10000;
 
     const server = spawn('npx', ['next', 'dev', '-p', port], {
       stdio: 'inherit'
     });
 
     try {
-      await waitOn({ resources: [`http://localhost:${port}${path}`], timeout });
+      await waitOn({
+        resources: [`http-get://localhost:${port}${path}`],
+        timeout
+      });
+
       server.kill();
     } catch (e) {
       console.error(chalk.red(`Error while generating the API spec: ${e}`));
+      server.kill();
       process.exit(1);
     }
   });

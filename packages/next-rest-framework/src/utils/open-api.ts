@@ -1,40 +1,32 @@
 import { join } from 'path';
-import http from 'http';
-import {
-  DefineEndpointsParams,
-  MethodHandler,
-  NextRestFrameworkConfig
-} from '../types';
-import { OpenAPIV3_1 } from 'openapi-types';
+import { type MethodHandler, type NextRestFrameworkConfig } from '../types';
+import { type OpenAPIV3_1 } from 'openapi-types';
 import {
   DEFAULT_ERRORS,
   NEXT_REST_FRAMEWORK_USER_AGENT,
   OPEN_API_VERSION,
-  ValidMethod,
-  VERSION
+  VERSION,
+  ValidMethod
 } from '../constants';
-import merge from 'lodash.merge';
+import { merge, isEqualWith } from 'lodash';
 import { getJsonSchema, getSchemaKeys } from './schemas';
 import { readdirSync, readFileSync, writeFileSync } from 'fs';
-import isEqualWith from 'lodash.isequalwith';
 import chalk from 'chalk';
-import { NextApiRequest } from 'next';
+import { type DefineRouteParams } from '../types/define-route';
 
 export const getHTMLForSwaggerUI = ({
-  headers,
   config: {
     openApiJsonPath,
     openApiYamlPath,
     swaggerUiPath,
     swaggerUiConfig: { title, description, faviconHref, logoHref } = {}
-  }
+  },
+  baseUrl
 }: {
-  headers: http.IncomingHttpHeaders;
   config: NextRestFrameworkConfig;
+  baseUrl: string;
 }) => {
-  const proto = headers['x-forwarded-proto'] ?? 'http';
-  const host = headers.host;
-  const url = `${proto}://${host}/${openApiYamlPath}`;
+  const url = `${baseUrl}${openApiJsonPath}`;
 
   return `<!DOCTYPE html>
   <html lang="en" data-theme="light">
@@ -124,12 +116,12 @@ export const getHTMLForSwaggerUI = ({
   </html>`;
 };
 
-const getNestedApiRoutes = (basePath: string, dir: string): string[] => {
+const getNestedRoutes = (basePath: string, dir: string): string[] => {
   const dirents = readdirSync(join(basePath, dir), { withFileTypes: true });
 
   const files = dirents.map((dirent) => {
     const res = join(dir, dirent.name);
-    return dirent.isDirectory() ? getNestedApiRoutes(basePath, res) : res;
+    return dirent.isDirectory() ? getNestedRoutes(basePath, res) : res;
   });
 
   return files.flat();
@@ -137,14 +129,41 @@ const getNestedApiRoutes = (basePath: string, dir: string): string[] => {
 
 // Generate the OpenAPI paths from the Next.js API routes.
 const generatePaths = async ({
-  config: { apiRoutesPath, openApiJsonPath, openApiYamlPath, swaggerUiPath },
-  req: { headers }
+  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath, ...config },
+  baseUrl
 }: {
   config: NextRestFrameworkConfig;
-  req: NextApiRequest;
+  baseUrl: string;
 }): Promise<OpenAPIV3_1.PathsObject> => {
+  const filterRoutes = (file: string) => {
+    const isRoute = file.endsWith('route.ts');
+
+    const isCatchAllRoute = file.includes('[...');
+
+    const isOpenApiJsonRoute =
+      file === `${openApiJsonPath?.split('/').at(-1)}/route.ts`;
+
+    const isOpenApiYamlRoute =
+      file === `${openApiYamlPath?.split('/').at(-1)}/route.ts`;
+
+    const isSwaggerUiRoute =
+      file === `${swaggerUiPath?.split('/').at(-1)}/route.ts`;
+
+    if (
+      !isRoute ||
+      isCatchAllRoute ||
+      isOpenApiJsonRoute ||
+      isOpenApiYamlRoute ||
+      isSwaggerUiRoute
+    ) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   const filterApiRoutes = (file: string) => {
-    const isCatchAllRoute = file.includes('...');
+    const isCatchAllRoute = file.includes('[...');
 
     const isOpenApiJsonRoute =
       file === `${openApiJsonPath?.split('/').at(-1)}.ts`;
@@ -166,37 +185,57 @@ const generatePaths = async ({
     }
   };
 
-  const basePath = join(process.cwd(), apiRoutesPath ?? '');
+  const appDirPath = 'appDirPath' in config ? config.appDirPath : '';
 
-  const apiRoutes = getNestedApiRoutes(basePath, '')
+  const _routes =
+    (appDirPath &&
+      getNestedRoutes(join(process.cwd(), appDirPath ?? ''), '')
+        .filter(filterRoutes)
+        .map((file) =>
+          `${appDirPath.split('/app')[1]}/${file}`
+            .replace('/route.ts', '')
+            .replace(/\\/g, '/')
+            .replace('[', '{')
+            .replace(']', '}')
+        )) ??
+    [];
+
+  const apiRoutesPath = 'apiRoutesPath' in config ? config.apiRoutesPath : '';
+
+  const apiRoutes = getNestedRoutes(
+    join(process.cwd(), apiRoutesPath ?? ''),
+    ''
+  )
     .filter(filterApiRoutes)
     .map((file) =>
       `/api/${file}`
-        .replace(/\\/g, '/')
         .replace('/index', '')
+        .replace(/\\/g, '/')
         .replace('[', '{')
         .replace(']', '}')
         .replace('.ts', '')
     );
 
+  const routes = [..._routes, ...apiRoutes];
+
   let paths: OpenAPIV3_1.PathsObject = {};
 
   await Promise.all(
-    apiRoutes.map(async (route) => {
-      const proto = headers['x-forwarded-proto'] ?? 'http';
-      const host = headers.host;
-      const url = `${proto}://${host}${route}`;
+    routes.map(async (route) => {
+      const url = `${baseUrl}${route}`;
       const controller = new AbortController();
 
-      // Abort the request if it takes longer than 200ms.
       const abortRequest = setTimeout(() => {
         controller.abort();
-      }, 200);
+      }, config.generatePathsTimeout);
 
       try {
         const res = await fetch(url, {
           headers: {
-            'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT
+            'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT,
+            'Content-Type': 'application/json',
+            'x-forwarded-proto': baseUrl.split('://')[0],
+            'x-forwarded-host': baseUrl.split('://')[1]
           },
           signal: controller.signal
         });
@@ -230,10 +269,10 @@ const generatePaths = async ({
 // In prod use the existing openapi.json file - in development mode update it whenever the generated API spec changes.
 export const getOrCreateOpenApiSpec = async ({
   config,
-  req
+  baseUrl
 }: {
   config: NextRestFrameworkConfig;
-  req: NextApiRequest;
+  baseUrl: string;
 }) => {
   let specFileFound = false;
 
@@ -244,12 +283,12 @@ export const getOrCreateOpenApiSpec = async ({
   } catch {}
 
   if (process.env.NODE_ENV !== 'production') {
-    const paths = await generatePaths({ config, req });
+    const paths = await generatePaths({ config, baseUrl });
 
     const newSpec = {
       ...config.openApiSpecOverrides,
       openapi: OPEN_API_VERSION,
-      paths: merge(config.openApiSpecOverrides?.paths, paths)
+      paths: merge({}, config.openApiSpecOverrides?.paths, paths)
     };
 
     if (!isEqualWith(global.openApiSpec, newSpec)) {
@@ -307,7 +346,7 @@ export const getPathsFromMethodHandlers = ({
   route
 }: {
   config: NextRestFrameworkConfig;
-  methodHandlers: DefineEndpointsParams;
+  methodHandlers: DefineRouteParams;
   route: string;
 }) => {
   const { openApiSpecOverrides } = methodHandlers;
@@ -325,7 +364,6 @@ export const getPathsFromMethodHandlers = ({
       ] as MethodHandler;
 
       const method = _method.toLowerCase();
-
       let requestBodyContent: Record<string, OpenAPIV3_1.MediaTypeObject> = {};
 
       if (input?.body && input?.contentType) {
@@ -356,7 +394,6 @@ export const getPathsFromMethodHandlers = ({
       );
 
       const generatedOperationObject: OpenAPIV3_1.OperationObject = {
-        tags,
         requestBody: {
           content: requestBodyContent
         },
@@ -366,7 +403,12 @@ export const getPathsFromMethodHandlers = ({
         }
       };
 
+      if (tags) {
+        generatedOperationObject.tags = tags;
+      }
+
       const pathParameters = route.match(/{([^}]+)}/g);
+
       if (pathParameters) {
         generatedOperationObject.parameters = pathParameters.map((param) => ({
           name: param.replace(/[{}]/g, ''),
