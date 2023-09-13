@@ -1,6 +1,24 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.0.1 - 2023-09-13
+
+Full details available in this PR: https://github.com/blomqma/next-rest-framework/pull/49
+
+### Added
+
+- Add support for Next.js App Router
+
+### Removed
+
+- Remove support for global, route and method middlewares.
+- Remove support for HTTP TRACE.
+- Removed support for Node.js 16.
+
+### Changed
+
+- Running `next-rest-framework generate` is no longer encouraged to be run together with `next build`.
+
 ### 0.8.0 - 2023-05-27
 
 ### Removed
