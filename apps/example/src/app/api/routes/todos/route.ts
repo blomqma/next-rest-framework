@@ -2,7 +2,7 @@ import { defineRoute } from 'next-rest-framework/client';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-export const GET = defineRoute({
+const handler = defineRoute({
   GET: {
     output: [
       {
@@ -25,10 +25,7 @@ export const GET = defineRoute({
         }
       );
     }
-  }
-});
-
-export const POST = defineRoute({
+  },
   POST: {
     input: {
       contentType: 'application/json',
@@ -63,10 +60,7 @@ export const POST = defineRoute({
         }
       );
     }
-  }
-});
-
-export const PUT = defineRoute({
+  },
   PUT: {
     input: {
       contentType: 'application/json',
@@ -111,3 +105,5 @@ export const PUT = defineRoute({
     }
   }
 });
+
+export { handler as GET, handler as POST, handler as PUT };

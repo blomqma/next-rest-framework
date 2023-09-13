@@ -85,7 +85,7 @@ import { defineRoute } from 'next-rest-framework/client';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-export const GET = defineRoute({
+const handler = defineRoute({
   GET: {
     output: [
       {
@@ -109,10 +109,7 @@ export const GET = defineRoute({
         }
       );
     }
-  }
-});
-
-export const POST = defineRoute({
+  },
   POST: {
     input: {
       contentType: 'application/json',
@@ -158,9 +155,9 @@ export const POST = defineRoute({
     }
   }
 });
-```
 
-You can also define a single route with all of the methods and export it as all of the methods you want to support.
+export { handler as GET, handler as POST };
+```
 
 #### Pages Router:
 
