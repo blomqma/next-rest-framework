@@ -263,7 +263,14 @@ const generatePaths = async ({
     })
   );
 
-  return paths;
+  const sortedPathKeys = Object.keys(paths).sort();
+  const sortedPaths: typeof paths = {};
+
+  for (const key of sortedPathKeys) {
+    sortedPaths[key] = paths[key];
+  }
+
+  return sortedPaths;
 };
 
 // In prod use the existing openapi.json file - in development mode update it whenever the generated API spec changes.
