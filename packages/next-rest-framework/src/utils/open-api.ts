@@ -202,19 +202,19 @@ const generatePaths = async ({
 
   const apiRoutesPath = 'apiRoutesPath' in config ? config.apiRoutesPath : '';
 
-  const apiRoutes = getNestedRoutes(
-    join(process.cwd(), apiRoutesPath ?? ''),
-    ''
-  )
-    .filter(filterApiRoutes)
-    .map((file) =>
-      `/api/${file}`
-        .replace('/index', '')
-        .replace(/\\/g, '/')
-        .replace('[', '{')
-        .replace(']', '}')
-        .replace('.ts', '')
-    );
+  const apiRoutes =
+    (apiRoutesPath &&
+      getNestedRoutes(join(process.cwd(), apiRoutesPath ?? ''), '')
+        .filter(filterApiRoutes)
+        .map((file) =>
+          `/api/${file}`
+            .replace('/index', '')
+            .replace(/\\/g, '/')
+            .replace('[', '{')
+            .replace(']', '}')
+            .replace('.ts', '')
+        )) ??
+    [];
 
   const routes = [..._routes, ...apiRoutes];
 
