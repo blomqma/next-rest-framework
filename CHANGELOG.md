@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.0.2 - 2023-09-23
+
+### Fixed
+
+- Fixed an idempotency issue in the OpenAPI paths generation where the ordering of the generated paths was inconsistent between executions.
+
+### Changed
+
+- Changed the OpenAPI spec generation to not make file system calls for API routes files when the config option `apiRoutesPath` is not defined.
+
 ### 1.0.1 - 2023-09-13
 
 Full details available in this PR: https://github.com/blomqma/next-rest-framework/pull/49
