@@ -235,4 +235,4 @@ export default defineApiRoute({
 
 These type-safe endpoints will be now auto-generated to your OpenAPI spec and Swagger UI!
 
-![Next REST Framework Swagger UI](@site/static/img/blog-2023-01-08-openapi-spec.jpg)
+![Next REST Framework Swagger UI](@site/static/img/swagger-ui-screenshot.jpg)

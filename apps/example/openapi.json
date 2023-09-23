@@ -7,6 +7,203 @@
   },
   "components": {},
   "paths": {
+    "/api/routes/todos": {
+      "get": {
+        "requestBody": {
+          "content": {}
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "foo": {
+                      "type": "string"
+                    },
+                    "bar": {
+                      "type": "string"
+                    },
+                    "baz": {
+                      "type": "string"
+                    },
+                    "qux": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "foo": {
+                    "type": "string"
+                  },
+                  "bar": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "foo": {
+                      "type": "string"
+                    },
+                    "bar": {
+                      "type": "number"
+                    },
+                    "query": {
+                      "type": "object",
+                      "properties": {
+                        "test": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "test",
+            "in": "query"
+          }
+        ]
+      },
+      "put": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "foo": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "bar": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "baz": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "foo": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "bar": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "bar": {
+                      "type": "number"
+                    },
+                    "query": {
+                      "type": "object",
+                      "properties": {
+                        "test": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "test",
+            "in": "query"
+          }
+        ]
+      }
+    },
     "/api/api-routes/dynamic/{slug}": {
       "get": {
         "requestBody": {
@@ -239,96 +436,12 @@
         ]
       }
     },
-    "/api/routes/todos": {
+    "/api/routes/dynamic/{slug}": {
       "get": {
         "requestBody": {
           "content": {}
         },
         "responses": {
-          "200": {
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "foo": {
-                      "type": "string"
-                    },
-                    "bar": {
-                      "type": "string"
-                    },
-                    "baz": {
-                      "type": "string"
-                    },
-                    "qux": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "foo": {
-                    "type": "string"
-                  },
-                  "bar": {
-                    "type": "number"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "foo": {
-                      "type": "string"
-                    },
-                    "bar": {
-                      "type": "number"
-                    },
-                    "query": {
-                      "type": "object",
-                      "properties": {
-                        "test": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
           "default": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
@@ -347,90 +460,12 @@
         },
         "parameters": [
           {
-            "name": "test",
-            "in": "query"
-          }
-        ]
-      },
-      "put": {
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "foo": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "bar": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  },
-                  "baz": {
-                    "type": "number"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "foo": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "bar": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    },
-                    "bar": {
-                      "type": "number"
-                    },
-                    "query": {
-                      "type": "object",
-                      "properties": {
-                        "test": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "name": "slug",
+            "in": "path",
+            "required": true
           },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "parameters": [
           {
-            "name": "test",
+            "name": "slug",
             "in": "query"
           }
         ]
