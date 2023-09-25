@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const cookieStore = cookies();
-  const theme = cookieStore.get('theme')?.value ?? 'dark';
+  const theme = cookieStore.get('theme')?.value ?? 'light';
 
   return (
     <html lang="en" data-theme={theme}>
