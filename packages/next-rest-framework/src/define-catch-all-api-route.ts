@@ -20,7 +20,7 @@ export const defineCatchAllApiRoute = ({
   return (methodHandlers: DefineApiRouteParams = {}) => {
     return async (req: NextApiRequest, res: NextApiResponse) => {
       try {
-        const { method, headers, url: pathname } = req;
+        const { method, headers, url: pathname, cookies } = req;
         const proto = headers['x-forwarded-proto'] ?? 'http';
         const host = headers.host;
         const baseUrl = `${proto}://${host}`;
@@ -62,7 +62,12 @@ export const defineCatchAllApiRoute = ({
           }
 
           if (pathname === swaggerUiPath) {
-            const html = getHTMLForSwaggerUI({ config, baseUrl });
+            const html = getHTMLForSwaggerUI({
+              config,
+              baseUrl,
+              theme: cookies.theme
+            });
+
             res.setHeader('Content-Type', 'text/html');
             res.status(200).send(html);
             return;

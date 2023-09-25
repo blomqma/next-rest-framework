@@ -2,7 +2,7 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter dev run dev",
+    "dev": "pnpm --filter example run dev",
     "build": "pnpm --filter next-rest-framework run build",
     "test": "pnpm --filter next-rest-framework run test",
     "test:watch": "pnpm --filter next-rest-framework run test:watch",
