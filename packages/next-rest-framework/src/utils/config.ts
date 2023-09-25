@@ -4,7 +4,6 @@ import { logNextRestFrameworkError } from './logging';
 import { type NextRestFrameworkConfig } from '../types';
 
 export const DEFAULT_CONFIG = {
-  apiRoutesPath: 'pages/api',
   openApiSpecOverrides: {
     openapi: OPEN_API_VERSION,
     info: {

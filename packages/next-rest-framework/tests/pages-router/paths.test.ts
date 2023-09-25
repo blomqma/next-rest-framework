@@ -31,7 +31,7 @@ beforeEach(() => {
 });
 
 const { defineCatchAllApiRoute, defineApiRoute } = NextRestFramework({
-  appDirPath: 'src/pages/api'
+  apiRoutesPath: 'src/pages/api'
 });
 
 const fooMethodHandlers = defineApiRoute({
