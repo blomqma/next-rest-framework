@@ -187,34 +187,44 @@ const generatePaths = async ({
 
   const appDirPath = 'appDirPath' in config ? config.appDirPath : '';
 
-  const _routes =
-    (appDirPath &&
-      getNestedRoutes(join(process.cwd(), appDirPath ?? ''), '')
-        .filter(filterRoutes)
-        .map((file) =>
-          `${appDirPath.split('/app')[1]}/${file}`
-            .replace('/route.ts', '')
-            .replace(/\\/g, '/')
-            .replace('[', '{')
-            .replace(']', '}')
-        )) ??
-    [];
+  let _routes: string[] = [];
+
+  try {
+    _routes = appDirPath
+      ? getNestedRoutes(join(process.cwd(), appDirPath ?? ''), '')
+          .filter(filterRoutes)
+          .map((file) =>
+            `${appDirPath.split('/app')[1]}/${file}`
+              .replace('/route.ts', '')
+              .replace(/\\/g, '/')
+              .replace('[', '{')
+              .replace(']', '}')
+          )
+      : [];
+  } catch {
+    // No app directory found.
+  }
 
   const apiRoutesPath = 'apiRoutesPath' in config ? config.apiRoutesPath : '';
 
-  const apiRoutes =
-    (apiRoutesPath &&
-      getNestedRoutes(join(process.cwd(), apiRoutesPath ?? ''), '')
-        .filter(filterApiRoutes)
-        .map((file) =>
-          `/api/${file}`
-            .replace('/index', '')
-            .replace(/\\/g, '/')
-            .replace('[', '{')
-            .replace(']', '}')
-            .replace('.ts', '')
-        )) ??
-    [];
+  let apiRoutes: string[] = [];
+
+  try {
+    apiRoutes = apiRoutesPath
+      ? getNestedRoutes(join(process.cwd(), apiRoutesPath ?? ''), '')
+          .filter(filterApiRoutes)
+          .map((file) =>
+            `/api/${file}`
+              .replace('/index', '')
+              .replace(/\\/g, '/')
+              .replace('[', '{')
+              .replace(']', '}')
+              .replace('.ts', '')
+          )
+      : [];
+  } catch {
+    // No API routes directory found.
+  }
 
   const routes = [..._routes, ...apiRoutes];
 

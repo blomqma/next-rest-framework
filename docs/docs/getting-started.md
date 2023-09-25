@@ -52,7 +52,7 @@ To initialize Next REST Framework you need to export and call the `defineCatchAl
 
 import { defineCatchAllRoute } from 'next-rest-framework/client';
 
-export default defineCatchAllRoute();
+export const GET = defineCatchAllRoute();
 ```
 
 OR:
