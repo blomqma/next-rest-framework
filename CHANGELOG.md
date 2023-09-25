@@ -1,6 +1,17 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.1.0 - 2023-09-26
+
+### Fixed
+
+- Fix an error of the pages directory not being found when only using Pages Router.
+- Fix App Router catch-all route documentation in the readme.
+
+### Added
+
+- Add support for dark theme in the SwaggerUI.
+
 ### 1.0.2 - 2023-09-23
 
 ### Fixed
