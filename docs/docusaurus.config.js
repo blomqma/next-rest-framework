@@ -64,7 +64,7 @@ const config = {
           },
           { to: '/blog', label: 'Blog', position: 'left' },
           {
-            href: 'https://next-rest-framework-demo.vercel.app/api',
+            href: 'https://next-rest-framework-demo.vercel.app',
             label: 'Live demo',
             position: 'left'
           },

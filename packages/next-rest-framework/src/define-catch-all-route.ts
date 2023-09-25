@@ -11,6 +11,7 @@ import yaml from 'js-yaml';
 import { type DefineRouteParams } from './types/define-route';
 import { type TypedNextRequest } from './types/request';
 import { defineRoute } from './define-route';
+import { cookies } from 'next/headers';
 
 export const defineCatchAllRoute = ({
   config
@@ -58,7 +59,9 @@ export const defineCatchAllRoute = ({
           const spec = await getOrCreateOpenApiSpec({ config, baseUrl });
 
           if (pathname === swaggerUiPath) {
-            const html = getHTMLForSwaggerUI({ config, baseUrl });
+            const cookieStore = cookies();
+            const theme = cookieStore.get('theme')?.value;
+            const html = getHTMLForSwaggerUI({ config, baseUrl, theme });
 
             return new NextResponse(html, {
               headers: {

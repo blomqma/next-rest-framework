@@ -65,12 +65,13 @@ The output objects define what kind of responses are returned from your API hand
 
 The SwaggerUI config object can be used to customize the generated Swagger UI:
 
-| Name          | Description                             |
-| ------------- | --------------------------------------- |
-| `title`       | Custom page title meta tag value.       |
-| `description` | Custom page description meta tag value. |
-| `logoHref`    | An href for a custom logo.              |
-| `faviconHref` | An href for a custom favicon.           |
+| Name           | Description                                                           |
+| -------------- | --------------------------------------------------------------------- |
+| `defaultTheme` | Default theme (light/dark) to use for SwaggerUI - defaults to "light" |
+| `title`        | Custom page title meta tag value.                                     |
+| `description`  | Custom page description meta tag value.                               |
+| `logoHref`     | An href for a custom logo.                                            |
+| `faviconHref`  | An href for a custom favicon.                                         |
 
 ## [Changelog](#changelog)
 

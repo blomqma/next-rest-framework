@@ -8,7 +8,7 @@ sidebar_position: 1
 
 Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set of tools to build type-safe, self-documenting HTTP REST APIs with [Next.js](http://nextjs.org/). Building OpenAPI specification-compliant REST APIs can be cumbersome and slow but Next REST Framework makes this easy with auto-generated OpenAPI documents and Swagger UI using TypeScript and object schemas.
 
-- [Live demo](https://next-rest-framework-demo.vercel.app/api)
+- [Live demo](https://next-rest-framework-demo.vercel.app)
 
 ### [Features](#features)
 

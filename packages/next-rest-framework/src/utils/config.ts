@@ -18,6 +18,7 @@ export const DEFAULT_CONFIG = {
   openApiYamlPath: '/api/openapi.yaml',
   swaggerUiPath: '/api',
   swaggerUiConfig: {
+    defaultTheme: 'light',
     title: 'Next REST Framework | SwaggerUI',
     description: 'Next REST Framework SwaggerUI',
     faviconHref:

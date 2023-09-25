@@ -22,6 +22,7 @@ export interface NextRestFrameworkConfig {
   swaggerUiPath?: string; // Path that will be used for the API docs - defaults to `/api/docs`.
   // Customization options for Swagger UI.
   swaggerUiConfig?: {
+    defaultTheme?: 'light' | 'dark'; // Default theme to use for SwaggerUI - defaults to "light".
     title?: string;
     description?: string;
     faviconHref?: string;

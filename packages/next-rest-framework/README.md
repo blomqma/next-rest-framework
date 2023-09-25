@@ -52,7 +52,7 @@
 
 Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set of tools to build type-safe, self-documenting HTTP REST APIs with [Next.js](http://nextjs.org/). Building OpenAPI specification-compliant REST APIs can be cumbersome and slow but Next REST Framework makes this easy with auto-generated OpenAPI documents and Swagger UI using TypeScript and object schemas.
 
-- [Live demo](https://next-rest-framework-demo.vercel.app/api)
+- [Live demo](https://next-rest-framework-demo.vercel.app)
 - [Docs](https://next-rest-framework.vercel.app)
 
 This is a monorepo containing the following packages / projects:
@@ -375,12 +375,13 @@ The output objects define what kind of responses are returned from your API hand
 
 The SwaggerUI config object can be used to customize the generated Swagger UI:
 
-| Name          | Description                             |
-| ------------- | --------------------------------------- |
-| `title`       | Custom page title meta tag value.       |
-| `description` | Custom page description meta tag value. |
-| `logoHref`    | An href for a custom logo.              |
-| `faviconHref` | An href for a custom favicon.           |
+| Name           | Description                                                           |
+| -------------- | --------------------------------------------------------------------- |
+| `defaultTheme` | Default theme (light/dark) to use for SwaggerUI - defaults to "light" |
+| `title`        | Custom page title meta tag value.                                     |
+| `description`  | Custom page description meta tag value.                               |
+| `logoHref`     | An href for a custom logo.                                            |
+| `faviconHref`  | An href for a custom favicon.                                         |
 
 ## [Changelog](#changelog)
 

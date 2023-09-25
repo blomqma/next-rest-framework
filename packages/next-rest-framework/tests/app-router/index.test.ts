@@ -17,6 +17,12 @@ jest.mock('fs', () => ({
   writeFileSync: () => {}
 }));
 
+jest.mock('next/headers', () => ({
+  cookies: () => ({
+    get: () => {}
+  })
+}));
+
 const config = { appDirPath: 'app' };
 
 beforeEach(() => {
