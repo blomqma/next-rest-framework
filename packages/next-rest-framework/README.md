@@ -154,7 +154,7 @@ The reserved OpenAPI paths are configurable with the [Config options](#config-op
 #### App Router:
 
 ```typescript
-// src/app/api/todos.ts
+// src/app/api/todos/route.ts
 
 import { defineRoute } from 'next-rest-framework/client';
 import { NextResponse } from 'next/server';
