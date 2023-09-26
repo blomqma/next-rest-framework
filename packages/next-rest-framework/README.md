@@ -242,70 +242,52 @@ export { handler as GET, handler as POST };
 import { defineApiRoute } from 'next-rest-framework/client';
 import { z } from 'zod';
 
-const todoSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  completed: z.boolean()
-});
-
 export default defineApiRoute({
   GET: {
     output: [
       {
         status: 200,
         contentType: 'application/json',
-        schema: z.array(todoSchema)
+        schema: z.object({
+          foo: z.string(),
+          bar: z.string(),
+          baz: z.string(),
+          qux: z.string()
+        })
       }
     ],
-    handler: ({ res }) => {
-      // Any other JSON format will lead to TS error.
-      res.status(200).json([
-        {
-          id: 'foo',
-          name: 'bar',
-          completed: true
-        }
-      ]);
+    handler: (_req, res) => {
+      res.status(200).json({ foo: 'foo', bar: 'bar', baz: 'baz', qux: 'qux' });
     }
   },
   POST: {
     input: {
       contentType: 'application/json',
       body: z.object({
-        name: z.string()
+        foo: z.string(),
+        bar: z.number()
       }),
       query: z.object({
-        page: z.string()
+        test: z.string()
       })
     },
     output: [
       {
         status: 201,
         contentType: 'application/json',
-        schema: todoSchema
+        schema: z.object({
+          foo: z.string(),
+          bar: z.number(),
+          query: z.object({
+            test: z.string()
+          })
+        })
       }
     ],
-    // A strongly-typed API route handler: https://nextjs.org/docs/pages/building-your-application/routing/api-routes
-    handler: ({
-      res,
-      req: {
-        body: {
-          name // Strongly typed.
-        },
-        query: {
-          page // Strongly typed.
-        }
-      }
-    }) => {
-      // Any other JSON format will lead to TS error.
-      res.status(201).json({
-        id: 'foo',
-        name,
-        completed: false
-      });
+    handler: ({ body: { foo, bar }, query: { test } }, res) => {
+      res.status(201).json({ foo, bar, query: { test } });
     }
   }
-});
 ```
 
 These type-safe endpoints will be now auto-generated to your OpenAPI spec and Swagger UI!

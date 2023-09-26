@@ -6,7 +6,7 @@ export default defineApiRoute({
     output: [
       {
         status: 200,
-        contentType: 'text/html',
+        contentType: 'application/json',
         schema: z.object({
           foo: z.string(),
           bar: z.string(),
@@ -16,7 +16,6 @@ export default defineApiRoute({
       }
     ],
     handler: (_req, res) => {
-      res.setHeader('content-type', 'text/html');
       res.status(200).json({ foo: 'foo', bar: 'bar', baz: 'baz', qux: 'qux' });
     }
   },
