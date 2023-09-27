@@ -13,6 +13,7 @@ import { getJsonSchema, getSchemaKeys } from './schemas';
 import { readdirSync, readFileSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
 import { type DefineRouteParams } from '../types/define-route';
+import { logIgnoredPaths, warnAboutDirNotFound } from './logging';
 
 export const getHTMLForSwaggerUI = ({
   config: {
@@ -139,7 +140,16 @@ const getNestedRoutes = (basePath: string, dir: string): string[] => {
 
 // Generate the OpenAPI paths from the Next.js API routes.
 const generatePaths = async ({
-  config: { openApiJsonPath, openApiYamlPath, swaggerUiPath, ...config },
+  config: {
+    appDirPath,
+    apiRoutesPath,
+    openApiJsonPath,
+    openApiYamlPath,
+    swaggerUiPath,
+    deniedPaths,
+    allowedPaths,
+    generatePathsTimeout
+  },
   baseUrl
 }: {
   config: NextRestFrameworkConfig;
@@ -195,7 +205,37 @@ const generatePaths = async ({
     }
   };
 
-  const appDirPath = 'appDirPath' in config ? config.appDirPath : '';
+  const isWildcardMatch = (pattern: string, path: string) => {
+    const regexPattern = pattern
+      .split('/')
+      .map((segment) =>
+        segment === '*' ? '[^/]*' : segment === '**' ? '.*' : segment
+      )
+      .join('/');
+
+    const regex = new RegExp(`^${regexPattern}$`);
+    return regex.test(path);
+  };
+
+  const ignoredPaths: string[] = [];
+
+  const isAllowedRoute = (path: string) => {
+    const isAllowed = allowedPaths?.some((allowedPath) =>
+      isWildcardMatch(allowedPath, path)
+    );
+
+    const isDenied = deniedPaths?.some((deniedPath) =>
+      isWildcardMatch(deniedPath, path)
+    );
+
+    const routeIsAllowed = isAllowed && !isDenied;
+
+    if (!routeIsAllowed) {
+      ignoredPaths.push(path);
+    }
+
+    return routeIsAllowed;
+  };
 
   let _routes: string[] = [];
 
@@ -210,12 +250,18 @@ const generatePaths = async ({
               .replace('[', '{')
               .replace(']', '}')
           )
+          .filter(isAllowedRoute)
       : [];
   } catch {
-    // No app directory found.
-  }
+    if (!global.apiRoutesPathsNotFoundLogged) {
+      warnAboutDirNotFound({
+        configName: 'appDirPath',
+        path: appDirPath ?? ''
+      });
 
-  const apiRoutesPath = 'apiRoutesPath' in config ? config.apiRoutesPath : '';
+      global.apiRoutesPathsNotFoundLogged = true;
+    }
+  }
 
   let apiRoutes: string[] = [];
 
@@ -231,9 +277,22 @@ const generatePaths = async ({
               .replace(']', '}')
               .replace('.ts', '')
           )
+          .filter(isAllowedRoute)
       : [];
   } catch {
-    // No API routes directory found.
+    if (!global.apiRoutesPathsNotFoundLogged) {
+      warnAboutDirNotFound({
+        configName: 'apiRoutesPath',
+        path: apiRoutesPath ?? ''
+      });
+
+      global.apiRoutesPathsNotFoundLogged = true;
+    }
+  }
+
+  if (ignoredPaths.length && !global.ignoredPathsLogged) {
+    logIgnoredPaths(ignoredPaths);
+    global.ignoredPathsLogged = true;
   }
 
   const routes = [..._routes, ...apiRoutes];
@@ -247,7 +306,7 @@ const generatePaths = async ({
 
       const abortRequest = setTimeout(() => {
         controller.abort();
-      }, config.generatePathsTimeout);
+      }, generatePathsTimeout);
 
       try {
         const res = await fetch(url, {

@@ -16,7 +16,7 @@ jest.mock('fs', () => ({
   writeFileSync: () => {}
 }));
 
-const config = { apiRoutesPath: 'pages/api' };
+const config = { apiRoutesPath: 'pages/api' } as const;
 
 beforeEach(() => {
   resetCustomGlobals();
