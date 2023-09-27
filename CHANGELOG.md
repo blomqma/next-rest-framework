@@ -1,6 +1,14 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.2.0 - 2023-09-27
+
+### Added
+
+- Add option to allow/deny paths from Next REST Framework. This ensures better compability with other third-party server-side libraries and routes not using Next REST Framework.
+- Add logging for error cases when the app/pages directory is not found based on the config options.
+- Add logging for ignored paths based on the allow/deny lists.
+
 ### 1.1.1 - 2023-09-26
 
 ### Fixed
