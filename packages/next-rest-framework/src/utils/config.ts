@@ -17,6 +17,8 @@ export const DEFAULT_CONFIG = {
   openApiJsonPath: '/api/openapi.json',
   openApiYamlPath: '/api/openapi.yaml',
   swaggerUiPath: '/api',
+  deniedPaths: [],
+  allowedPaths: ['**'],
   swaggerUiConfig: {
     defaultTheme: 'light',
     title: 'Next REST Framework | SwaggerUI',

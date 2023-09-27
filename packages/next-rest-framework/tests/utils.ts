@@ -23,6 +23,9 @@ export const resetCustomGlobals = () => {
   global.reservedOpenApiJsonPathWarningLogged = false;
   global.reservedOpenApiYamlPathWarningLogged = false;
   global.reservedSwaggerUiPathWarningLogged = false;
+  global.appDirNotFoundLogged = false;
+  global.apiRoutesPathsNotFoundLogged = false;
+  global.ignoredPathsLogged = false;
 };
 
 export const createNextRestFrameworkMocks = <
@@ -169,7 +172,15 @@ export const complexSchemaData = {
   intersections: { name: 'John', role: 'Admin' }
 };
 
-export const expectComplexSchemaResponse = (paths: Record<string, unknown>) => {
+export const expectComplexSchemaResponse = ({
+  paths,
+  allowedPaths,
+  deniedPaths
+}: {
+  paths: Record<string, unknown>;
+  allowedPaths?: string[];
+  deniedPaths?: string[];
+}) => {
   const primitives = {
     type: 'object',
     properties: {
@@ -285,58 +296,86 @@ export const expectComplexSchemaResponse = (paths: Record<string, unknown>) => {
     }
   ];
 
-  expect(paths['/api/foo']).toEqual({
-    post: {
-      requestBody,
-      responses: {
-        '201': responseContent,
-        default: defaultResponse
-      },
-      parameters
-    }
-  });
-
-  expect(paths['/api/foo/bar']).toEqual({
-    put: {
-      requestBody,
-      responses: {
-        '203': responseContent,
-        default: defaultResponse
-      },
-      parameters
-    }
-  });
-
-  expect(paths['/api/foo/bar/baz']).toEqual({
-    get: {
-      requestBody: {
-        content: {}
-      },
-      responses: {
-        '200': responseContent,
-        default: defaultResponse
+  if (
+    deniedPaths?.includes('/api/foo') ??
+    (allowedPaths && !allowedPaths.includes('/api/foo'))
+  ) {
+    expect(paths).not.toContain('/api/foo');
+  } else {
+    expect(paths['/api/foo']).toEqual({
+      post: {
+        requestBody,
+        responses: {
+          '201': responseContent,
+          default: defaultResponse
+        },
+        parameters
       }
-    }
-  });
+    });
+  }
 
-  expect(paths['/api/foo/bar/{qux}']).toEqual({
-    get: {
-      parameters: [
-        {
-          in: 'path',
-          name: 'qux',
-          required: true
+  if (
+    deniedPaths?.includes('/api/foo/bar') ??
+    (allowedPaths && !allowedPaths.includes('/api/foo/bar'))
+  ) {
+    expect(paths).not.toContain('/api/foo/bar');
+  } else {
+    expect(paths['/api/foo/bar']).toEqual({
+      put: {
+        requestBody,
+        responses: {
+          '203': responseContent,
+          default: defaultResponse
+        },
+        parameters
+      }
+    });
+  }
+
+  if (
+    deniedPaths?.includes('/api/foo/bar/baz') ??
+    (allowedPaths && !allowedPaths.includes('/api/foo/bar/baz'))
+  ) {
+    expect(paths).not.toContain('/api/foo/bar/baz');
+  } else {
+    expect(paths['/api/foo/bar/baz']).toEqual({
+      get: {
+        requestBody: {
+          content: {}
+        },
+        responses: {
+          '200': responseContent,
+          default: defaultResponse
         }
-      ],
-      requestBody: {
-        content: {}
-      },
-      responses: {
-        '200': responseContent,
-        default: defaultResponse
       }
-    }
-  });
+    });
+  }
+
+  if (
+    deniedPaths?.includes('/api/foo/bar/{qux}') ??
+    (allowedPaths && !allowedPaths.includes('/api/foo/bar/{qux}'))
+  ) {
+    expect(paths).not.toContain('/api/foo/bar/{qux}');
+  } else {
+    expect(paths['/api/foo/bar/{qux}']).toEqual({
+      get: {
+        parameters: [
+          {
+            in: 'path',
+            name: 'qux',
+            required: true
+          }
+        ],
+        requestBody: {
+          content: {}
+        },
+        responses: {
+          '200': responseContent,
+          default: defaultResponse
+        }
+      }
+    });
+  }
 };
 
 export const expectOpenAPIGenerationErrors = (error: unknown) => {

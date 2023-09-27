@@ -91,7 +91,8 @@ App Router:
 import { NextRestFramework } from 'next-rest-framework';
 
 export const { defineCatchAllRoute, defineRoute } = NextRestFramework({
-  appDirPath: 'src/app' // Path to your app directory.
+  appDirPath: 'src/app', // Path to your app directory.
+  deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
 });
 ```
 
@@ -103,7 +104,8 @@ Pages Router:
 import { NextRestFramework } from 'next-rest-framework';
 
 export const { defineCatchAllApiRoute, defineApiRoute } = NextRestFramework({
-  apiRoutesPath: 'src/pages/api' // Path to your API routes directory.
+  apiRoutesPath: 'src/pages/api', // Path to your API routes directory.
+  deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
 });
 ```
 
@@ -302,8 +304,10 @@ The optional config options allow you to customize Next REST Framework. The foll
 
 | Name                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `appDirPath`           |  Absolute path to the app directory where your routes are located, usually either `app` or `src/app`. Required when using App Router. Can be used together with `apiRoutesPath`                                                                                                                                                                                                                                                                                  |
-| `apiRoutesPath`        |  Absolute path to the directory where your API routes are located, usually `pages/api` or `src/pages/api`. Required when using Pages Router. Can be used together with `appDirPath`.                                                                                                                                                                                                                                                                             |
+| `appDirPath`           |  Absolute path from the project root to the root directory where your Routes are located when using App Router. Next REST Framework uses this as the root directory to recursively search for your Routes, so being as specific as possible will improve performance. This option is not required when using Pages Router, but it can be used together with the `apiRoutesPath` option when using both routers at the same time.                                 |
+| `apiRoutesPath`        |  Absolute path from the project root to the root directory where your API Routes are located when using Pages Router. Next REST Framework uses this as the root directory to recursively search for your API Routes, so being as specific as possible will improve performance. This option is not required when using App Router, but it can be used together with the `appDirPath` option when using both routers at the same time.                            |
+| `deniedPaths`          | Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/disallowed-path', '/api/disallowed-path-2/*', '/api/disallowed-path-3/**']` Defaults to no paths being disallowed.                                                                                                                                           |
+| `allowedPaths`         | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.                                                                                                                                                         |
 | `openApiJsonPath`      | Custom path for serving `openapi.json` file. Defaults to `/api/openapi.json`.                                                                                                                                                                                                                                                                                                                                                                                    |
 | `openApiYamlPath`      | Custom path for serving `openapi.yaml` file. Defaults to `/api/openapi.yaml`.                                                                                                                                                                                                                                                                                                                                                                                    |
 | `swaggerUiPath`        | Custom path for service Swagger UI. Defaults to `/api`.                                                                                                                                                                                                                                                                                                                                                                                                          |

@@ -6,4 +6,7 @@ declare module globalThis {
   var reservedOpenApiJsonPathWarningLogged = false;
   var reservedOpenApiYamlPathWarningLogged = false;
   var reservedSwaggerUiPathWarningLogged = false;
+  var appDirNotFoundLogged = false;
+  var apiRoutesPathsNotFoundLogged = false;
+  var ignoredPathsLogged = false;
 }

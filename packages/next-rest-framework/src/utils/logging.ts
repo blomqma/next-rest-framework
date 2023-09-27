@@ -91,6 +91,34 @@ export const warnAboutReservedPath = ({
   }
 };
 
+export const warnAboutDirNotFound = ({
+  configName,
+  path
+}: {
+  configName: 'appDirPath' | 'apiRoutesPath';
+  path: string;
+}) => {
+  console.warn(
+    chalk.yellowBright(
+      `Warning: You have enabled the ${chalk.bold(
+        configName
+      )} option in your Next REST Framework config, but the directory does not exist at ${chalk.bold(
+        path
+      )}.`
+    )
+  );
+};
+
+export const logIgnoredPaths = (paths: string[]) => {
+  console.info(
+    chalk.yellowBright(
+      `The following paths are ignored by Next REST Framework: ${chalk.bold(
+        paths.map((p) => `\n- ${p}`)
+      )}`
+    )
+  );
+};
+
 export const handleReservedPathWarnings = ({
   pathname,
   config: { openApiJsonPath, openApiYamlPath, swaggerUiPath }

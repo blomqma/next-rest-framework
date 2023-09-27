@@ -13,6 +13,7 @@ import {
 } from '../../src/constants';
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
+import chalk from 'chalk';
 
 const createDirent = (name: string) => ({
   isDirectory: () => false,
@@ -184,8 +185,156 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
 
   const res = await defineCatchAllRoute()(req, context);
   const { paths } = await res?.json();
-  expectComplexSchemaResponse(paths);
+  expectComplexSchemaResponse({ paths });
 });
+
+it.each([
+  {
+    allowedPaths: ['*'],
+    expectedPathsToBeAllowed: [],
+    expectedPathsToBeIgnored: [
+      '/api/foo',
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ]
+  },
+  {
+    allowedPaths: ['**'],
+    expectedPathsToBeAllowed: [
+      '/api/foo',
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ],
+    expectedPathsToBeIgnored: []
+  },
+  {
+    allowedPaths: ['/api/foo'],
+    expectedPathsToBeAllowed: ['/api/foo'],
+    expectedPathsToBeIgnored: [
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ]
+  },
+  {
+    allowedPaths: ['/api/foo/*/baz'],
+    expectedPathsToBeAllowed: ['/api/foo/bar/baz'],
+    expectedPathsToBeIgnored: ['/api/foo', '/api/foo/bar', '/api/foo/bar/{qux}']
+  },
+  {
+    allowedPaths: ['/api/foo/**'],
+    expectedPathsToBeAllowed: [
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ],
+    expectedPathsToBeIgnored: ['/api/foo']
+  }
+])(
+  'auto-generates the paths from the internal endpoint responses when allowing specific routes: $allowedPaths',
+  async ({
+    allowedPaths,
+    expectedPathsToBeAllowed,
+    expectedPathsToBeIgnored
+  }) => {
+    console.info = jest.fn();
+
+    const { req, context } = createNextRestFrameworkMocks({
+      method: ValidMethod.GET,
+      path: '/api/openapi.json'
+    });
+
+    const res = await NextRestFramework({
+      appDirPath: 'src/app/api',
+      allowedPaths
+    }).defineCatchAllRoute()(req, context);
+
+    const { paths } = await res?.json();
+
+    expectComplexSchemaResponse({
+      paths,
+      allowedPaths: expectedPathsToBeAllowed
+    });
+
+    if (expectedPathsToBeIgnored.length) {
+      expect(console.info).toHaveBeenNthCalledWith(
+        3,
+        chalk.yellowBright(
+          `The following paths are ignored by Next REST Framework: ${chalk.bold(
+            expectedPathsToBeIgnored.map((p) => `\n- ${p}`)
+          )}`
+        )
+      );
+    }
+  }
+);
+
+it.each([
+  {
+    deniedPaths: ['*'],
+    expectedPathsToBeDenied: []
+  },
+  {
+    deniedPaths: ['**'],
+    expectedPathsToBeDenied: [
+      '/api/foo',
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ]
+  },
+  {
+    deniedPaths: ['/api/foo'],
+    expectedPathsToBeDenied: ['/api/foo']
+  },
+  {
+    deniedPaths: ['/api/foo/*/baz'],
+    expectedPathsToBeDenied: ['/api/foo/bar/baz']
+  },
+  {
+    deniedPaths: ['/api/foo/**'],
+    expectedPathsToBeDenied: [
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ]
+  }
+])(
+  'auto-generates the paths from the internal endpoint responses when denying specific routes: $deniedPaths',
+  async ({ deniedPaths, expectedPathsToBeDenied }) => {
+    console.info = jest.fn();
+
+    const { req, context } = createNextRestFrameworkMocks({
+      method: ValidMethod.GET,
+      path: '/api/openapi.json'
+    });
+
+    const res = await NextRestFramework({
+      appDirPath: 'src/app/api',
+      deniedPaths
+    }).defineCatchAllRoute()(req, context);
+
+    const { paths } = await res?.json();
+
+    expectComplexSchemaResponse({
+      paths,
+      deniedPaths: expectedPathsToBeDenied
+    });
+
+    if (expectedPathsToBeDenied.length) {
+      expect(console.info).toHaveBeenNthCalledWith(
+        3,
+        chalk.yellowBright(
+          `The following paths are ignored by Next REST Framework: ${chalk.bold(
+            expectedPathsToBeDenied.map((p) => `\n- ${p}`)
+          )}`
+        )
+      );
+    }
+  }
+);
 
 it('handles error if the OpenAPI spec generation fails', async () => {
   console.error = jest.fn();
