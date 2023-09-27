@@ -14,35 +14,25 @@ beforeEach(() => {
 });
 
 const { defineRoute } = NextRestFramework({
-  appDirPath: 'src/pages/api',
+  appDirPath: 'src/app',
   swaggerUiPath: '/api/docs'
 });
 
-const openApiSpecHandler = defineRoute({
+const handler = defineRoute({
   GET: {
     handler: () => {}
   }
 });
 
-const swaggerUiHandler = defineRoute({
-  GET: {
-    handler: () => {}
-  }
+jest.mock('../../../apps/dev/pages/api/openapi.json.ts', () => handler, {
+  virtual: true
 });
 
-jest.mock(
-  '../../../apps/dev/pages/api/openapi.json.ts',
-  () => openApiSpecHandler,
-  { virtual: true }
-);
+jest.mock('../../../apps/dev/pages/api/openapi.yaml.ts', () => handler, {
+  virtual: true
+});
 
-jest.mock(
-  '../../../apps/dev/pages/api/openapi.yaml.ts',
-  () => openApiSpecHandler,
-  { virtual: true }
-);
-
-jest.mock('../../../apps/dev/pages/api/docs', () => swaggerUiHandler, {
+jest.mock('../../../apps/dev/pages/api/docs', () => handler, {
   virtual: true
 });
 
@@ -53,7 +43,7 @@ it('warns about reserved openapi.json path', async () => {
   });
 
   console.warn = jest.fn();
-  await openApiSpecHandler(req, context);
+  await handler(req, context);
 
   expect(console.warn).toHaveBeenCalledWith(
     chalk.yellowBright(
@@ -73,7 +63,7 @@ it('warns about reserved openapi.yaml path', async () => {
   });
 
   console.warn = jest.fn();
-  await openApiSpecHandler(req, context);
+  await handler(req, context);
 
   expect(console.warn).toHaveBeenCalledWith(
     chalk.yellowBright(
@@ -93,7 +83,7 @@ it('warns about reserved Swagger UI path', async () => {
   });
 
   console.warn = jest.fn();
-  await openApiSpecHandler(req, context);
+  await handler(req, context);
 
   expect(console.warn).toHaveBeenCalledWith(
     chalk.yellowBright(
@@ -102,6 +92,29 @@ it('warns about reserved Swagger UI path', async () => {
       )} is reserved for Swagger UI. Update ${chalk.bold(
         'swaggerUiPath'
       )} in your Next REST Framework config to use this path for other purposes.`
+    )
+  );
+});
+
+it('warns about `appDirPath` not found', async () => {
+  const { req, context } = createNextRestFrameworkMocks({
+    method: ValidMethod.GET,
+    path: '/api'
+  });
+
+  console.warn = jest.fn();
+
+  await NextRestFramework({
+    appDirPath: 'src/app/does-not-exist'
+  }).defineCatchAllRoute()(req, context);
+
+  expect(console.warn).toHaveBeenCalledWith(
+    chalk.yellowBright(
+      `Warning: You have enabled the ${chalk.bold(
+        'appDirPath'
+      )} option in your Next REST Framework config, but the directory does not exist at ${chalk.bold(
+        'src/app/does-not-exist'
+      )}.`
     )
   );
 });

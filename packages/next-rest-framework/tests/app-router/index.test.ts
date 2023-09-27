@@ -23,7 +23,7 @@ jest.mock('next/headers', () => ({
   })
 }));
 
-const config = { appDirPath: 'app' };
+const config = { appDirPath: 'app' } as const;
 
 beforeEach(() => {
   resetCustomGlobals();
