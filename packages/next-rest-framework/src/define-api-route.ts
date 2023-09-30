@@ -149,39 +149,33 @@ ${error}`);
           }
 
           if (bodySchema) {
-            const validateBody = await validateSchema?.({
+            const { valid, errors } = await validateSchema({
               schema: bodySchema,
               obj: body
             });
 
-            if (validateBody) {
-              const { valid, errors } = validateBody;
-
-              if (!valid) {
-                res
-                  .status(400)
-                  .json({ message: `Invalid request body: ${errors}` });
-                return;
-              }
+            if (!valid) {
+              res.status(400).json({
+                message: 'Invalid request body.',
+                errors
+              });
+              return;
             }
           }
 
           if (querySchema) {
-            const validateQuery = await validateSchema?.({
+            const { valid, errors } = await validateSchema({
               schema: querySchema,
               obj: query
             });
 
-            if (validateQuery) {
-              const { valid, errors } = validateQuery;
+            if (!valid) {
+              res.status(400).json({
+                message: 'Invalid query parameters.',
+                errors
+              });
 
-              if (!valid) {
-                res
-                  .status(400)
-                  .json({ message: `Invalid query parameters: ${errors}` });
-
-                return;
-              }
+              return;
             }
           }
         }

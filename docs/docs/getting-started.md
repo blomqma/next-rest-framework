@@ -118,9 +118,6 @@ const handler = defineRoute({
       body: z.object({
         foo: z.string(),
         bar: z.number()
-      }),
-      query: z.object({
-        test: z.string()
       })
     },
     output: [
@@ -129,27 +126,17 @@ const handler = defineRoute({
         contentType: 'application/json',
         schema: z.object({
           foo: z.string(),
-          bar: z.number(),
-          query: z.object({
-            test: z.string()
-          })
+          bar: z.number()
         })
       }
     ],
     // A strongly-typed Route Handler: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
-    handler: async (
-      req,
-      {
-        params: {
-          test // Strongly typed.
-        }
-      }
-    ) => {
+    handler: async (req) => {
       const { foo, bar } = await req.json();
 
       // Any other JSON format will lead to TS error.
       return NextResponse.json(
-        { foo, bar, query: { test } },
+        { foo, bar },
         {
           status: 201
         }
@@ -193,9 +180,6 @@ export default defineApiRoute({
       body: z.object({
         foo: z.string(),
         bar: z.number()
-      }),
-      query: z.object({
-        test: z.string()
       })
     },
     output: [
@@ -204,15 +188,12 @@ export default defineApiRoute({
         contentType: 'application/json',
         schema: z.object({
           foo: z.string(),
-          bar: z.number(),
-          query: z.object({
-            test: z.string()
-          })
+          bar: z.number()
         })
       }
     ],
-    handler: ({ body: { foo, bar }, query: { test } }, res) => {
-      res.status(201).json({ foo, bar, query: { test } });
+    handler: ({ body: { foo, bar } }, res) => {
+      res.status(201).json({ foo, bar });
     }
   }
 });
