@@ -2,7 +2,8 @@ import { NextRestFramework } from '../../src';
 import {
   DEFAULT_CONFIG,
   getConfig,
-  getHTMLForSwaggerUI
+  getHTMLForSwaggerUI,
+  validateSchema
 } from '../../src/utils';
 import { DEFAULT_ERRORS, VERSION, ValidMethod } from '../../src/constants';
 import chalk from 'chalk';
@@ -331,23 +332,27 @@ it('returns 404 from a catch-all-handler instead of 405', async () => {
 });
 
 it('returns error for invalid request body', async () => {
+  const body = {
+    foo: 'bar'
+  };
+
   const { req, res } = createApiRouteMocks({
     method: ValidMethod.POST,
-    body: {
-      foo: 'bar'
-    },
+    body,
     headers: {
       'content-type': 'application/json'
     }
+  });
+
+  const schema = z.object({
+    foo: z.number()
   });
 
   await NextRestFramework(config).defineApiRoute({
     POST: {
       input: {
         contentType: 'application/json',
-        body: z.object({
-          foo: z.number()
-        })
+        body: schema
       },
       output: [],
       handler: () => {}
@@ -356,35 +361,36 @@ it('returns error for invalid request body', async () => {
 
   expect(res.statusCode).toEqual(400);
 
+  const { errors } = await validateSchema({ schema, obj: body });
+
   expect(res._getJSONData()).toEqual({
-    message: 'Invalid request body: Expected number, received string'
+    message: 'Invalid request body.',
+    errors
   });
 });
 
 it('returns error for invalid query parameters', async () => {
+  const query = {
+    foo: 'bar'
+  };
+
   const { req, res } = createApiRouteMocks({
     method: ValidMethod.POST,
-    body: {
-      foo: 1
-    },
-    query: {
-      foo: 'bar'
-    },
+    query,
     headers: {
       'content-type': 'application/json'
     }
+  });
+
+  const schema = z.object({
+    foo: z.number()
   });
 
   await NextRestFramework(config).defineApiRoute({
     POST: {
       input: {
         contentType: 'application/json',
-        body: z.object({
-          foo: z.number()
-        }),
-        query: z.object({
-          foo: z.number()
-        })
+        query: schema
       },
       output: [],
       handler: () => {}
@@ -394,8 +400,11 @@ it('returns error for invalid query parameters', async () => {
 
   expect(res.statusCode).toEqual(400);
 
+  const { errors } = await validateSchema({ schema, obj: query });
+
   expect(res._getJSONData()).toEqual({
-    message: 'Invalid query parameters: Expected number, received string'
+    message: 'Invalid query parameters.',
+    errors
   });
 });
 

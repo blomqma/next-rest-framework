@@ -32,9 +32,6 @@ const handler = defineRoute({
       body: z.object({
         foo: z.string(),
         bar: z.number()
-      }),
-      query: z.object({
-        test: z.string()
       })
     },
     output: [
@@ -43,61 +40,18 @@ const handler = defineRoute({
         contentType: 'application/json',
         schema: z.object({
           foo: z.string(),
-          bar: z.number(),
-          query: z.object({
-            test: z.string()
-          })
+          bar: z.number()
         })
       }
     ],
-    handler: async (req, { params: { test } }) => {
+    handler: async (req) => {
       const { foo, bar } = await req.json();
 
       return NextResponse.json(
-        { foo, bar, query: { test } },
         {
-          status: 201
-        }
-      );
-    }
-  },
-  PUT: {
-    input: {
-      contentType: 'application/json',
-      body: z.object({
-        foo: z.array(
-          z.object({
-            bar: z.string()
-          })
-        ),
-        baz: z.number()
-      }),
-      query: z.object({
-        test: z.string()
-      })
-    },
-    output: [
-      {
-        status: 201,
-        contentType: 'application/json',
-        schema: z.object({
-          foo: z.array(
-            z.object({
-              bar: z.string()
-            })
-          ),
-          bar: z.number(),
-          query: z.object({
-            test: z.string()
-          })
-        })
-      }
-    ],
-    handler: async (req, { params: { test } }) => {
-      const { foo } = await req.json();
-
-      return NextResponse.json(
-        { foo, bar: 0, query: { test } },
+          foo,
+          bar
+        },
         {
           status: 201
         }

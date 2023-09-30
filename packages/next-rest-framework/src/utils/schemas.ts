@@ -43,10 +43,7 @@ const zodSchemaValidator = ({
   obj: unknown;
 }) => {
   const data = schema.safeParse(obj);
-
-  const errors = !data.success
-    ? data.error.issues.map(({ message }) => message)
-    : null;
+  const errors = !data.success ? data.error.issues : null;
 
   return {
     valid: data.success,

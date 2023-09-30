@@ -157,48 +157,54 @@ ${error}`);
           }
 
           if (bodySchema) {
-            const body = await req.json();
+            try {
+              const reqClone = req.clone();
+              const body = await reqClone.json();
 
-            const validateBody = await validateSchema?.({
-              schema: bodySchema,
-              obj: body
-            });
-
-            if (validateBody) {
-              const { valid, errors } = validateBody;
+              const { valid, errors } = await validateSchema({
+                schema: bodySchema,
+                obj: body
+              });
 
               if (!valid) {
                 return NextResponse.json(
                   {
-                    message: `Invalid request body: ${errors}`
+                    message: 'Invalid request body.',
+                    errors
                   },
                   {
                     status: 400
                   }
                 );
               }
+            } catch (error) {
+              return NextResponse.json(
+                {
+                  message: 'Missing request body.'
+                },
+                {
+                  status: 400
+                }
+              );
             }
           }
 
           if (querySchema) {
-            const validateQuery = await validateSchema?.({
+            const { valid, errors } = await validateSchema({
               schema: querySchema,
               obj: context.params
             });
 
-            if (validateQuery) {
-              const { valid, errors } = validateQuery;
-
-              if (!valid) {
-                return NextResponse.json(
-                  {
-                    message: `Invalid query parameters: ${errors}`
-                  },
-                  {
-                    status: 400
-                  }
-                );
-              }
+            if (!valid) {
+              return NextResponse.json(
+                {
+                  message: 'Invalid query parameters.',
+                  errors
+                },
+                {
+                  status: 400
+                }
+              );
             }
           }
         }
