@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.2.1 - 2023-09-30
+
+### Fixed
+
+- Fix request body validation with App Router. The new validation clones the request object before validating it, allowing the request body to be further parsed by the API handler.
+
 ### 1.2.0 - 2023-09-27
 
 ### Added
