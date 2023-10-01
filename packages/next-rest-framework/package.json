@@ -39,7 +39,8 @@
     "commander": "10.0.1",
     "js-yaml": "4.1.0",
     "lodash": "4.17.21",
-    "wait-on": "7.0.1"
+    "wait-on": "7.0.1",
+    "zod-to-json-schema": "3.21.4"
   },
   "devDependencies": {
     "@next-rest-framework/tsconfig": "workspace:*",

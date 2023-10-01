@@ -1,9 +1,8 @@
 import { NextRestFramework } from '../../src';
 import * as openApiUtils from '../../src/utils/open-api';
 import {
-  complexZodSchema,
   createApiRouteMocks,
-  expectComplexSchemaResponse,
+  expectPathsResponse,
   expectOpenAPIGenerationErrors,
   resetCustomGlobals
 } from '../utils';
@@ -35,11 +34,13 @@ const { defineCatchAllApiRoute, defineApiRoute } = NextRestFramework({
   apiRoutesPath: 'src/pages/api'
 });
 
+const schema = z.object({ foo: z.string() });
+
 const fooMethodHandlers = defineApiRoute({
   POST: {
     input: {
       contentType: 'application/json',
-      body: complexZodSchema,
+      body: schema,
       query: z.object({
         foo: z.string()
       })
@@ -47,7 +48,7 @@ const fooMethodHandlers = defineApiRoute({
     output: [
       {
         status: 201,
-        schema: complexZodSchema,
+        schema,
         contentType: 'application/json'
       }
     ],
@@ -61,7 +62,7 @@ const fooBarMethodHandlers = defineApiRoute({
   PUT: {
     input: {
       contentType: 'application/json',
-      body: complexZodSchema,
+      body: schema,
       query: z.object({
         foo: z.string()
       })
@@ -69,7 +70,7 @@ const fooBarMethodHandlers = defineApiRoute({
     output: [
       {
         status: 203,
-        schema: complexZodSchema,
+        schema,
         contentType: 'application/json'
       }
     ],
@@ -84,7 +85,7 @@ const fooBarBazMethodHandlers = defineApiRoute({
     output: [
       {
         status: 200,
-        schema: complexZodSchema,
+        schema,
         contentType: 'application/json'
       }
     ],
@@ -99,7 +100,7 @@ const fooBarBazQuxMethodHandlers = defineApiRoute({
     output: [
       {
         status: 200,
-        schema: complexZodSchema,
+        schema,
         contentType: 'application/json'
       }
     ],
@@ -176,7 +177,7 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
 
   await defineCatchAllApiRoute()(req, res);
   const { paths } = await res._getJSONData();
-  expectComplexSchemaResponse({ paths });
+  expectPathsResponse({ zodSchema: schema, paths });
 });
 
 it.each([
@@ -244,7 +245,8 @@ it.each([
 
     const { paths } = await res._getJSONData();
 
-    expectComplexSchemaResponse({
+    expectPathsResponse({
+      zodSchema: schema,
       paths,
       allowedPaths: expectedPathsToBeAllowed
     });
@@ -309,7 +311,8 @@ it.each([
 
     const { paths } = await res._getJSONData();
 
-    expectComplexSchemaResponse({
+    expectPathsResponse({
+      zodSchema: schema,
       paths,
       deniedPaths: expectedPathsToBeDenied
     });

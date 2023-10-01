@@ -66,7 +66,9 @@
                     "qux": {
                       "type": "string"
                     }
-                  }
+                  },
+                  "required": ["foo", "bar", "baz", "qux"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -101,7 +103,9 @@
                   "bar": {
                     "type": "number"
                   }
-                }
+                },
+                "required": ["foo", "bar"],
+                "additionalProperties": false
               }
             }
           }
@@ -119,7 +123,9 @@
                     "bar": {
                       "type": "number"
                     }
-                  }
+                  },
+                  "required": ["foo", "bar"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -201,7 +207,9 @@
                     "qux": {
                       "type": "string"
                     }
-                  }
+                  },
+                  "required": ["foo", "bar", "baz", "qux"],
+                  "additionalProperties": false
                 }
               }
             }
@@ -236,7 +244,9 @@
                   "bar": {
                     "type": "number"
                   }
-                }
+                },
+                "required": ["foo", "bar"],
+                "additionalProperties": false
               }
             }
           }
@@ -254,7 +264,9 @@
                     "bar": {
                       "type": "number"
                     }
-                  }
+                  },
+                  "required": ["foo", "bar"],
+                  "additionalProperties": false
                 }
               }
             }

@@ -86,12 +86,14 @@ importers:
       ts-node: 10.9.1
       typescript: '*'
       wait-on: 7.0.1
+      zod-to-json-schema: 3.21.4
     dependencies:
       chalk: 4.1.2
       commander: 10.0.1
       js-yaml: 4.1.0
       lodash: 4.17.21
       wait-on: 7.0.1
+      zod-to-json-schema: 3.21.4_zod@3.22.2
     devDependencies:
       '@next-rest-framework/tsconfig': link:../tsconfig
       '@types/jest': 29.5.4
@@ -11154,13 +11156,20 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  /zod-to-json-schema/3.21.4_zod@3.22.2:
+    resolution: {integrity: sha512-fjUZh4nQ1s6HMccgIeE0VP4QG/YRGPmyjO9sAh890aQKPEk3nqbfUXhMFaC+Dr5KvYBm8BCyvfpZf2jY9aGSsw==}
+    peerDependencies:
+      zod: ^3.21.4
+    dependencies:
+      zod: 3.22.2
+    dev: false
+
   /zod/3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
     dev: true
 
   /zod/3.22.2:
     resolution: {integrity: sha512-wvWkphh5WQsJbVk1tbx1l1Ly4yg+XecD+Mq280uBGt9wa5BKSWf4Mhp6GmrkPixhMxmabYY7RbzlwVP32pbGCg==}
-    dev: true
 
   /zwitch/1.0.5:
     resolution: {integrity: sha512-V50KMwwzqJV0NpZIZFwfOD5/lyny3WlSzRiXgA0G7VUnRlqttta1L6UQIHzd6EuBY/cHGfwTIck7w1yH6Q5zUw==}

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { type ZodSchema } from 'zod';
 import { NextRequest } from 'next/server';
 import { type ValidMethod } from '../src/constants';
 import {
@@ -14,6 +14,7 @@ import { type Modify } from '../src/types';
 import { type NextApiResponse } from 'next/types';
 import { defaultResponse } from '../src/utils';
 import chalk from 'chalk';
+import zodToJsonSchema from 'zod-to-json-schema';
 
 export const resetCustomGlobals = () => {
   global.nextRestFrameworkConfig = undefined;
@@ -82,196 +83,18 @@ export const createApiRouteMocks = <
   );
 };
 
-enum NativeEnum {
-  Foo = 'foo',
-  Bar = 'bar',
-  Baz = 'baz'
-}
-
-const primitives = z.object({
-  string: z.string(),
-  number: z.number(),
-  bigint: z.bigint(),
-  date: z.date(),
-  symbol: z.symbol(),
-  undefined: z.undefined(),
-  null: z.null(),
-  nan: z.nan(),
-  void: z.void(),
-  any: z.any(),
-  unknown: z.unknown(),
-  never: z.never(),
-  enum: z.enum(['foo', 'bar', 'baz']),
-  nativeEnum: z.nativeEnum(NativeEnum),
-  nullable: z.nullable(z.string())
-});
-
-export const complexZodSchema = z.object({
-  primitives,
-  objects: z.object({
-    primitives
-  }),
-  arrays: z.array(primitives),
-  tuples: z.tuple([z.string(), z.number()]),
-  unions: z.union([z.string(), z.number()]),
-  discriminatedUnions: z.discriminatedUnion('type', [
-    z.object({
-      type: z.literal('object1'),
-      foo: z.string(),
-      bar: z.number()
-    }),
-    z.object({
-      type: z.literal('object2'),
-      foo: z.number(),
-      bar: z.boolean()
-    })
-  ]),
-  record: z.record(z.string()),
-  maps: z.map(z.string(), z.number()),
-  sets: z.set(z.string()),
-  intersections: z.intersection(
-    z.object({
-      name: z.string()
-    }),
-    z.object({
-      role: z.string()
-    })
-  )
-});
-
-const primitivesData = {
-  string: 'foo',
-  number: 123,
-  bigint: BigInt(123),
-  date: new Date('2021-01-01'),
-  symbol: Symbol('foo'),
-  undefined,
-  null: null,
-  nan: NaN,
-  void: undefined,
-  any: 'any',
-  unknown: 'unknown',
-  never: z.NEVER,
-  enum: 'foo' as 'foo' | 'bar' | 'baz',
-  nativeEnum: NativeEnum.Foo,
-  nullable: 'foo'
-};
-
-export const complexSchemaData = {
-  primitives: primitivesData,
-  objects: {
-    primitives: primitivesData
-  },
-  arrays: [primitivesData],
-  tuples: ['foo', 123] as [string, number],
-  unions: 'foo',
-  discriminatedUnions: { type: 'object1', foo: 'foo', bar: 123 } as const,
-  record: { key: 'value' },
-  maps: new Map().set('foo', 123),
-  sets: new Set('foo'),
-  intersections: { name: 'John', role: 'Admin' }
-};
-
-export const expectComplexSchemaResponse = ({
+export const expectPathsResponse = ({
+  zodSchema,
   paths,
   allowedPaths,
   deniedPaths
 }: {
+  zodSchema: ZodSchema;
   paths: Record<string, unknown>;
   allowedPaths?: string[];
   deniedPaths?: string[];
 }) => {
-  const primitives = {
-    type: 'object',
-    properties: {
-      string: { type: 'string' },
-      number: { type: 'number' },
-      bigint: { type: 'number' },
-      date: { type: 'string', format: 'date-time' },
-      symbol: { type: 'string' },
-      undefined: { type: 'null' },
-      null: { type: 'null' },
-      nan: { type: 'null' },
-      void: { type: 'null' },
-      any: {},
-      unknown: {},
-      never: { type: 'null' },
-      enum: { enum: ['foo', 'bar', 'baz'] },
-      nativeEnum: { enum: ['foo', 'bar', 'baz'] },
-      nullable: { type: ['string', 'null'] }
-    }
-  };
-
-  const schema = {
-    type: 'object',
-    properties: {
-      primitives,
-      objects: {
-        type: 'object',
-        properties: {
-          primitives
-        }
-      },
-      arrays: {
-        type: 'array',
-        items: primitives
-      },
-      tuples: {
-        type: 'array',
-        items: [{ type: 'string' }, { type: 'number' }]
-      },
-      unions: { anyOf: [{ type: 'string' }, { type: 'number' }] },
-      discriminatedUnions: {
-        oneOf: [
-          {
-            type: 'object',
-            properties: {
-              type: { enum: ['object1'], type: 'string' },
-              foo: { type: 'string' },
-              bar: { type: 'number' }
-            }
-          },
-          {
-            type: 'object',
-            properties: {
-              type: { enum: ['object2'], type: 'string' },
-              foo: { type: 'number' },
-              bar: { type: 'boolean' }
-            }
-          }
-        ]
-      },
-      record: {
-        type: 'object',
-        additionalProperties: { type: 'string' }
-      },
-      maps: {
-        type: 'object',
-        additionalProperties: { type: 'number' }
-      },
-      sets: {
-        type: 'array',
-        items: { type: 'string' },
-        uniqueItems: true
-      },
-      intersections: {
-        allOf: [
-          {
-            type: 'object',
-            properties: {
-              name: { type: 'string' }
-            }
-          },
-          {
-            type: 'object',
-            properties: {
-              role: { type: 'string' }
-            }
-          }
-        ]
-      }
-    }
-  };
+  const schema = zodToJsonSchema(zodSchema, { target: 'openApi3' });
 
   const requestBody = {
     content: {
