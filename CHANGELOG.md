@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.2.2 - 2023-10-01
+
+### Fixed
+
+- Fix miscellaneous issues with generating the OpenAPI spec from Zod schema, by using `zod-to-json-schema`.
+
 ### 1.2.1 - 2023-09-30
 
 ### Fixed
