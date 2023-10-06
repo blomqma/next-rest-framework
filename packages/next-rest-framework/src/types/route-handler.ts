@@ -5,11 +5,11 @@ import { type TypedNextApiRequest, type TypedNextRequest } from './request';
 
 export type RouteHandler<
   Body = unknown,
-  Params = unknown,
+  Query = unknown,
   ResponseBody = unknown
 > = (
-  req: TypedNextRequest<Body>,
-  context: { params: Params }
+  req: TypedNextRequest<Body, Query>,
+  context: { params: Record<string, unknown> }
 ) =>
   | Promise<TypedNextResponse<ResponseBody> | void>
   | TypedNextResponse<ResponseBody>

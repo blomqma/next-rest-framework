@@ -31,33 +31,40 @@ export const resetCustomGlobals = () => {
 
 export const createNextRestFrameworkMocks = <
   Body,
-  Params extends Record<string, unknown>
+  Query extends Record<string, string>
 >({
   path = '/',
   body,
   method,
   query,
+  params = {},
   headers
 }: {
   method: ValidMethod;
   path?: string;
   body?: Body;
-  query?: Params;
+  query?: Query;
+  params?: Record<string, unknown>;
   headers?: Record<string, string>;
 }): {
-  req: TypedNextRequest<Body>;
-  context: { params: Params };
+  req: TypedNextRequest<Body, Query>;
+  context: { params: typeof params };
 } => ({
-  req: new NextRequest('http://localhost:3000' + path, {
-    method,
-    body: JSON.stringify(body),
-    headers: {
-      host: 'localhost:3000',
-      'x-forwarded-proto': 'http',
-      ...headers
+  req: new NextRequest(
+    `http://localhost:3000${path}${
+      query ? `?${new URLSearchParams(query).toString()}` : ''
+    }`,
+    {
+      method,
+      body: JSON.stringify(body),
+      headers: {
+        host: 'localhost:3000',
+        'x-forwarded-proto': 'http',
+        ...headers
+      }
     }
-  }) as TypedNextRequest<Body>,
-  context: { params: (query ?? {}) as Params }
+  ) as unknown as TypedNextRequest<Body, Query>,
+  context: { params }
 });
 
 export const createApiRouteMocks = <
