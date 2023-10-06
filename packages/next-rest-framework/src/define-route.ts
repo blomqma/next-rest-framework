@@ -192,7 +192,7 @@ ${error}`);
           if (querySchema) {
             const { valid, errors } = await validateSchema({
               schema: querySchema,
-              obj: context.params
+              obj: Object.fromEntries(new URLSearchParams(req.nextUrl.search))
             });
 
             if (!valid) {
