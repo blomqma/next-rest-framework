@@ -244,7 +244,7 @@ const generatePaths = async ({
       ? getNestedRoutes(join(process.cwd(), appDirPath ?? ''), '')
           .filter(filterRoutes)
           .map((file) =>
-            `${appDirPath.split('/app')[1]}/${file}`
+            `${appDirPath.split('app')[1]}/${file}`
               .replace('/route.ts', '')
               .replace(/\\/g, '/')
               .replace('[', '{')
