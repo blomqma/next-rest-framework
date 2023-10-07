@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.2.3 - 2023-10-07
+
+### Fixed
+
+- Fix `appDirPath` handling when not using src directory.
+
 ### 1.2.2 - 2023-10-01
 
 ### Fixed
