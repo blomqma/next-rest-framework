@@ -11,6 +11,14 @@ type NextRestFrameworkOpenApiSpec = Partial<
   >
 >;
 
+type AppDirPath = 'app' | `app/${string}` | 'src/app' | `src/app/${string}`;
+
+type ApiRoutesPath =
+  | 'pages/api'
+  | `pages/api/${string}`
+  | 'src/pages/api'
+  | `src/pages/api/${string}`;
+
 export interface NextRestFrameworkConfig {
   /*!
    * Absolute path from the project root to the root directory where your Routes are located when using App Router.
@@ -18,18 +26,14 @@ export interface NextRestFrameworkConfig {
    * as possible will improve performance. This option is not required when using Pages Router, but it can be used
    * together with the `apiRoutesPath` option when using both routers at the same time.
    */
-  appDirPath?: 'app' | `app/${string}` | 'src/app' | `src/app/${string}`;
+  appDirPath?: AppDirPath | `/${AppDirPath}` | `./${AppDirPath}`;
   /*!
    * Absolute path from the project root to the root directory where your API Routes are located when using Pages Router.
    * Next REST Framework uses this as the root directory to recursively search for your API Routes, so being as specific
    * as possible will improve performance. This option is not required when using App Router, but it can be used
    * together with the `appDirPath` option when using both routers at the same time.
    */
-  apiRoutesPath?:
-    | 'pages/api'
-    | `pages/api/${string}`
-    | 'src/pages/api'
-    | `src/pages/api/${string}`;
+  apiRoutesPath?: ApiRoutesPath | `/${ApiRoutesPath}` | `./${ApiRoutesPath}`;
   /*!
    * Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec.
    * Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching.

@@ -91,7 +91,7 @@ App Router:
 import { NextRestFramework } from 'next-rest-framework';
 
 export const { defineCatchAllRoute, defineRoute } = NextRestFramework({
-  appDirPath: 'src/app', // Path to your app directory.
+  appDirPath: './src/app', // Path to your app directory.
   deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
 });
 ```
@@ -104,7 +104,7 @@ Pages Router:
 import { NextRestFramework } from 'next-rest-framework';
 
 export const { defineCatchAllApiRoute, defineApiRoute } = NextRestFramework({
-  apiRoutesPath: 'src/pages/api', // Path to your API routes directory.
+  apiRoutesPath: './src/pages/api', // Path to your API routes directory.
   deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
 });
 ```
