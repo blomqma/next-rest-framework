@@ -86,8 +86,11 @@ export const defineRoute = ({
     > = {}
   ) => {
     return async (
-      req: TypedNextRequest<SchemaReturnType<BodySchema>>,
-      context: { params: SchemaReturnType<QuerySchema> }
+      req: TypedNextRequest<
+        SchemaReturnType<BodySchema>,
+        SchemaReturnType<QuerySchema>
+      >,
+      context: { params: Record<string, unknown> }
     ) => {
       try {
         const { method, headers, nextUrl } = req;
@@ -192,7 +195,7 @@ ${error}`);
           if (querySchema) {
             const { valid, errors } = await validateSchema({
               schema: querySchema,
-              obj: context.params
+              obj: Object.fromEntries(new URLSearchParams(req.nextUrl.search))
             });
 
             if (!valid) {

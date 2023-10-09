@@ -95,7 +95,10 @@ export const defineCatchAllRoute = ({
         return await defineRoute({
           config
         })(methodHandlers)(
-          req as TypedNextRequest<Record<string, unknown>>,
+          req as TypedNextRequest<
+            Record<string, unknown>,
+            Record<string, string>
+          >,
           context
         );
       } catch (error) {
