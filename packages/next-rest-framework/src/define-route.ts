@@ -149,7 +149,10 @@ ${error}`);
         if (input) {
           const { body: bodySchema, query: querySchema, contentType } = input;
 
-          if (headers.get('content-type')?.split(';')[0] !== contentType) {
+          if (
+            contentType &&
+            headers.get('content-type')?.split(';')[0] !== contentType
+          ) {
             return NextResponse.json(
               { message: DEFAULT_ERRORS.invalidMediaType },
               { status: 415 }
