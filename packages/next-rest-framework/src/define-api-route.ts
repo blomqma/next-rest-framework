@@ -143,7 +143,10 @@ ${error}`);
         if (input) {
           const { body: bodySchema, query: querySchema, contentType } = input;
 
-          if (headers['content-type']?.split(';')[0] !== contentType) {
+          if (
+            contentType &&
+            headers['content-type']?.split(';')[0] !== contentType
+          ) {
             res.status(415).json({ message: DEFAULT_ERRORS.invalidMediaType });
             return;
           }
