@@ -1,6 +1,13 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 1.2.4 - 2023-10-09
+
+### Fixed
+
+- Fix query parameter validation on app router - now the search parameters are validated similarly to when using Pages Router.
+- Fix content type validation when no user-defined content type validation is set.
+
 ### 1.2.3 - 2023-10-07
 
 ### Fixed
