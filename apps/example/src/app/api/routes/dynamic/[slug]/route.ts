@@ -1,4 +1,4 @@
-import { defineRoute } from 'next-rest-framework/client';
+import { defineRoute } from 'next-rest-framework';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 

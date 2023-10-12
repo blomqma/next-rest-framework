@@ -4,86 +4,46 @@ sidebar_position: 2
 
 # Getting started
 
-### [Initialize client](#initialize-client)
+### [Installation](#installation)
 
-To use Next REST Framework you need to initialize the client somewhere in your Next.js project. The client exposes all functionality of the framework you will need:
-
-App Router:
-
-```typescript
-// src/next-rest-framework/client.ts
-
-import { NextRestFramework } from 'next-rest-framework';
-
-export const { defineCatchAllRoute, defineRoute } = NextRestFramework({
-  appDirPath: './src/app', // Path to your app directory.
-  deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
-});
+```
+npm install --save next-rest-framework
 ```
 
-Pages Router:
+### [Initialize docs endpoint](#initialize-docs-endpoint)
 
-```typescript
-// src/next-rest-framework/client.ts
-
-import { NextRestFramework } from 'next-rest-framework';
-
-export const { defineCatchAllApiRoute, defineApiRoute } = NextRestFramework({
-  apiRoutesPath: './src/pages/api', // Path to your API routes directory.
-  deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
-});
-```
-
-You can also use both App Router and Pages Router simultaneously by combining the examples above.
-
-The complete API of the initialized client is the following:
-
-| Name                     | Description                                                                                                                                                                                        |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `defineCatchAllRoute`    |  A function for defining a single catch-all route when using App Router. Must be used in the root of your `app` directory in the following path `[[...next-rest-framework]]/route.ts`.             |
-| `defineCatchAllApiRoute` |  A function for defining a single catch-all API route when using Pages Router. Must be used in the root of your API routes folder in the following path `pages/api/[[...next-rest-framework]].ts`. |
-| `defineRoute`            | A function for defining an individual route that you want to use Next REST Framework for when using App Router. Can also be used in other catch-all API routes.                                    |
-| `defineApiRoute`         | A function for defining an individual API route that you want to use Next REST Framework for when using Pages Router. Can also be used in other catch-all API routes.                              |
-
-### [Initialize catch-all route](#initialize-catch-all-route)
-
-To initialize Next REST Framework you need to export and call the `defineCatchAllRoute` function when using App Router, or `defineCatchAllApiRoute` function when using Pages Router from a root-level [optional catch-all API route](https://nextjs.org/docs/routing/dynamic-routes#optional-catch-all-routes):
-
-```typescript
-// src/app/[[...next-rest-framework]]/route.ts
-
-import { defineCatchAllRoute } from 'next-rest-framework/client';
-
-export const GET = defineCatchAllRoute();
-```
-
-OR:
-
-```typescript
-// src/pages/api/[[...next-rest-framework]].ts
-
-import { defineCatchAllApiRoute } from 'next-rest-framework/client';
-
-export default defineCatchAllApiRoute();
-```
-
-This is enough to get you started. Your application should use the catch-all function only once. If you want to define additional catch-all routes, you can use the `defineRoute` or `defineApiRoute` functions for those. By default Next REST Framework gives you three API routes with this configuration:
-
-- `/api`: Swagger UI using the auto-generated OpenAPI spec.
-- `/api/openapi.json`: An auto-generated openapi.json document.
-- `/api/openapi.yaml`: An auto-generated openapi.yaml document.
-- A local `openapi.json` file that will be generated as you run `npx next-rest-framework generate` or call any of the above endpoints in development mode. This file should be under version control and you should always keep it in the project root. It will be automatically updated as you develop your application locally and is used by Next REST Framework when you run your application in production. Remember that it will be dynamically regenerated every time you call any of the above endpoints in development mode. A good practice is also to generate this file as part of your pre-commit hooks or before deploying your changes to production with `next-rest-framework generate`.
-
-The reserved OpenAPI paths are configurable with the [Config options](#config-options) that you can pass for your `NextRestFramework` client.
-
-### [Add an API Route](#add-an-api-route)
+To get access to the auto-generated documentation, initialize the docs endpoint somewhere in your codebase. You can also skip this step if you don't want to expose a public API documentation.
 
 #### App Router:
 
 ```typescript
-// src/app/api/todos.ts
+// src/app/api/route.ts
 
-import { defineRoute } from 'next-rest-framework/client';
+import { defineDocsRoute } from 'next-rest-framework';
+
+export const GET = defineDocsRoute();
+```
+
+#### Pages Router:
+
+```typescript
+// src/pages/api.ts
+
+import { defineDocsApiRoute } from 'next-rest-framework';
+
+export default defineDocsApiRoute();
+```
+
+This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the CLI command `npx next-rest-framework generate` to generate it. You can also use both App Router and Pages Router simultaneously by combining the examples above. See the full configuration options of this endpoint in the [Config options](/docs/api-reference#config-options) section.
+
+### [Add a route](#add-a-route)
+
+#### App Router:
+
+```typescript
+// src/app/api/todos/route.ts
+
+import { defineRoute } from 'next-rest-framework';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -102,7 +62,6 @@ const handler = defineRoute({
       }
     ],
     handler: () => {
-      // Any other JSON format will lead to TS error.
       return NextResponse.json(
         { foo: 'foo', bar: 'bar', baz: 'baz', qux: 'qux' },
         {
@@ -130,11 +89,9 @@ const handler = defineRoute({
         })
       }
     ],
-    // A strongly-typed Route Handler: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
     handler: async (req) => {
       const { foo, bar } = await req.json();
 
-      // Any other JSON format will lead to TS error.
       return NextResponse.json(
         { foo, bar },
         {
@@ -153,7 +110,7 @@ export { handler as GET, handler as POST };
 ```typescript
 // src/pages/api/todos.ts
 
-import { defineApiRoute } from 'next-rest-framework/client';
+import { defineApiRoute } from 'next-rest-framework';
 import { z } from 'zod';
 
 export default defineApiRoute({
@@ -199,6 +156,6 @@ export default defineApiRoute({
 });
 ```
 
-These type-safe endpoints will be now auto-generated to your OpenAPI spec and Swagger UI!
+These type-safe endpoints will be now auto-generated to your OpenAPI spec!
 
-![Next REST Framework Swagger UI](@site/static/img/swagger-ui-screenshot.jpg)
+![Next REST Framework docs](@site/static/img/docs-screenshot.jpg)

@@ -1,10 +1,9 @@
-import { NextRestFramework } from '../../src';
-import * as openApiUtils from '../../src/utils/open-api';
+import { defineDocsRoute, defineRoute } from '../../src';
 import {
-  createNextRestFrameworkMocks,
-  expectPathsResponse,
-  expectOpenAPIGenerationErrors,
-  resetCustomGlobals
+  createMockRouteRequest,
+  resetCustomGlobals,
+  getExpectedSpec,
+  expectOpenAPIGenerationErrors
 } from '../utils';
 import {
   NEXT_REST_FRAMEWORK_USER_AGENT,
@@ -12,7 +11,9 @@ import {
 } from '../../src/constants';
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
+import fs from 'fs';
 import chalk from 'chalk';
+import * as openApiUtils from '../../src/utils/open-api';
 
 const createDirent = (name: string) => ({
   isDirectory: () => false,
@@ -20,22 +21,33 @@ const createDirent = (name: string) => ({
 });
 
 jest.mock('fs', () => ({
-  readdirSync: () =>
-    [
-      'foo/route.ts',
-      'foo/bar/route.ts',
-      'foo/bar/baz/route.ts',
-      'foo/bar/[qux]/route.ts'
-    ].map(createDirent),
-  writeFileSync: () => {}
+  ...jest.requireActual('fs'),
+  readdirSync: (path: string) => {
+    const paths = path.includes('pages')
+      ? []
+      : [
+          'api/foo/route.ts',
+          'api/foo/bar/route.ts',
+          'api/foo/bar/baz/route.ts',
+          'api/foo/bar/[qux]/route.ts'
+        ];
+
+    return paths.map(createDirent);
+  },
+  existsSync: () => true
+}));
+
+const writeFileSyncSpy = jest
+  .spyOn(fs, 'writeFileSync')
+  .mockImplementation(() => {});
+
+jest.mock('path', () => ({
+  ...jest.requireActual('path'),
+  basename: () => 'route.js'
 }));
 
 beforeEach(() => {
   resetCustomGlobals();
-});
-
-const { defineCatchAllRoute, defineRoute } = NextRestFramework({
-  appDirPath: 'src/app/api'
 });
 
 const schema = z.object({ foo: z.string() });
@@ -148,7 +160,7 @@ jest.mock(
 global.fetch = async (url: string) => {
   const path = url.replace('http://localhost:3000', '');
 
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET,
     path,
     query: {
@@ -179,21 +191,33 @@ global.fetch = async (url: string) => {
 };
 
 it('auto-generates the paths from the internal endpoint responses', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET,
-    path: '/api/openapi.json'
+    path: '/api'
   });
 
-  const res = await defineCatchAllRoute()(req, context);
-  const { paths } = await res?.json();
-  expectPathsResponse({ zodSchema: schema, paths });
+  await defineDocsRoute()(req, context);
+
+  const spec = getExpectedSpec({
+    zodSchema: schema,
+    allowedPaths: [
+      '/api/foo',
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ],
+    deniedPaths: []
+  });
+
+  expect(global.openApiSpec).toEqual(spec);
+  expect(writeFileSyncSpy).toHaveBeenCalled();
 });
 
 it.each([
   {
     allowedPaths: ['*'],
     expectedPathsToBeAllowed: [],
-    expectedPathsToBeIgnored: [
+    expectedPathsToBeDenied: [
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
@@ -208,12 +232,12 @@ it.each([
       '/api/foo/bar/baz',
       '/api/foo/bar/{qux}'
     ],
-    expectedPathsToBeIgnored: []
+    expectedPathsToBeDenied: []
   },
   {
     allowedPaths: ['/api/foo'],
     expectedPathsToBeAllowed: ['/api/foo'],
-    expectedPathsToBeIgnored: [
+    expectedPathsToBeDenied: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
       '/api/foo/bar/{qux}'
@@ -222,7 +246,7 @@ it.each([
   {
     allowedPaths: ['/api/foo/*/baz'],
     expectedPathsToBeAllowed: ['/api/foo/bar/baz'],
-    expectedPathsToBeIgnored: ['/api/foo', '/api/foo/bar', '/api/foo/bar/{qux}']
+    expectedPathsToBeDenied: ['/api/foo', '/api/foo/bar', '/api/foo/bar/{qux}']
   },
   {
     allowedPaths: ['/api/foo/**'],
@@ -231,41 +255,41 @@ it.each([
       '/api/foo/bar/baz',
       '/api/foo/bar/{qux}'
     ],
-    expectedPathsToBeIgnored: ['/api/foo']
+    expectedPathsToBeDenied: ['/api/foo']
   }
 ])(
   'auto-generates the paths from the internal endpoint responses when allowing specific routes: $allowedPaths',
   async ({
     allowedPaths,
     expectedPathsToBeAllowed,
-    expectedPathsToBeIgnored
+    expectedPathsToBeDenied
   }) => {
     console.info = jest.fn();
 
-    const { req, context } = createNextRestFrameworkMocks({
+    const { req, context } = createMockRouteRequest({
       method: ValidMethod.GET,
-      path: '/api/openapi.json'
+      path: '/api'
     });
 
-    const res = await NextRestFramework({
-      appDirPath: 'src/app/api',
+    await defineDocsRoute({
       allowedPaths
-    }).defineCatchAllRoute()(req, context);
+    })(req, context);
 
-    const { paths } = await res?.json();
-
-    expectPathsResponse({
+    const spec = getExpectedSpec({
       zodSchema: schema,
-      paths,
-      allowedPaths: expectedPathsToBeAllowed
+      allowedPaths: expectedPathsToBeAllowed,
+      deniedPaths: expectedPathsToBeDenied
     });
 
-    if (expectedPathsToBeIgnored.length) {
+    expect(global.openApiSpec).toEqual(spec);
+    expect(writeFileSyncSpy).toHaveBeenCalled();
+
+    if (expectedPathsToBeDenied.length) {
       expect(console.info).toHaveBeenNthCalledWith(
         3,
         chalk.yellowBright(
           `The following paths are ignored by Next REST Framework: ${chalk.bold(
-            expectedPathsToBeIgnored.map((p) => `\n- ${p}`)
+            expectedPathsToBeDenied.map((p) => `\n- ${p}`)
           )}`
         )
       );
@@ -276,10 +300,17 @@ it.each([
 it.each([
   {
     deniedPaths: ['*'],
+    expectedPathsToBeAllowed: [
+      '/api/foo',
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ],
     expectedPathsToBeDenied: []
   },
   {
     deniedPaths: ['**'],
+    expectedPathsToBeAllowed: [],
     expectedPathsToBeDenied: [
       '/api/foo',
       '/api/foo/bar',
@@ -289,14 +320,25 @@ it.each([
   },
   {
     deniedPaths: ['/api/foo'],
+    expectedPathsToBeAllowed: [
+      '/api/foo/bar',
+      '/api/foo/bar/baz',
+      '/api/foo/bar/{qux}'
+    ],
     expectedPathsToBeDenied: ['/api/foo']
   },
   {
     deniedPaths: ['/api/foo/*/baz'],
+    expectedPathsToBeAllowed: [
+      '/api/foo',
+      '/api/foo/bar',
+      '/api/foo/bar/{qux}'
+    ],
     expectedPathsToBeDenied: ['/api/foo/bar/baz']
   },
   {
     deniedPaths: ['/api/foo/**'],
+    expectedPathsToBeAllowed: ['/api/foo'],
     expectedPathsToBeDenied: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
@@ -305,26 +347,30 @@ it.each([
   }
 ])(
   'auto-generates the paths from the internal endpoint responses when denying specific routes: $deniedPaths',
-  async ({ deniedPaths, expectedPathsToBeDenied }) => {
+  async ({
+    deniedPaths,
+    expectedPathsToBeAllowed,
+    expectedPathsToBeDenied
+  }) => {
     console.info = jest.fn();
 
-    const { req, context } = createNextRestFrameworkMocks({
+    const { req, context } = createMockRouteRequest({
       method: ValidMethod.GET,
-      path: '/api/openapi.json'
+      path: '/api'
     });
 
-    const res = await NextRestFramework({
-      appDirPath: 'src/app/api',
+    await defineDocsRoute({
       deniedPaths
-    }).defineCatchAllRoute()(req, context);
+    })(req, context);
 
-    const { paths } = await res?.json();
-
-    expectPathsResponse({
+    const spec = getExpectedSpec({
       zodSchema: schema,
-      paths,
+      allowedPaths: expectedPathsToBeAllowed,
       deniedPaths: expectedPathsToBeDenied
     });
+
+    expect(global.openApiSpec).toEqual(spec);
+    expect(writeFileSyncSpy).toHaveBeenCalled();
 
     if (expectedPathsToBeDenied.length) {
       expect(console.info).toHaveBeenNthCalledWith(
@@ -357,13 +403,20 @@ it('handles error if the OpenAPI spec generation fails', async () => {
       throw Error(error);
     });
 
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET,
-    path: '/api/openapi.json'
+    path: '/api'
   });
 
-  const res = await defineCatchAllRoute()(req, context);
-  const { paths } = await res?.json();
-  expect(paths).toEqual({});
+  await defineDocsRoute()(req, context);
+
+  const spec = getExpectedSpec({
+    zodSchema: schema,
+    allowedPaths: [],
+    deniedPaths: []
+  });
+
+  expect(global.openApiSpec).toEqual(spec);
+  expect(writeFileSyncSpy).toHaveBeenCalled();
   expectOpenAPIGenerationErrors(error);
 });

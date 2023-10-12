@@ -32,25 +32,26 @@
   - [Lightweight, type-safe, easy to use](#lightweight-type-safe-easy-to-use)
 - [Installation](#installation)
 - [Getting started](#getting-started)
-  - [Initialize client](#initialize-client)
-  - [Initialize catch-all route](#initialize-catch-all-route)
-  - [Add an API Route](#add-an-api-route)
+  - [Initialize docs endpoint](#initialize-docs-endpoint)
     - [App Router:](#app-router)
     - [Pages Router:](#pages-router)
+  - [Add a route](#add-a-route)
+    - [App Router:](#app-router-1)
+    - [Pages Router:](#pages-router-1)
 - [API reference](#api-reference)
   - [Config options](#config-options)
   - [Route config](#route-config)
     - [Method handlers](#method-handlers)
       - [Input object](#input-object)
       - [Output object](#output-object)
-  - [SwaggerUI config](#swaggerui-config)
+  - [Docs config](#docs-config)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
 - [License](#license)
 
 ## [Overview](#overview)
 
-Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set of tools to build type-safe, self-documenting HTTP REST APIs with [Next.js](http://nextjs.org/). Building OpenAPI specification-compliant REST APIs can be cumbersome and slow but Next REST Framework makes this easy with auto-generated OpenAPI documents and Swagger UI using TypeScript and object schemas.
+Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set of tools to build type-safe, self-documenting HTTP REST APIs with [Next.js](http://nextjs.org/). Building OpenAPI specification-compliant REST APIs can be cumbersome and slow but Next REST Framework makes this easy with auto-generated OpenAPI documents and docs using TypeScript and object schemas.
 
 - [Live demo](https://next-rest-framework-demo.vercel.app)
 - [Docs](https://next-rest-framework.vercel.app)
@@ -79,86 +80,40 @@ npm install --save next-rest-framework
 
 ## [Getting started](#getting-started)
 
-### [Initialize client](#initialize-client)
+### [Initialize docs endpoint](#initialize-docs-endpoint)
 
-To use Next REST Framework you need to initialize the client somewhere in your Next.js project. The client exposes all functionality of the framework you will need:
+To get access to the auto-generated documentation, initialize the docs endpoint somewhere in your codebase. You can also skip this step if you don't want to expose a public API documentation.
 
-App Router:
-
-```typescript
-// src/next-rest-framework/client.ts
-
-import { NextRestFramework } from 'next-rest-framework';
-
-export const { defineCatchAllRoute, defineRoute } = NextRestFramework({
-  appDirPath: './src/app', // Path to your app directory.
-  deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
-});
-```
-
-Pages Router:
+#### App Router:
 
 ```typescript
-// src/next-rest-framework/client.ts
+// src/app/api/route.ts
 
-import { NextRestFramework } from 'next-rest-framework';
+import { defineDocsRoute } from 'next-rest-framework';
 
-export const { defineCatchAllApiRoute, defineApiRoute } = NextRestFramework({
-  apiRoutesPath: './src/pages/api', // Path to your API routes directory.
-  deniedPaths: ['/api/auth/**'] // Paths that are not using Next REST Framework if you have any.
-});
+export const GET = defineDocsRoute();
 ```
 
-You can also use both App Router and Pages Router simultaneously by combining the examples above.
-
-The complete API of the initialized client is the following:
-
-| Name                     | Description                                                                                                                                                                                        |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `defineCatchAllRoute`    |  A function for defining a single catch-all route when using App Router. Must be used in the root of your `app` directory in the following path `[[...next-rest-framework]]/route.ts`.             |
-| `defineCatchAllApiRoute` |  A function for defining a single catch-all API route when using Pages Router. Must be used in the root of your API routes folder in the following path `pages/api/[[...next-rest-framework]].ts`. |
-| `defineRoute`            | A function for defining an individual route that you want to use Next REST Framework for when using App Router. Can also be used in other catch-all API routes.                                    |
-| `defineApiRoute`         | A function for defining an individual API route that you want to use Next REST Framework for when using Pages Router. Can also be used in other catch-all API routes.                              |
-
-### [Initialize catch-all route](#initialize-catch-all-route)
-
-To initialize Next REST Framework you need to export and call the `defineCatchAllRoute` function when using App Router, or `defineCatchAllApiRoute` function when using Pages Router from a root-level [optional catch-all API route](https://nextjs.org/docs/routing/dynamic-routes#optional-catch-all-routes):
+#### Pages Router:
 
 ```typescript
-// src/app/[[...next-rest-framework]]/route.ts
+// src/pages/api.ts
 
-import { defineCatchAllRoute } from 'next-rest-framework/client';
+import { defineDocsApiRoute } from 'next-rest-framework';
 
-export const GET = defineCatchAllRoute();
+export default defineDocsApiRoute();
 ```
 
-OR:
+This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the CLI command `npx next-rest-framework generate` to generate it. You can also use both App Router and Pages Router simultaneously by combining the examples above. See the full configuration options of this endpoint in the [Config options](#config-options) section.
 
-```typescript
-// src/pages/api/[[...next-rest-framework]].ts
-
-import { defineCatchAllApiRoute } from 'next-rest-framework/client';
-
-export default defineCatchAllApiRoute();
-```
-
-This is enough to get you started. Your application should use the catch-all function only once. If you want to define additional catch-all routes, you can use the `defineRoute` or `defineApiRoute` functions for those. By default Next REST Framework gives you three API routes with this configuration:
-
-- `/api`: Swagger UI using the auto-generated OpenAPI spec.
-- `/api/openapi.json`: An auto-generated openapi.json document.
-- `/api/openapi.yaml`: An auto-generated openapi.yaml document.
-- A local `openapi.json` file that will be generated as you run `npx next-rest-framework generate` or call any of the above endpoints in development mode. This file should be under version control and you should always keep it in the project root. It will be automatically updated as you develop your application locally and is used by Next REST Framework when you run your application in production. Remember that it will be dynamically regenerated every time you call any of the above endpoints in development mode. A good practice is also to generate this file as part of your pre-commit hooks or before deploying your changes to production with `next-rest-framework generate`.
-
-The reserved OpenAPI paths are configurable with the [Config options](#config-options) that you can pass for your `NextRestFramework` client.
-
-### [Add an API Route](#add-an-api-route)
+### [Add a route](#add-a-route)
 
 #### App Router:
 
 ```typescript
 // src/app/api/todos/route.ts
 
-import { defineRoute } from 'next-rest-framework/client';
+import { defineRoute } from 'next-rest-framework';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -177,7 +132,6 @@ const handler = defineRoute({
       }
     ],
     handler: () => {
-      // Any other JSON format will lead to TS error.
       return NextResponse.json(
         { foo: 'foo', bar: 'bar', baz: 'baz', qux: 'qux' },
         {
@@ -205,11 +159,9 @@ const handler = defineRoute({
         })
       }
     ],
-    // A strongly-typed Route Handler: https://nextjs.org/docs/app/building-your-application/routing/route-handlers
     handler: async (req) => {
       const { foo, bar } = await req.json();
 
-      // Any other JSON format will lead to TS error.
       return NextResponse.json(
         { foo, bar },
         {
@@ -228,7 +180,7 @@ export { handler as GET, handler as POST };
 ```typescript
 // src/pages/api/todos.ts
 
-import { defineApiRoute } from 'next-rest-framework/client';
+import { defineApiRoute } from 'next-rest-framework';
 import { z } from 'zod';
 
 export default defineApiRoute({
@@ -274,34 +226,30 @@ export default defineApiRoute({
 });
 ```
 
-These type-safe endpoints will be now auto-generated to your OpenAPI spec and Swagger UI!
+These type-safe endpoints will be now auto-generated to your OpenAPI spec!
 
-![Next REST Framework Swagger UI](./docs/static/img/swagger-ui-screenshot.jpg)
+![Next REST Framework docs](./docs/static/img/docs-screenshot.jpg)
 
 ## [API reference](#api-reference)
 
 ### [Config options](#config-options)
 
-The optional config options allow you to customize Next REST Framework. The following options can be passed as a parameter for your `NextRestFramework` client in an object:
+The optional config options allow you to customize Next REST Framework. The following options can be passed to the `defineDocsRoute` (App Router) and `defineDocsApiRoute` (Pages Router) docs route handler functions:
 
-| Name                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `appDirPath`           |  Absolute path from the project root to the root directory where your Routes are located when using App Router. Next REST Framework uses this as the root directory to recursively search for your Routes, so being as specific as possible will improve performance. This option is not required when using Pages Router, but it can be used together with the `apiRoutesPath` option when using both routers at the same time.                                 |
-| `apiRoutesPath`        |  Absolute path from the project root to the root directory where your API Routes are located when using Pages Router. Next REST Framework uses this as the root directory to recursively search for your API Routes, so being as specific as possible will improve performance. This option is not required when using App Router, but it can be used together with the `appDirPath` option when using both routers at the same time.                            |
-| `deniedPaths`          | Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/disallowed-path', '/api/disallowed-path-2/*', '/api/disallowed-path-3/**']` Defaults to no paths being disallowed.                                                                                                                                           |
-| `allowedPaths`         | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.                                                                                                                                                         |
-| `openApiJsonPath`      | Custom path for serving `openapi.json` file. Defaults to `/api/openapi.json`.                                                                                                                                                                                                                                                                                                                                                                                    |
-| `openApiYamlPath`      | Custom path for serving `openapi.yaml` file. Defaults to `/api/openapi.yaml`.                                                                                                                                                                                                                                                                                                                                                                                    |
-| `swaggerUiPath`        | Custom path for service Swagger UI. Defaults to `/api`.                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `swaggerUiConfig`      | A [SwaggerUI config](#swaggerui-config) object for customizing the generated SwaggerUI.                                                                                                                                                                                                                                                                                                                                                                          |
-| `exposeOpenApiSpec`    | Setting this to `false` will serve none of the OpenAPI documents neither the Swagger UI. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                     |
-| `errorHandler`         | An error handler function used to catch errors in your routes. Both synchronous and asynchronous handlers are supported. The function takes in the same parameters as the Next.js [App Router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. Defaults to a basic error handler logging the errors in non-production mode. |
-| `suppressInfo`         | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                                                                                                                                                                       |
-| `generatePathsTimeout` | Timeout in milliseconds for generating the OpenAPI spec. Defaults to 5000. For large applications you might have to increase this.                                                                                                                                                                                                                                                                                                                               |
+| Name                      | Description                                                                                                                                                                                                                                                                                                            |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deniedPaths`             | Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/disallowed-path', '/api/disallowed-path-2/*', '/api/disallowed-path-3/**']` Defaults to no paths being disallowed. |
+| `allowedPaths`            | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.               |
+| `openApiSpecOverrides`    | Overrides to the generated OpenAPI spec.                                                                                                                                                                                                                                                                               |
+| `openApiJsonPath`         | Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder.                                                                                                                                   |
+| `autoGenerateOpenApiSpec` | Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`.                                                                                                                                                                    |
+| `docsConfig`              | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
+| `suppressInfo`            | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                             |
+| `generatePathsTimeout`    | Timeout in milliseconds for generating the OpenAPI spec. Defaults to 5000. For large applications you might have to increase this.                                                                                                                                                                                     |
 
 ### [Route config](#route-config)
 
-The route config parameters define an individual route, applicable for all endpoints (methods) that are using that route:
+The route config parameters passed to the `defineRoute` (App Router) and `defineApiRoute` (Pages Router) functions define an individual route, applicable for all endpoints that are using that route:
 
 | Name                                                       | Description                                                                                                                                                                   | Required |
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -312,12 +260,12 @@ The route config parameters define an individual route, applicable for all endpo
 
 The method handler parameters define an individual endpoint:
 
-| Name                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                     | Required |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `input`                | An [Input object](#input-object) object.                                                                                                                                                                                                                                                                                                                                                                                                        | `false`  |
-| `output`               | An array of [Output objects](#output-object).                                                                                                                                                                                                                                                                                                                                                                                                   |  `true`  |
-| `handler`              |  Your handler function that takes in your typed request and response (when using Pages Router). Both synchronous and asynchronous handlers are supported. The function takes in strongly-typed versions of the same parameters as the Next.js [App Router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. | `true`   |
-| `openApiSpecOverrides` | An OpenAPI [Operation object](https://swagger.io/specification/#operation-object) that can be used to override and extend the auto-generated and higher level specifications.                                                                                                                                                                                                                                                                   | `false`  |
+| Name                   | Description                                                                                                                                                                                                                                                                                                                               | Required |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `input`                | An [Input object](#input-object) object.                                                                                                                                                                                                                                                                                                  | `false`  |
+| `output`               | An array of [Output objects](#output-object).                                                                                                                                                                                                                                                                                             |  `true`  |
+| `handler`              | A strongly-typed handler function for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. | `true`   |
+| `openApiSpecOverrides` | An OpenAPI [Operation object](https://swagger.io/specification/#operation-object) that can be used to override and extend the auto-generated and higher level specifications.                                                                                                                                                             | `false`  |
 
 ##### [Input object](#input-object)
 
@@ -339,17 +287,16 @@ The output objects define what kind of responses are returned from your API hand
 | `contentType` | The content type header of the response.                                                                                                                          | `true`   |
 | `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. A response body not matching to the schema will lead to a TS error. |  `true`  |
 
-### [SwaggerUI config](#swaggerui-config)
+### [Docs config](#docs-config)
 
-The SwaggerUI config object can be used to customize the generated Swagger UI:
+The docs config object can be used to customize the generated docs:
 
-| Name           | Description                                                           |
-| -------------- | --------------------------------------------------------------------- |
-| `defaultTheme` | Default theme (light/dark) to use for SwaggerUI - defaults to "light" |
-| `title`        | Custom page title meta tag value.                                     |
-| `description`  | Custom page description meta tag value.                               |
-| `logoHref`     | An href for a custom logo.                                            |
-| `faviconHref`  | An href for a custom favicon.                                         |
+| Name          | Description                             |
+| ------------- | --------------------------------------- |
+| `title`       | Custom page title meta tag value.       |
+| `description` | Custom page description meta tag value. |
+| `faviconUrl`  | A URL for a custom favicon.             |
+| `logoUrl`     | A URL for a custom logo.                |
 
 ## [Changelog](#changelog)
 

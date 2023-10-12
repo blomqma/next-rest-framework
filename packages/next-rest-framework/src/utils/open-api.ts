@@ -1,132 +1,23 @@
 import { join } from 'path';
-import { type MethodHandler, type NextRestFrameworkConfig } from '../types';
+import {
+  type MethodHandler,
+  type NextRestFrameworkConfig,
+  type DefineApiRouteParams,
+  type DefineRouteParams
+} from '../types';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import {
   DEFAULT_ERRORS,
   NEXT_REST_FRAMEWORK_USER_AGENT,
   OPEN_API_VERSION,
-  VERSION,
   ValidMethod
 } from '../constants';
 import { merge, isEqualWith } from 'lodash';
 import { getJsonSchema, getSchemaKeys } from './schemas';
-import { readdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
-import { type DefineRouteParams } from '../types/define-route';
-import { logIgnoredPaths, warnAboutDirNotFound } from './logging';
 
-export const getHTMLForSwaggerUI = ({
-  config: {
-    openApiJsonPath,
-    swaggerUiConfig: {
-      defaultTheme,
-      title,
-      description,
-      faviconHref,
-      logoHref
-    } = {}
-  },
-  baseUrl,
-  theme = defaultTheme ?? 'light'
-}: {
-  config: NextRestFrameworkConfig;
-  baseUrl: string;
-  theme?: string;
-}) => {
-  const url = `${baseUrl}${openApiJsonPath}`;
-
-  return `<!DOCTYPE html>
-  <html lang="en" data-theme="${theme}">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>${title}</title>
-      <meta
-        name="description"
-        content="${description}"
-      />
-      <link rel="icon" type="image/x-icon" href="${faviconHref}">
-      <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
-      <link
-        href="https://cdn.jsdelivr.net/npm/daisyui@2.46.0/dist/full.css"
-        rel="stylesheet"
-        type="text/css"
-      />
-      <script src="https://cdn.tailwindcss.com"></script>
-      <style>
-        p, :not(code, a) > span:not(.opblock-summary-method), i, h1, h2, h3, h4, h5, h6, th, td, button, div {color: hsl(var(--bc)) !important;}
-        svg {fill: hsl(var(--bc)) !important;}
-        .opblock-section-header {background-color: hsl(var(--b)) !important;}
-      </style>
-    </head>
-
-    <body class="min-h-screen flex flex-col items-center">
-      <div class="navbar bg-base-200 flex justify-center">
-        <div class="max-w-7xl flex justify-between grow gap-5 h-24 px-5">
-          <div class="flex items-center gap-4">
-            <a>
-              <img
-                src="${logoHref}"
-                alt="Logo"
-                class="w-32"
-              />
-            </a>
-            <p>v${VERSION}</p>
-          </div>
-          <label class="swap swap-rotate">
-            <input
-              type="checkbox"
-              onclick="if(this.checked){document.documentElement.setAttribute('data-theme', 'light');document.cookie='theme=light; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/';}else{document.documentElement.setAttribute('data-theme', 'dark');document.cookie='theme=dark; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/';}"
-              ${theme === 'light' ? 'checked' : ''}
-            />
-            <svg
-              class="swap-on fill-current w-6 h-6"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-            >
-              <path d="M5.64,17l-.71.71a1,1,0,0,0,0,1.41,1,1,0,0,0,1.41,0l.71-.71A1,1,0,0,0,5.64,17ZM5,12a1,1,0,0,0-1-1H3a1,1,0,0,0,0,2H4A1,1,0,0,0,5,12Zm7-7a1,1,0,0,0,1-1V3a1,1,0,0,0-2,0V4A1,1,0,0,0,12,5ZM5.64,7.05a1,1,0,0,0,.7.29,1,1,0,0,0,.71-.29,1,1,0,0,0,0-1.41l-.71-.71A1,1,0,0,0,4.93,6.34Zm12,.29a1,1,0,0,0,.7-.29l.71-.71a1,1,0,1,0-1.41-1.41L17,5.64a1,1,0,0,0,0,1.41A1,1,0,0,0,17.66,7.34ZM21,11H20a1,1,0,0,0,0,2h1a1,1,0,0,0,0-2Zm-9,8a1,1,0,0,0-1,1v1a1,1,0,0,0,2,0V20A1,1,0,0,0,12,19ZM18.36,17A1,1,0,0,0,17,18.36l.71.71a1,1,0,0,0,1.41,0,1,1,0,0,0,0-1.41ZM12,6.5A5.5,5.5,0,1,0,17.5,12,5.51,5.51,0,0,0,12,6.5Zm0,9A3.5,3.5,0,1,1,15.5,12,3.5,3.5,0,0,1,12,15.5Z" />
-            </svg>
-            <svg
-              class="swap-off fill-current w-6 h-6"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-            >
-              <path d="M21.64,13a1,1,0,0,0-1.05-.14,8.05,8.05,0,0,1-3.37.73A8.15,8.15,0,0,1,9.08,5.49a8.59,8.59,0,0,1,.25-2A1,1,0,0,0,8,2.36,10.14,10.14,0,1,0,22,14.05,1,1,0,0,0,21.64,13Zm-9.5,6.69A8.14,8.14,0,0,1,7.08,5.22v.27A10.15,10.15,0,0,0,17.22,15.63a9.79,9.79,0,0,0,2.1-.22A8.11,8.11,0,0,1,12.14,19.73Z" />
-            </svg>
-          </label>
-        </div>
-      </div>
-
-      <main class="max-w-7xl grow w-full">
-        <div id="swagger-ui"></div>
-      </main>
-
-      <footer class="footer bg-base-200 flex justify-center">
-        <div class="container max-w-5xl flex flex-col items-center text-md gap-5 px-5 py-2">
-          <a href="https://github.com/blomqma/next-rest-framework" class="text-center text-sm flex flex-wrap items-center gap-1">
-            Built with Next REST Framework
-            <img
-              src="https://next-rest-framework.vercel.app/img/logo.svg"
-              alt="Next REST Framework logo"
-              class="w-10"
-            />
-          </a>
-        </div>
-      </footer>
-
-      <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-bundle.js" crossorigin></script>
-      <script>
-        window.onload = () => {
-          window.ui = SwaggerUIBundle({
-              url: '${url}',
-              dom_id: '#swagger-ui',
-          });
-        };
-      </script>
-    </body>
-  </html>`;
-};
-
+// Traverse the base path and find all nested files.
 const getNestedRoutes = (basePath: string, dir: string): string[] => {
   const dirents = readdirSync(join(basePath, dir), { withFileTypes: true });
 
@@ -138,73 +29,17 @@ const getNestedRoutes = (basePath: string, dir: string): string[] => {
   return files.flat();
 };
 
-// Generate the OpenAPI paths from the Next.js API routes.
+// Generate the OpenAPI paths from the Next.js routes and API routes.
 const generatePaths = async ({
-  config: {
-    appDirPath,
-    apiRoutesPath,
-    openApiJsonPath,
-    openApiYamlPath,
-    swaggerUiPath,
-    deniedPaths,
-    allowedPaths,
-    generatePathsTimeout
-  },
-  baseUrl
+  config,
+  baseUrl,
+  url
 }: {
   config: NextRestFrameworkConfig;
   baseUrl: string;
+  url: string;
 }): Promise<OpenAPIV3_1.PathsObject> => {
-  const filterRoutes = (file: string) => {
-    const isRoute = file.endsWith('route.ts');
-
-    const isCatchAllRoute = file.includes('[...');
-
-    const isOpenApiJsonRoute =
-      file === `${openApiJsonPath?.split('/').at(-1)}/route.ts`;
-
-    const isOpenApiYamlRoute =
-      file === `${openApiYamlPath?.split('/').at(-1)}/route.ts`;
-
-    const isSwaggerUiRoute =
-      file === `${swaggerUiPath?.split('/').at(-1)}/route.ts`;
-
-    if (
-      !isRoute ||
-      isCatchAllRoute ||
-      isOpenApiJsonRoute ||
-      isOpenApiYamlRoute ||
-      isSwaggerUiRoute
-    ) {
-      return false;
-    } else {
-      return true;
-    }
-  };
-
-  const filterApiRoutes = (file: string) => {
-    const isCatchAllRoute = file.includes('[...');
-
-    const isOpenApiJsonRoute =
-      file === `${openApiJsonPath?.split('/').at(-1)}.ts`;
-
-    const isOpenApiYamlRoute =
-      file === `${openApiYamlPath?.split('/').at(-1)}.ts`;
-
-    const isSwaggerUiRoute = file === `${swaggerUiPath?.split('/').at(-1)}.ts`;
-
-    if (
-      isCatchAllRoute ||
-      isOpenApiJsonRoute ||
-      isOpenApiYamlRoute ||
-      isSwaggerUiRoute
-    ) {
-      return false;
-    } else {
-      return true;
-    }
-  };
-
+  // Match wildcard paths with single or multiple segments.
   const isWildcardMatch = (pattern: string, path: string) => {
     const regexPattern = pattern
       .split('/')
@@ -219,12 +54,13 @@ const generatePaths = async ({
 
   const ignoredPaths: string[] = [];
 
+  // Check if the route is allowed or denied by the user.
   const isAllowedRoute = (path: string) => {
-    const isAllowed = allowedPaths?.some((allowedPath) =>
+    const isAllowed = config.allowedPaths?.some((allowedPath) =>
       isWildcardMatch(allowedPath, path)
     );
 
-    const isDenied = deniedPaths?.some((deniedPath) =>
+    const isDenied = config.deniedPaths?.some((deniedPath) =>
       isWildcardMatch(deniedPath, path)
     );
 
@@ -237,61 +73,99 @@ const generatePaths = async ({
     return routeIsAllowed;
   };
 
+  /*
+   * Clean and filter the routes to paths:
+   * - Remove any routes that are not API routes.
+   * - Remove catch-all routes.
+   * - Remove the current route used for docs.
+   * - Replace back slashes, square brackets etc.
+   * - Filter disallowed routes.
+   */
+  const getCleanedRoutes = (files: string[]) =>
+    files
+      .filter((file) => file.endsWith('route.ts'))
+      .filter((file) => !file.includes('[...'))
+      .filter((file) => file !== `${url.split('/').at(-1)}/route.ts`)
+      .map((file) =>
+        `/${file}`
+          .replace('/route.ts', '')
+          .replace(/\\/g, '/')
+          .replace('[', '{')
+          .replace(']', '}')
+      )
+      .filter(isAllowedRoute);
+
   let _routes: string[] = [];
 
-  try {
-    _routes = appDirPath
-      ? getNestedRoutes(join(process.cwd(), appDirPath ?? ''), '')
-          .filter(filterRoutes)
-          .map((file) =>
-            `${appDirPath.split('app')[1]}/${file}`
-              .replace('/route.ts', '')
-              .replace(/\\/g, '/')
-              .replace('[', '{')
-              .replace(']', '}')
-          )
-          .filter(isAllowedRoute)
-      : [];
-  } catch {
-    if (!global.apiRoutesPathsNotFoundLogged) {
-      warnAboutDirNotFound({
-        configName: 'appDirPath',
-        path: appDirPath ?? ''
-      });
+  /*
+   * Clean and filter the API routes to paths:
+   * - Remove catch-all routes.
+   * - Remove the current route used for docs.
+   * - Add the `/api` prefix.
+   * - Replace back slashes, square brackets etc.
+   * - Filter disallowed routes.
+   */
+  const getCleanedApiRoutes = (files: string[]) =>
+    files
+      .filter((file) => !file.includes('[...'))
+      .filter((file) => file !== `${url.split('/').at(-1)}.ts`)
+      .map((file) =>
+        `/api/${file}`
+          .replace('/index', '')
+          .replace(/\\/g, '/')
+          .replace('[', '{')
+          .replace(']', '}')
+          .replace('.ts', '')
+      )
+      .filter(isAllowedRoute);
 
-      global.apiRoutesPathsNotFoundLogged = true;
+  try {
+    // Scan `app` folder.
+    const path = join(process.cwd(), 'app');
+
+    if (existsSync(path)) {
+      _routes = getCleanedRoutes(getNestedRoutes(path, ''));
+    } else {
+      // Scan `src/app` folder.
+      const path = join(process.cwd(), 'src/app');
+
+      if (existsSync(path)) {
+        _routes = getCleanedRoutes(getNestedRoutes(path, ''));
+      }
     }
-  }
+  } catch {}
 
   let apiRoutes: string[] = [];
 
   try {
-    apiRoutes = apiRoutesPath
-      ? getNestedRoutes(join(process.cwd(), apiRoutesPath ?? ''), '')
-          .filter(filterApiRoutes)
-          .map((file) =>
-            `/api/${file}`
-              .replace('/index', '')
-              .replace(/\\/g, '/')
-              .replace('[', '{')
-              .replace(']', '}')
-              .replace('.ts', '')
-          )
-          .filter(isAllowedRoute)
-      : [];
-  } catch {
-    if (!global.apiRoutesPathsNotFoundLogged) {
-      warnAboutDirNotFound({
-        configName: 'apiRoutesPath',
-        path: apiRoutesPath ?? ''
-      });
+    // Scan `pages/api` folder.
+    const path = join(process.cwd(), 'pages/api');
 
-      global.apiRoutesPathsNotFoundLogged = true;
+    if (existsSync(path)) {
+      apiRoutes = getCleanedApiRoutes(getNestedRoutes(path, ''));
+    } else {
+      // Scan `src/pages/api` folder.
+      const path = join(process.cwd(), 'src/pages/api');
+
+      if (existsSync(path)) {
+        apiRoutes = getCleanedApiRoutes(getNestedRoutes(path, ''));
+      }
     }
-  }
+  } catch {}
 
-  if (ignoredPaths.length && !global.ignoredPathsLogged) {
-    logIgnoredPaths(ignoredPaths);
+  if (
+    !config.suppressInfo &&
+    ignoredPaths.length &&
+    !global.ignoredPathsLogged
+  ) {
+    console.info(
+      chalk.yellowBright(
+        `The following paths are ignored by Next REST Framework: ${chalk.bold(
+          ignoredPaths.map((p) => `\n- ${p}`)
+        )}`
+      )
+    );
+
     global.ignoredPathsLogged = true;
   }
 
@@ -299,6 +173,7 @@ const generatePaths = async ({
 
   let paths: OpenAPIV3_1.PathsObject = {};
 
+  // Call the API routes to get the OpenAPI paths.
   await Promise.all(
     routes.map(async (route) => {
       const url = `${baseUrl}${route}`;
@@ -306,7 +181,7 @@ const generatePaths = async ({
 
       const abortRequest = setTimeout(() => {
         controller.abort();
-      }, generatePathsTimeout);
+      }, config.generatePathsTimeout);
 
       try {
         const res = await fetch(url, {
@@ -353,29 +228,41 @@ const generatePaths = async ({
 };
 
 // In prod use the existing openapi.json file - in development mode update it whenever the generated API spec changes.
-export const getOrCreateOpenApiSpec = async ({
+export const syncOpenApiSpec = async ({
   config,
-  baseUrl
+  baseUrl,
+  url
 }: {
   config: NextRestFrameworkConfig;
   baseUrl: string;
+  url: string;
 }) => {
   let specFileFound = false;
 
   try {
-    const data = readFileSync(join(process.cwd(), 'openapi.json'));
+    const data = readFileSync(
+      join(process.cwd(), 'public', config.openApiJsonPath ?? '')
+    );
+
     global.openApiSpec = JSON.parse(data.toString());
     specFileFound = true;
   } catch {}
 
   if (process.env.NODE_ENV !== 'production') {
-    const paths = await generatePaths({ config, baseUrl });
+    const paths = await generatePaths({ config, baseUrl, url });
 
-    const newSpec = {
-      ...config.openApiSpecOverrides,
-      openapi: OPEN_API_VERSION,
-      paths: merge({}, config.openApiSpecOverrides?.paths, paths)
-    };
+    const newSpec = merge(
+      {
+        openapi: OPEN_API_VERSION,
+        info: {
+          'x-logo': {
+            url: config.docsConfig?.logoUrl
+          }
+        }
+      },
+      config.openApiSpecOverrides,
+      { paths }
+    );
 
     if (!isEqualWith(global.openApiSpec, newSpec)) {
       if (!specFileFound) {
@@ -388,11 +275,21 @@ export const getOrCreateOpenApiSpec = async ({
         );
       }
 
-      writeFileSync(
-        join(process.cwd(), 'openapi.json'),
-        JSON.stringify(newSpec, null, 2) + '\n',
-        null
-      );
+      const publicPath = join(process.cwd(), 'public');
+
+      if (!existsSync(publicPath)) {
+        console.info(
+          chalk.redBright(
+            `The \`public\` folder was not found. Generating OpenAPI spec aborted.`
+          )
+        );
+
+        return;
+      }
+
+      const path = join(process.cwd(), 'public', config.openApiJsonPath ?? '');
+      const jsonSpec = JSON.stringify(newSpec, null, 2) + '\n';
+      writeFileSync(path, jsonSpec, null);
 
       if (!global.apiSpecGeneratedLogged) {
         console.info(chalk.green('API spec generated successfully!'));
@@ -405,8 +302,6 @@ export const getOrCreateOpenApiSpec = async ({
 
     global.apiSpecGeneratedLogged = true;
   }
-
-  return global.openApiSpec;
 };
 
 export const defaultResponse: OpenAPIV3_1.ResponseObject = {
@@ -427,12 +322,10 @@ export const isValidMethod = (x: unknown): x is ValidMethod =>
   Object.values(ValidMethod).includes(x as ValidMethod);
 
 export const getPathsFromMethodHandlers = ({
-  config,
   methodHandlers,
   route
 }: {
-  config: NextRestFrameworkConfig;
-  methodHandlers: DefineRouteParams;
+  methodHandlers: DefineRouteParams | DefineApiRouteParams;
   route: string;
 }) => {
   const { openApiSpecOverrides } = methodHandlers;
@@ -450,14 +343,17 @@ export const getPathsFromMethodHandlers = ({
       ] as MethodHandler;
 
       const method = _method.toLowerCase();
-      let requestBodyContent: Record<string, OpenAPIV3_1.MediaTypeObject> = {};
+
+      const generatedOperationObject: OpenAPIV3_1.OperationObject = {};
 
       if (input?.body && input?.contentType) {
         const schema = getJsonSchema({ schema: input.body });
 
-        requestBodyContent = {
-          [input.contentType]: {
-            schema
+        generatedOperationObject.requestBody = {
+          content: {
+            [input.contentType]: {
+              schema
+            }
           }
         };
       }
@@ -479,14 +375,9 @@ export const getPathsFromMethodHandlers = ({
         {}
       );
 
-      const generatedOperationObject: OpenAPIV3_1.OperationObject = {
-        requestBody: {
-          content: requestBodyContent
-        },
-        responses: {
-          ...generatedResponses,
-          default: defaultResponse
-        }
+      generatedOperationObject.responses = {
+        ...generatedResponses,
+        default: defaultResponse
       };
 
       if (tags) {
