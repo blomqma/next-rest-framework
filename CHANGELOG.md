@@ -1,6 +1,21 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 2.0.1 - 2023-10-15
+
+### Fixed
+
+This fixes a bug that caused an infinite request
+loop when using pages router and the docs endpoint
+was not ignored by the OpenAPI path generation.
+
+This fix also allows defining multiple different docs
+endpoints, although that should be a rare case.
+The request protocol parsing is also now handled
+differently with pages router and cases where the
+protocol headers contain multiple protocols should
+be handled now.
+
 ### 2.0.0 - 2023-10-15
 
 Improve DX, API docs, router compability etc.
