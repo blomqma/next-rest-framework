@@ -1,6 +1,57 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 2.0.0 - 2023-10-15
+
+Improve DX, API docs, router compability etc.
+
+This is another breaking change to multiple
+components of the framework, changing the client
+API, simplifying route definition etc.
+
+**Re-designed client API**
+
+Previously all features of the framework were
+available via single client, initialized by the
+user in their code base. This change removes the
+concept of initializing a client and accessing route
+definitions etc. via the client.
+
+The documentation part is now decoupled from defining
+individual routes, meaning that the new simplified
+workflow allows the developer to define a single route
+for the generated documentation if they want it.
+
+Individual routes can still be defined like before,
+without importing the route definitions from the client.
+
+The documentation endpoint also does not have to be a
+catch-all route and it can be defined anywhere in the code
+base without breaking things.
+
+In addition to having less boilerplate with the new
+client API, we also get rid of configuring the paths
+for the `app` and `pages` directories. The new smarter
+approach handles this automatically by scanning these
+folders automatically, detecting the `src` directory
+is in use.
+
+**Streamlined OpenAPI spec generation**
+
+Previously, we were storing the generated `openapi.json`
+file in the root of the project and serving that via another
+internal endpoint. The new approach simply generates the spec
+file directly to the `public` folder, where it will be served
+for the API documentation.
+
+**Replacing SwaggerUI with Redoc**
+
+Redoc is a great open source project and replacement for
+SwaggerUI, offering more features like richer endpoint
+previews, search etc. The new rendered API documentation
+uses Redocly and it can still be configured and customized
+by the developer.
+
 ### 1.2.4 - 2023-10-09
 
 ### Fixed
