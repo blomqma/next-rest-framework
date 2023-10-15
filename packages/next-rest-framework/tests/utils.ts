@@ -1,35 +1,30 @@
 import { type ZodSchema } from 'zod';
 import { NextRequest } from 'next/server';
-import { type ValidMethod } from '../src/constants';
 import {
-  type TypedNextApiRequest,
-  type TypedNextRequest
-} from '../src/types/request';
+  DEFAULT_LOGO_URL,
+  OPEN_API_VERSION,
+  VERSION,
+  type ValidMethod
+} from '../src/constants';
+import { type TypedNextRequest, type Modify } from '../src/types';
 import {
   createMocks,
   type RequestOptions,
   type ResponseOptions
 } from 'node-mocks-http';
-import { type Modify } from '../src/types';
-import { type NextApiResponse } from 'next/types';
 import { defaultResponse } from '../src/utils';
 import chalk from 'chalk';
 import zodToJsonSchema from 'zod-to-json-schema';
+import { type NextApiResponse } from 'next/types';
 
 export const resetCustomGlobals = () => {
   global.nextRestFrameworkConfig = undefined;
   global.openApiSpec = undefined;
   global.apiSpecGeneratedLogged = false;
-  global.reservedPathsLogged = false;
-  global.reservedOpenApiJsonPathWarningLogged = false;
-  global.reservedOpenApiYamlPathWarningLogged = false;
-  global.reservedSwaggerUiPathWarningLogged = false;
-  global.appDirNotFoundLogged = false;
-  global.apiRoutesPathsNotFoundLogged = false;
   global.ignoredPathsLogged = false;
 };
 
-export const createNextRestFrameworkMocks = <
+export const createMockRouteRequest = <
   Body,
   Query extends Record<string, string>
 >({
@@ -63,11 +58,11 @@ export const createNextRestFrameworkMocks = <
         ...headers
       }
     }
-  ) as unknown as TypedNextRequest<Body, Query>,
+  ) as TypedNextRequest<Body, Query>,
   context: { params }
 });
 
-export const createApiRouteMocks = <
+export const createMockApiRouteRequest = <
   Body,
   Query = Partial<Record<string, string | string[]>>
 >(
@@ -83,23 +78,21 @@ export const createApiRouteMocks = <
     }
   };
 
-  // @ts-expect-error eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  // @ts-expect-error: The `NextApiRequest` does not satisfy the types for `Request`.
   return createMocks<TypedNextApiRequest<Body, Query>, NextApiResponse>(
-    reqOptions as RequestOptions,
+    reqOptions,
     resOptions
   );
 };
 
-export const expectPathsResponse = ({
+export const getExpectedSpec = ({
   zodSchema,
-  paths,
   allowedPaths,
   deniedPaths
 }: {
   zodSchema: ZodSchema;
-  paths: Record<string, unknown>;
-  allowedPaths?: string[];
-  deniedPaths?: string[];
+  allowedPaths: string[];
+  deniedPaths: string[];
 }) => {
   const schema = zodToJsonSchema(zodSchema, { target: 'openApi3' });
 
@@ -126,86 +119,99 @@ export const expectPathsResponse = ({
     }
   ];
 
-  if (
-    deniedPaths?.includes('/api/foo') ??
-    (allowedPaths && !allowedPaths.includes('/api/foo'))
-  ) {
-    expect(paths).not.toContain('/api/foo');
-  } else {
-    expect(paths['/api/foo']).toEqual({
-      post: {
-        requestBody,
-        responses: {
-          '201': responseContent,
-          default: defaultResponse
-        },
-        parameters
-      }
-    });
-  }
+  let paths = {};
 
-  if (
-    deniedPaths?.includes('/api/foo/bar') ??
-    (allowedPaths && !allowedPaths.includes('/api/foo/bar'))
-  ) {
-    expect(paths).not.toContain('/api/foo/bar');
-  } else {
-    expect(paths['/api/foo/bar']).toEqual({
-      put: {
-        requestBody,
-        responses: {
-          '203': responseContent,
-          default: defaultResponse
-        },
-        parameters
-      }
-    });
-  }
-
-  if (
-    deniedPaths?.includes('/api/foo/bar/baz') ??
-    (allowedPaths && !allowedPaths.includes('/api/foo/bar/baz'))
-  ) {
-    expect(paths).not.toContain('/api/foo/bar/baz');
-  } else {
-    expect(paths['/api/foo/bar/baz']).toEqual({
-      get: {
-        requestBody: {
-          content: {}
-        },
-        responses: {
-          '200': responseContent,
-          default: defaultResponse
+  if (!deniedPaths.includes('/api/foo') && allowedPaths.includes('/api/foo')) {
+    paths = {
+      ...paths,
+      '/api/foo': {
+        post: {
+          requestBody,
+          responses: {
+            '201': responseContent,
+            default: defaultResponse
+          },
+          parameters
         }
       }
-    });
+    };
   }
 
   if (
-    deniedPaths?.includes('/api/foo/bar/{qux}') ??
-    (allowedPaths && !allowedPaths.includes('/api/foo/bar/{qux}'))
+    !deniedPaths.includes('/api/foo/bar') &&
+    allowedPaths.includes('/api/foo/bar')
   ) {
-    expect(paths).not.toContain('/api/foo/bar/{qux}');
-  } else {
-    expect(paths['/api/foo/bar/{qux}']).toEqual({
-      get: {
-        parameters: [
-          {
-            in: 'path',
-            name: 'qux',
-            required: true
+    paths = {
+      ...paths,
+      '/api/foo/bar': {
+        put: {
+          requestBody,
+          responses: {
+            '203': responseContent,
+            default: defaultResponse
+          },
+          parameters
+        }
+      }
+    };
+  }
+
+  if (
+    !deniedPaths.includes('/api/foo/bar/baz') &&
+    allowedPaths.includes('/api/foo/bar/baz')
+  ) {
+    paths = {
+      ...paths,
+      '/api/foo/bar/baz': {
+        get: {
+          responses: {
+            '200': responseContent,
+            default: defaultResponse
           }
-        ],
-        requestBody: {
-          content: {}
-        },
-        responses: {
-          '200': responseContent,
-          default: defaultResponse
         }
       }
-    });
+    };
   }
+
+  if (
+    !deniedPaths.includes('/api/foo/bar/{qux}') &&
+    allowedPaths.includes('/api/foo/bar/{qux}')
+  ) {
+    paths = {
+      ...paths,
+      '/api/foo/bar/{qux}': {
+        get: {
+          parameters: [
+            {
+              in: 'path',
+              name: 'qux',
+              required: true
+            }
+          ],
+          responses: {
+            '200': responseContent,
+            default: defaultResponse
+          }
+        }
+      }
+    };
+  }
+
+  const spec = {
+    openapi: OPEN_API_VERSION,
+    info: {
+      'x-logo': {
+        url: DEFAULT_LOGO_URL
+      },
+      title: 'Next REST Framework',
+      description:
+        'This is an autogenerated OpenAPI spec by Next REST Framework.',
+      version: `v${VERSION}`
+    },
+    paths
+  };
+
+  return spec;
 };
 
 export const expectOpenAPIGenerationErrors = (error: unknown) => {

@@ -98,7 +98,7 @@ export default function Page() {
         <ul className="flex gap-4">
           <li>
             <a className="link link-primary" href="/api">
-              Swagger UI
+              API docs
             </a>
           </li>
           <li>
@@ -115,17 +115,20 @@ export default function Page() {
       </main>
       <footer className="footer bg-base-200 flex justify-center">
         <div className="container max-w-5xl flex flex-col items-center text-md gap-5 px-5 py-2">
-          <a
-            href="https://github.com/blomqma/next-rest-framework"
-            className="text-center text-sm flex flex-wrap items-center gap-1"
-          >
-            Built with Next REST Framework
+          <p className="text-center text-sm flex flex-wrap items-center gap-2">
+            Built with
+            <a
+              href="https://github.com/blomqma/next-rest-framework"
+              className="link"
+            >
+              Next REST Framework
+            </a>
             <img
               src="https://next-rest-framework.vercel.app/img/logo.svg"
               alt="Next REST Framework logo"
               className="w-10"
             />
-          </a>
+          </p>
         </div>
       </footer>
     </>

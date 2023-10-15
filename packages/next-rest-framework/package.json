@@ -37,7 +37,6 @@
   "dependencies": {
     "chalk": "4.1.2",
     "commander": "10.0.1",
-    "js-yaml": "4.1.0",
     "lodash": "4.17.21",
     "wait-on": "7.0.1",
     "zod-to-json-schema": "3.21.4"
@@ -45,7 +44,6 @@
   "devDependencies": {
     "@next-rest-framework/tsconfig": "workspace:*",
     "@types/jest": "29.5.4",
-    "@types/js-yaml": "4.0.5",
     "@types/lodash": "4.14.197",
     "@types/wait-on": "5.3.1",
     "jest": "29.6.4",

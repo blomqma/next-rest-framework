@@ -1,21 +1,24 @@
-import { NextRestFramework } from '../../src';
-import {
-  DEFAULT_CONFIG,
-  getConfig,
-  getHTMLForSwaggerUI,
-  validateSchema
-} from '../../src/utils';
-import { DEFAULT_ERRORS, VERSION, ValidMethod } from '../../src/constants';
+import { defineDocsRoute, defineRoute } from '../../src';
+import { DEFAULT_CONFIG, getConfig, validateSchema } from '../../src/utils';
+import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import chalk from 'chalk';
-import { createNextRestFrameworkMocks, resetCustomGlobals } from '../utils';
+import { createMockRouteRequest, resetCustomGlobals } from '../utils';
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
+import { getHtmlForDocs } from '../../src/utils/docs';
 import { type NextRestFrameworkConfig } from '../../src/types';
 
 jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
   readdirSync: () => [],
   readFileSync: () => '',
-  writeFileSync: () => {}
+  writeFileSync: () => {},
+  existsSync: () => true
+}));
+
+jest.mock('path', () => ({
+  ...jest.requireActual('path'),
+  basename: () => 'route.js'
 }));
 
 jest.mock('next/headers', () => ({
@@ -24,31 +27,28 @@ jest.mock('next/headers', () => ({
   })
 }));
 
-const config = { appDirPath: 'app' } as const;
-
 beforeEach(() => {
   resetCustomGlobals();
 });
 
 it('uses the default config by default', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET,
     path: '/api'
   });
 
   expect(global.nextRestFrameworkConfig).toEqual(undefined);
-  await NextRestFramework().defineCatchAllRoute()(req, context);
+  await defineDocsRoute()(req, context);
   expect(global.nextRestFrameworkConfig).toEqual(DEFAULT_CONFIG);
 });
 
 it('sets the global config', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET,
     path: '/api'
   });
 
   const customConfig: NextRestFrameworkConfig = {
-    ...config,
     openApiSpecOverrides: {
       info: {
         title: 'Some Title',
@@ -56,25 +56,22 @@ it('sets the global config', async () => {
       },
       paths: {}
     },
-    openApiJsonPath: '/foo/bar',
-    openApiYamlPath: '/bar/baz',
-    swaggerUiPath: '/baz/qux',
-    exposeOpenApiSpec: false
+    openApiJsonPath: '/foo/bar'
   };
 
-  await NextRestFramework(customConfig).defineCatchAllRoute()(req, context);
+  await defineDocsRoute(customConfig)(req, context);
   expect(global.nextRestFrameworkConfig).toEqual(getConfig(customConfig));
 });
 
 it('logs init, reserved paths and config changed info', async () => {
   console.info = jest.fn();
 
-  const { req, context } = createNextRestFrameworkMocks({
+  let { req, context } = createMockRouteRequest({
     method: ValidMethod.GET,
-    path: '/api/openapi.yaml'
+    path: '/api'
   });
 
-  await NextRestFramework(config).defineCatchAllRoute()(req, context);
+  await defineDocsRoute()(req, context);
 
   expect(console.info).toHaveBeenNthCalledWith(
     1,
@@ -83,9 +80,8 @@ it('logs init, reserved paths and config changed info', async () => {
 
   expect(console.info).toHaveBeenNthCalledWith(
     2,
-    chalk.yellowBright(`Swagger UI: http://localhost:3000/api
-OpenAPI JSON: http://localhost:3000/api/openapi.json
-OpenAPI YAML: http://localhost:3000/api/openapi.yaml`)
+    chalk.yellowBright(`Docs: http://localhost:3000/api
+OpenAPI JSON: http://localhost:3000/openapi.json`)
   );
 
   expect(console.info).toHaveBeenNthCalledWith(
@@ -100,12 +96,12 @@ OpenAPI YAML: http://localhost:3000/api/openapi.yaml`)
 
   expect(console.info).toHaveBeenCalledTimes(4);
 
-  await NextRestFramework({
-    ...config,
-    swaggerUiPath: '/api/foo/bar',
-    openApiJsonPath: '/api/bar/baz',
-    openApiYamlPath: '/api/baz/qux'
-  }).defineCatchAllRoute()(req, context);
+  ({ req, context } = createMockRouteRequest({
+    method: ValidMethod.GET,
+    path: '/api/foo/bar'
+  }));
+
+  await defineDocsRoute({ openApiJsonPath: '/api/bar/baz' })(req, context);
 
   expect(console.info).toHaveBeenNthCalledWith(
     5,
@@ -114,112 +110,32 @@ OpenAPI YAML: http://localhost:3000/api/openapi.yaml`)
 
   expect(console.info).toHaveBeenNthCalledWith(
     6,
-    chalk.yellowBright(`Swagger UI: http://localhost:3000/api/foo/bar
-OpenAPI JSON: http://localhost:3000/api/bar/baz
-OpenAPI YAML: http://localhost:3000/api/baz/qux`)
+    chalk.yellowBright(`Docs: http://localhost:3000/api/foo/bar
+OpenAPI JSON: http://localhost:3000/api/bar/baz`)
   );
 
   expect(console.info).toHaveBeenCalledTimes(6);
-
-  await NextRestFramework({
-    ...config,
-    exposeOpenApiSpec: false
-  }).defineCatchAllRoute()(req, context);
-
-  expect(console.info).toHaveBeenNthCalledWith(
-    7,
-    chalk.green('Next REST Framework config changed, re-initializing!')
-  );
-
-  expect(console.info).toHaveBeenNthCalledWith(
-    8,
-    chalk.yellowBright(
-      `OpenAPI spec is not exposed. To expose it, set ${chalk.bold(
-        'exposeOpenApiSpec'
-      )} to ${chalk.bold('true')} in the Next REST Framework config.`
-    )
-  );
-
-  expect(console.info).toHaveBeenCalledTimes(8);
 });
 
-it('returns OpenAPI YAML spec', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
-    method: ValidMethod.GET,
-    path: '/api/openapi.yaml'
-  });
-
-  const res = await NextRestFramework(config).defineCatchAllRoute()(
-    req,
-    context
-  );
-
-  const text = await res?.text();
-
-  const yaml = `openapi: 3.0.1
-info:
-  title: Next REST Framework
-  description: This is an autogenerated OpenAPI spec by Next REST Framework.
-  version: ${VERSION}
-components: {}
-paths: {}
-`;
-
-  expect(text).toEqual(yaml);
-});
-
-it('returns OpenAPI JSON spec', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
-    method: ValidMethod.GET,
-    path: '/api/openapi.json'
-  });
-
-  const res = await NextRestFramework(config).defineCatchAllRoute()(
-    req,
-    context
-  );
-
-  const data = await res?.json();
-
-  const json = {
-    openapi: '3.0.1',
-    info: {
-      title: 'Next REST Framework',
-      description:
-        'This is an autogenerated OpenAPI spec by Next REST Framework.',
-      version: VERSION
-    },
-    components: {},
-    paths: {}
-  };
-
-  expect(data).toEqual(json);
-});
-
-it('returns Swagger UI', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
+it('returns the docs HTML', async () => {
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET,
     path: '/api'
   });
 
-  const _config = {
-    ...config,
-    swaggerUiConfig: {
+  const _config: NextRestFrameworkConfig = {
+    docsConfig: {
       title: 'foo',
       description: 'bar',
-      faviconHref: 'baz.ico',
-      logoHref: 'qux.jpeg'
+      faviconUrl: 'baz.ico',
+      logoUrl: 'qux.jpeg'
     }
   };
 
-  const res = await NextRestFramework(_config).defineCatchAllRoute()(
-    req,
-    context
-  );
-
+  const res = await defineDocsRoute(_config)(req, context);
   const text = await res?.text();
 
-  const html = getHTMLForSwaggerUI({
+  const html = getHtmlForDocs({
     config: getConfig(_config),
     baseUrl: 'http://localhost:3000'
   });
@@ -228,13 +144,12 @@ it('returns Swagger UI', async () => {
   expect(text).toContain('foo');
   expect(text).toContain('bar');
   expect(text).toContain('baz.ico');
-  expect(text).toContain('qux.jpeg');
 });
 
 it.each(Object.values(ValidMethod))(
   'works with HTTP method: %p',
   async (method) => {
-    const { req, context } = createNextRestFrameworkMocks({
+    const { req, context } = createMockRouteRequest({
       method
     });
 
@@ -249,7 +164,7 @@ it.each(Object.values(ValidMethod))(
     const data = ['All good!'];
     const handler = () => NextResponse.json(data);
 
-    const res = await NextRestFramework(config).defineRoute({
+    const res = await defineRoute({
       GET: {
         output,
         handler
@@ -286,11 +201,11 @@ it.each(Object.values(ValidMethod))(
 );
 
 it('returns error for valid methods with no handlers', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.POST
   });
 
-  const res = await NextRestFramework(config).defineRoute({
+  const res = await defineRoute({
     GET: {
       output: [],
       handler: () => {}
@@ -307,60 +222,12 @@ it('returns error for valid methods with no handlers', async () => {
   });
 });
 
-it('works with a valid catch-all-handler', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
-    method: ValidMethod.POST
-  });
-
-  const res = await NextRestFramework(config).defineCatchAllRoute({
-    POST: {
-      output: [
-        {
-          status: 200,
-          contentType: 'application/json',
-          schema: z.object({ message: z.string() })
-        }
-      ],
-      handler: () => {
-        return NextResponse.json({ message: 'All good!' }, { status: 200 });
-      }
-    }
-  })(req, context);
-
-  const json = await res?.json();
-  expect(res?.status).toEqual(200);
-
-  expect(json).toEqual({
-    message: 'All good!'
-  });
-});
-
-it('returns 404 from a catch-all-handler instead of 405', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
-    method: ValidMethod.GET
-  });
-
-  const res = await NextRestFramework(config).defineCatchAllRoute({
-    POST: {
-      output: [],
-      handler: () => {}
-    }
-  })(req, context);
-
-  const json = await res?.json();
-  expect(res?.status).toEqual(404);
-
-  expect(json).toEqual({
-    message: DEFAULT_ERRORS.notFound
-  });
-});
-
 it('returns error for invalid request body', async () => {
   const body = {
     foo: 'bar'
   };
 
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.POST,
     body,
     headers: {
@@ -372,7 +239,7 @@ it('returns error for invalid request body', async () => {
     foo: z.number()
   });
 
-  const res = await NextRestFramework(config).defineRoute({
+  const res = await defineRoute({
     POST: {
       input: {
         contentType: 'application/json',
@@ -399,7 +266,7 @@ it('returns error for invalid query parameters', async () => {
     foo: 'bar'
   };
 
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.POST,
     query,
     headers: {
@@ -411,7 +278,7 @@ it('returns error for invalid query parameters', async () => {
     foo: z.number()
   });
 
-  const res = await NextRestFramework(config).defineRoute({
+  const res = await defineRoute({
     POST: {
       input: {
         contentType: 'application/json',
@@ -435,7 +302,7 @@ it('returns error for invalid query parameters', async () => {
 });
 
 it('returns error for invalid content-type', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.POST,
     body: {
       foo: 'bar'
@@ -445,7 +312,7 @@ it('returns error for invalid content-type', async () => {
     }
   });
 
-  const res = await NextRestFramework(config).defineRoute({
+  const res = await defineRoute({
     POST: {
       input: {
         contentType: 'application/json',
@@ -480,7 +347,7 @@ it.each([
 ])(
   'works with different content types: %s',
   async ({ definedContentType, requestContentType }) => {
-    const { req, context } = createNextRestFrameworkMocks({
+    const { req, context } = createMockRouteRequest({
       method: ValidMethod.POST,
       body: {
         foo: 'bar'
@@ -490,7 +357,7 @@ it.each([
       }
     });
 
-    const res = await NextRestFramework(config).defineRoute({
+    const res = await defineRoute({
       POST: {
         input: {
           contentType: definedContentType,
@@ -518,13 +385,13 @@ it.each([
 );
 
 it('returns a default error response', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
+  const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET
   });
 
   console.error = jest.fn();
 
-  const res = await NextRestFramework(config).defineRoute({
+  const res = await defineRoute({
     GET: {
       output: [],
       handler: () => {
@@ -538,59 +405,4 @@ it('returns a default error response', async () => {
   expect(json).toEqual({
     message: DEFAULT_ERRORS.unexpectedError
   });
-});
-
-it('works with an error handler', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
-    method: ValidMethod.GET
-  });
-
-  console.log = jest.fn();
-
-  const res = await NextRestFramework({
-    ...config,
-    errorHandler: () => {
-      console.log('foo');
-      return NextResponse.json({ message: 'foo' }, { status: 500 });
-    }
-  }).defineRoute({
-    GET: {
-      output: [],
-      handler: () => {
-        throw Error('Something went wrong');
-      }
-    }
-  })(req, context);
-
-  const json = await res?.json();
-  expect(console.log).toBeCalledWith('foo');
-  expect(res?.status).toEqual(500);
-
-  expect(json).toEqual({
-    message: 'foo'
-  });
-});
-
-it('suppresses errors in production mode by default', async () => {
-  const { req, context } = createNextRestFrameworkMocks({
-    method: ValidMethod.GET
-  });
-
-  console.error = jest.fn();
-  process.env = { ...process.env, NODE_ENV: 'production' };
-
-  await NextRestFramework(config).defineRoute({
-    GET: {
-      output: [],
-      handler: () => {
-        throw Error('Something went wrong');
-      }
-    }
-  })(req, context);
-
-  expect(console.error).toBeCalledWith(
-    chalk.red(
-      'Next REST Framework encountered an error - suppressed in production mode.'
-    )
-  );
 });

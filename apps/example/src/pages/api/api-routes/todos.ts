@@ -1,4 +1,4 @@
-import { defineApiRoute } from 'next-rest-framework/client';
+import { defineApiRoute } from 'next-rest-framework';
 import { z } from 'zod';
 
 export default defineApiRoute({
