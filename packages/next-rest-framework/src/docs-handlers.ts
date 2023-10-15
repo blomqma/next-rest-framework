@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { DEFAULT_ERRORS } from './constants';
+import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import { type NextRestFrameworkConfig } from './types';
 import { getConfig, syncOpenApiSpec } from './utils';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
@@ -15,6 +15,17 @@ export const defineDocsRoute = (_config?: NextRestFrameworkConfig) => {
   ) => {
     try {
       const { headers, url } = req;
+
+      // Return 403 if called internally by the framework.
+      if (headers.get('user-agent') === NEXT_REST_FRAMEWORK_USER_AGENT) {
+        return NextResponse.json(
+          {
+            message: `${NEXT_REST_FRAMEWORK_USER_AGENT} user agent is not allowed.`
+          },
+          { status: 403 }
+        );
+      }
+
       const proto = new URL(url).protocol;
       const host = headers.get('host');
       const baseUrl = `${proto}//${host}`;
@@ -51,7 +62,21 @@ export const defineDocsApiRoute = (_config?: NextRestFrameworkConfig) => {
 
   return async (req: NextApiRequest, res: NextApiResponse) => {
     try {
-      const proto = req.headers['x-forwarded-proto'] ?? 'http';
+      // Return 403 if called internally by the framework.
+      if (req.headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT) {
+        res.status(403).json({
+          message: `${NEXT_REST_FRAMEWORK_USER_AGENT} user agent is not allowed.`
+        });
+
+        return;
+      }
+
+      const _proto = req.headers['x-forwarded-proto'];
+
+      const proto = Array.isArray(_proto)
+        ? _proto[0]
+        : _proto?.split(',')[0] ?? 'http';
+
       const host = req.headers.host;
       const baseUrl = `${proto}://${host}`;
       const url = baseUrl + req.url;

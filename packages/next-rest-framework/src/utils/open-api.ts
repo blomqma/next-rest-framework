@@ -100,15 +100,14 @@ const generatePaths = async ({
   /*
    * Clean and filter the API routes to paths:
    * - Remove catch-all routes.
-   * - Remove the current route used for docs.
    * - Add the `/api` prefix.
    * - Replace back slashes, square brackets etc.
+   * - Filter the current route used for docs.
    * - Filter disallowed routes.
    */
   const getCleanedApiRoutes = (files: string[]) =>
     files
       .filter((file) => !file.includes('[...'))
-      .filter((file) => file !== `${url.split('/').at(-1)}.ts`)
       .map((file) =>
         `/api/${file}`
           .replace('/index', '')
@@ -117,6 +116,7 @@ const generatePaths = async ({
           .replace(']', '}')
           .replace('.ts', '')
       )
+      .filter((route) => route !== `/${url.split('/').at(-1)}`)
       .filter(isAllowedRoute);
 
   try {
