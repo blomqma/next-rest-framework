@@ -10,7 +10,7 @@ sidebar_position: 2
 npm install --save next-rest-framework
 ```
 
-### [Initialize docs endpoint](#initialize-docs-endpoint)
+### [Create docs handler](#create-docs-handler)
 
 To get access to the auto-generated documentation, initialize the docs endpoint somewhere in your codebase. You can also skip this step if you don't want to expose a public API documentation.
 
@@ -19,9 +19,9 @@ To get access to the auto-generated documentation, initialize the docs endpoint 
 ```typescript
 // src/app/api/route.ts
 
-import { defineDocsRoute } from 'next-rest-framework';
+import { docsRouteHandler } from 'next-rest-framework';
 
-export const GET = defineDocsRoute();
+export const GET = docsRouteHandler();
 ```
 
 #### Pages Router:
@@ -29,77 +29,82 @@ export const GET = defineDocsRoute();
 ```typescript
 // src/pages/api.ts
 
-import { defineDocsApiRoute } from 'next-rest-framework';
+import { docsApiRouteHandler } from 'next-rest-framework';
 
-export default defineDocsApiRoute();
+export default docsApiRouteHandler();
 ```
 
-This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the CLI command `npx next-rest-framework generate` to generate it. You can also use both App Router and Pages Router simultaneously by combining the examples above. See the full configuration options of this endpoint in the [Config options](/docs/api-reference#config-options) section.
+This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the CLI command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler](/docs/api-reference#docs-handler-options) section.
 
-### [Add a route](#add-a-route)
+### [Create endpoint](#create-endpoint)
 
 #### App Router:
 
 ```typescript
 // src/app/api/todos/route.ts
 
-import { defineRoute } from 'next-rest-framework';
+import { routeHandler, routeOperation } from 'next-rest-framework';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-const handler = defineRoute({
-  GET: {
-    output: [
+const TODOS = [
+  {
+    id: 1,
+    name: 'TODO 1',
+    completed: false
+  }
+];
+
+// Example App Router route handler with GET/POST handlers.
+const handler = routeHandler({
+  GET: routeOperation({
+    operationId: 'getTodos',
+    tags: ['example-api', 'todos', 'app-router']
+  })
+    .output([
       {
         status: 200,
-        contentType: 'text/html',
-        schema: z.object({
-          foo: z.string(),
-          bar: z.string(),
-          baz: z.string(),
-          qux: z.string()
-        })
+        contentType: 'application/json',
+        schema: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            completed: z.boolean()
+          })
+        )
       }
-    ],
-    handler: () => {
-      return NextResponse.json(
-        { foo: 'foo', bar: 'bar', baz: 'baz', qux: 'qux' },
-        {
-          status: 200,
-          headers: { 'Content-Type': 'text/plain' }
-        }
-      );
-    }
-  },
-  POST: {
-    input: {
+    ])
+    .handler(() => {
+      return NextResponse.json(TODOS, {
+        status: 200
+      });
+    }),
+
+  POST: routeOperation({
+    operationId: 'createTodo',
+    tags: ['example-api', 'todos', 'app-router']
+  })
+    .input({
       contentType: 'application/json',
       body: z.object({
-        foo: z.string(),
-        bar: z.number()
+        name: z.string()
       })
-    },
-    output: [
+    })
+    .output([
       {
         status: 201,
         contentType: 'application/json',
-        schema: z.object({
-          foo: z.string(),
-          bar: z.number()
-        })
+        schema: z.string()
       }
-    ],
-    handler: async (req) => {
-      const { foo, bar } = await req.json();
+    ])
+    .handler(async (req) => {
+      const { name } = await req.json();
+      console.log('Strongly typed TODO name: ', name);
 
-      return NextResponse.json(
-        { foo, bar },
-        {
-          status: 201
-        }
-      );
-    }
-  }
+      return NextResponse.json('New TODO created.', {
+        status: 201
+      });
+    })
 });
 
 export { handler as GET, handler as POST };
@@ -110,52 +115,65 @@ export { handler as GET, handler as POST };
 ```typescript
 // src/pages/api/todos.ts
 
-import { defineApiRoute } from 'next-rest-framework';
+import { apiRouteHandler, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
-export default defineApiRoute({
-  GET: {
-    output: [
+const TODOS = [
+  {
+    id: 1,
+    name: 'TODO 1',
+    completed: false
+  }
+];
+
+// Example Pages Router API route with GET/POST handlers.
+export default apiRouteHandler({
+  GET: apiRouteOperation({
+    operationId: 'getTodos',
+    tags: ['example-api', 'todos', 'pages-router']
+  })
+    .output([
       {
         status: 200,
         contentType: 'application/json',
-        schema: z.object({
-          foo: z.string(),
-          bar: z.string(),
-          baz: z.string(),
-          qux: z.string()
-        })
+        schema: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            completed: z.boolean()
+          })
+        )
       }
-    ],
-    handler: (_req, res) => {
-      res.status(200).json({ foo: 'foo', bar: 'bar', baz: 'baz', qux: 'qux' });
-    }
-  },
-  POST: {
-    input: {
+    ])
+    .handler((req, res) => {
+      res.status(200).json(TODOS);
+    }),
+
+  POST: apiRouteOperation({
+    operationId: 'createTodo',
+    tags: ['example-api', 'todos', 'pages-router']
+  })
+    .input({
       contentType: 'application/json',
       body: z.object({
-        foo: z.string(),
-        bar: z.number()
+        name: z.string()
       })
-    },
-    output: [
+    })
+    .output([
       {
         status: 201,
         contentType: 'application/json',
-        schema: z.object({
-          foo: z.string(),
-          bar: z.number()
-        })
+        schema: z.string()
       }
-    ],
-    handler: ({ body: { foo, bar } }, res) => {
-      res.status(201).json({ foo, bar });
-    }
-  }
+    ])
+    .handler((req, res) => {
+      const { name } = req.body;
+      console.log('Strongly typed TODO name: ', name);
+      res.status(201).json('New TODO created.');
+    })
 });
 ```
 
-These type-safe endpoints will be now auto-generated to your OpenAPI spec!
+These type-safe endpoints will be now auto-generated to your OpenAPI spec:
 
 ![Next REST Framework docs](@site/static/img/docs-screenshot.jpg)

@@ -2,11 +2,20 @@
 slug: announcing-next-rest-framework
 title: Announcing Next REST Framework
 authors: blomqma
-tags: [Next.js, REST, API, TypeScript, object-schema validation, OpenAPI]
+tags: [Next.js, REST, API, TypeScript, OpenAPI]
 ---
 
-Although [Next.js](http://nextjs.org/) has been a valid option for full-stack applications for a while now, a lot of developers have limited the use of it only for the frontend parts of their applications. The Next.js [API Routes](#https://nextjs.org/docs/api-routes/introduction) however, offer a great way to build a backend for your [dynamic applications](https://blog.logrocket.com/implementing-ssr-next-js-dynamic-routing-prefetching/).
+Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set of tools to build type-safe, self-documenting HTTP REST APIs with [Next.js](http://nextjs.org/). Building OpenAPI specification-compliant REST APIs can be cumbersome and slow but Next REST Framework makes this easy with auto-generated OpenAPI documents and docs using TypeScript and object schemas.
 
-The Next.js ecosystem has been evolving rapidly in the past few years and we've seen great server-side frameworks, like [tRPC](https://trpc.io/), emerging. Similar choices for REST APIs have been lacking and personally I've been reinventing the wheel over and over again on every Next.js backend I've been building during the past few years. The learnings from repeating the same things from project to project led to developing Next REST Framework, which is an open-source, lightweight, easy-to-use set of tools to build type-safe, self-documenting HTTP REST APIs with Next.js.
+- [Live demo](https://next-rest-framework-demo.vercel.app)
+- [Docs](https://next-rest-framework.vercel.app)
 
-The first problem that Next REST Framework aims to solve lies in ensuring that your backend is type-safe, using [TypeScript](https://www.typescriptlang.org/) and object-schema validation with [Zod](https://zod.dev/). Secondly, Next REST Framework self-documents your API straight from your business logic similarly to other popular REST frameworks like [Fast API](https://fastapi.tiangolo.com/) and [Django REST Framework](https://www.django-rest-framework.org/) and not from endless lines of open API [JSDoc](https://jsdoc.app/) annotations etc.
+### Lightweight, type-safe, easy to use
+
+- Designed to work with TypeScript so that your requests and responses are strongly typed.
+- Object-schema validation with [Zod](https://github.com/colinhacks/zod). The object schemas are automatically converted to JSON schema format for the auto-generated OpenAPI specification.
+- Auto-generated and extensible `openapi.json` spec file from your business logic.
+- Auto-generated [Redoc](https://github.com/Redocly/redoc) and/or [SwaggerUI](https://swagger.io/tools/swagger-ui/) documentation frontend.
+- Works with Next.js [Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware) and other server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
+- Supports both Next.js [App Router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [Pages Router](https://nextjs.org/docs/pages/building-your-application/routing), even at the same time.
+- Fully customizable and compatible with any existing Next.js project.

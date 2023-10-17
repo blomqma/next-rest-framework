@@ -12,14 +12,15 @@ Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set
 
 ### [Features](#features)
 
-#### Lightweight, type-safe, easy to use
+### Lightweight, type-safe, easy to use
 
-- Designed to work with TypeScript so that your request bodies, responses, headers etc. are strongly typed.
-- Object-schema validation with [Zod](https://github.com/colinhacks/zod). The schemas are automatically converted to JSON schema format for the auto-generated OpenAPI specifications.
-- Supports auto-generated openapi.json and openapi.yaml documents for which you can include your existing OpenAPI specification.
+- Designed to work with TypeScript so that your requests and responses are strongly typed.
+- Object-schema validation with [Zod](https://github.com/colinhacks/zod). The object schemas are automatically converted to JSON schema format for the auto-generated OpenAPI specification.
+- Auto-generated and extensible `openapi.json` spec file from your business logic.
+- Auto-generated [Redoc](https://github.com/Redocly/redoc) and/or [SwaggerUI](https://swagger.io/tools/swagger-ui/) documentation frontend.
 - Works with Next.js [Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware) and other server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
 - Supports both Next.js [App Router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [Pages Router](https://nextjs.org/docs/pages/building-your-application/routing), even at the same time.
-- Fully customizable - You can decide which routes Next REST Framework will use to serve your API docs etc. and it can be easily customized to work with any kind of existing Next.js REST API.
+- Fully customizable and compatible with any existing Next.js project.
 
 ### [Installation](#installation)
 

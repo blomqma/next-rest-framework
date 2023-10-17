@@ -1,9 +1,8 @@
 import { join } from 'path';
 import {
-  type MethodHandler,
-  type NextRestFrameworkConfig,
-  type DefineApiRouteParams,
-  type DefineRouteParams
+  type ApiRouteParams,
+  type RouteParams,
+  type NextRestFrameworkConfig
 } from '../types';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import {
@@ -325,25 +324,27 @@ export const getPathsFromMethodHandlers = ({
   methodHandlers,
   route
 }: {
-  methodHandlers: DefineRouteParams | DefineApiRouteParams;
+  methodHandlers: RouteParams | ApiRouteParams;
   route: string;
 }) => {
-  const { openApiSpecOverrides } = methodHandlers;
+  const { openApiPath } = methodHandlers;
   const paths: OpenAPIV3_1.PathsObject = {};
 
   paths[route] = {
-    ...openApiSpecOverrides
+    ...openApiPath
   };
 
   Object.keys(methodHandlers)
     .filter(isValidMethod)
     .forEach((_method) => {
-      const { openApiSpecOverrides, tags, input, output } = methodHandlers[
-        _method
-      ] as MethodHandler;
+      const methodHandler = methodHandlers[_method];
 
+      if (!methodHandler) {
+        return;
+      }
+
+      const { openApiOperation, input, output } = methodHandler._config;
       const method = _method.toLowerCase();
-
       const generatedOperationObject: OpenAPIV3_1.OperationObject = {};
 
       if (input?.body && input?.contentType) {
@@ -380,15 +381,13 @@ export const getPathsFromMethodHandlers = ({
         default: defaultResponse
       };
 
-      if (tags) {
-        generatedOperationObject.tags = tags;
-      }
-
-      const pathParameters = route.match(/{([^}]+)}/g);
+      const pathParameters = route
+        .match(/{([^}]+)}/g)
+        ?.map((param) => param.replace(/[{}]/g, ''));
 
       if (pathParameters) {
-        generatedOperationObject.parameters = pathParameters.map((param) => ({
-          name: param.replace(/[{}]/g, ''),
+        generatedOperationObject.parameters = pathParameters.map((name) => ({
+          name,
           in: 'path',
           required: true
         }));
@@ -399,16 +398,19 @@ export const getPathsFromMethodHandlers = ({
           ...(generatedOperationObject.parameters ?? []),
           ...getSchemaKeys({
             schema: input.query
-          }).map((key) => ({
-            name: key,
-            in: 'query'
-          }))
+          })
+            // Filter out query parameters that have already been added to the path parameters automatically.
+            .filter((key) => !pathParameters?.includes(key))
+            .map((key) => ({
+              name: key,
+              in: 'query'
+            }))
         ];
       }
 
       paths[route] = {
         ...paths[route],
-        [method]: merge(generatedOperationObject, openApiSpecOverrides)
+        [method]: merge(generatedOperationObject, openApiOperation)
       };
     });
 

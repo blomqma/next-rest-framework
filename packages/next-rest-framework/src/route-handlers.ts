@@ -1,90 +1,47 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import {
-  type BaseObjectSchemaType,
-  type BaseSchemaType,
+  type RouteParams,
+  type ApiRouteOperation,
+  type ApiRouteParams,
+  type RouteOperation,
   type OutputObject,
-  type SchemaReturnType,
-  type DefineApiRouteParams,
-  type DefineRouteParams,
-  type TypedNextRequest,
-  type TypedNextApiRequest
+  type NextRouteHandler,
+  type BaseQuery
 } from './types';
-import { getPathsFromMethodHandlers, validateSchema } from './utils';
+import {
+  getPathsFromMethodHandlers,
+  isValidMethod,
+  validateSchema
+} from './utils';
 import { logNextRestFrameworkError } from './utils/logging';
-import { type NextApiResponse } from 'next/types';
+import {
+  type NextApiHandler,
+  type NextApiRequest,
+  type NextApiResponse
+} from 'next/types';
 
-export const defineRoute = <
-  GetBodySchema extends BaseSchemaType,
-  GetQuerySchema extends BaseObjectSchemaType,
-  GetOutput extends OutputObject,
-  PutBodySchema extends BaseSchemaType,
-  PutQuerySchema extends BaseObjectSchemaType,
-  PutOutput extends OutputObject,
-  PostBodySchema extends BaseSchemaType,
-  PostQuerySchema extends BaseObjectSchemaType,
-  PostOutput extends OutputObject,
-  DeleteBodySchema extends BaseSchemaType,
-  DeleteQuerySchema extends BaseObjectSchemaType,
-  DeleteOutput extends OutputObject,
-  OptionsBodySchema extends BaseSchemaType,
-  OptionsQuerySchema extends BaseObjectSchemaType,
-  OptionsOutput extends OutputObject,
-  HeadBodySchema extends BaseSchemaType,
-  HeadQuerySchema extends BaseObjectSchemaType,
-  HeadOutput extends OutputObject,
-  PatchBodySchema extends BaseSchemaType,
-  PatchQuerySchema extends BaseObjectSchemaType,
-  PatchOutput extends OutputObject,
-  BodySchema extends GetBodySchema &
-    PutBodySchema &
-    PostBodySchema &
-    DeleteBodySchema &
-    OptionsBodySchema &
-    HeadBodySchema &
-    PatchBodySchema,
-  QuerySchema extends GetQuerySchema &
-    PutQuerySchema &
-    PostQuerySchema &
-    DeleteQuerySchema &
-    OptionsQuerySchema &
-    HeadQuerySchema &
-    PatchQuerySchema
->(
-  methodHandlers: DefineRouteParams<
-    GetBodySchema,
-    GetQuerySchema,
-    GetOutput,
-    PutBodySchema,
-    PutQuerySchema,
-    PutOutput,
-    PostBodySchema,
-    PostQuerySchema,
-    PostOutput,
-    DeleteBodySchema,
-    DeleteQuerySchema,
-    DeleteOutput,
-    OptionsBodySchema,
-    OptionsQuerySchema,
-    OptionsOutput,
-    HeadBodySchema,
-    HeadQuerySchema,
-    HeadOutput,
-    PatchBodySchema,
-    PatchQuerySchema,
-    PatchOutput
-  > = {}
-) => {
-  return async (
-    req: TypedNextRequest<
-      SchemaReturnType<BodySchema>,
-      SchemaReturnType<QuerySchema>
-    >,
-    context: { params: Record<string, unknown> }
-  ) => {
+export const routeHandler = (methodHandlers: RouteParams) => {
+  return async (req: NextRequest, context: { params: BaseQuery }) => {
     try {
       const { method, headers, nextUrl } = req;
       const { pathname } = nextUrl;
+
+      const handleMethodNotAllowed = () => {
+        return NextResponse.json(
+          { message: DEFAULT_ERRORS.methodNotAllowed },
+          {
+            status: 405,
+            headers: {
+              Allow: Object.keys(methodHandlers).join(', ')
+            }
+          }
+        );
+      };
+
+      if (!isValidMethod(method)) {
+        return handleMethodNotAllowed();
+      }
 
       if (headers.get('user-agent') === NEXT_REST_FRAMEWORK_USER_AGENT) {
         const route = decodeURIComponent(pathname ?? '');
@@ -105,18 +62,10 @@ ${error}`);
       const methodHandler = methodHandlers[method];
 
       if (!methodHandler) {
-        return NextResponse.json(
-          { message: DEFAULT_ERRORS.methodNotAllowed },
-          {
-            status: 405,
-            headers: {
-              Allow: Object.keys(methodHandlers).join(', ')
-            }
-          }
-        );
+        return handleMethodNotAllowed();
       }
 
-      const { input, handler } = methodHandler;
+      const { input, handler } = methodHandler._config;
 
       if (input) {
         const { body: bodySchema, query: querySchema, contentType } = input;
@@ -163,7 +112,6 @@ ${error}`);
             );
           }
         }
-
         if (querySchema) {
           const { valid, errors } = await validateSchema({
             schema: querySchema,
@@ -184,10 +132,14 @@ ${error}`);
         }
       }
 
-      return await handler(req, context);
+      if (!handler) {
+        throw Error('Handler not found.');
+      }
+
+      const res = await handler(req, context);
+      return res;
     } catch (error) {
       logNextRestFrameworkError(error);
-
       return NextResponse.json(
         { message: DEFAULT_ERRORS.unexpectedError },
         { status: 500 }
@@ -196,76 +148,59 @@ ${error}`);
   };
 };
 
-export const defineApiRoute = <
-  GetBodySchema extends BaseSchemaType,
-  GetQuerySchema extends BaseObjectSchemaType,
-  GetOutput extends OutputObject,
-  PutBodySchema extends BaseSchemaType,
-  PutQuerySchema extends BaseObjectSchemaType,
-  PutOutput extends OutputObject,
-  PostBodySchema extends BaseSchemaType,
-  PostQuerySchema extends BaseObjectSchemaType,
-  PostOutput extends OutputObject,
-  DeleteBodySchema extends BaseSchemaType,
-  DeleteQuerySchema extends BaseObjectSchemaType,
-  DeleteOutput extends OutputObject,
-  OptionsBodySchema extends BaseSchemaType,
-  OptionsQuerySchema extends BaseObjectSchemaType,
-  OptionsOutput extends OutputObject,
-  HeadBodySchema extends BaseSchemaType,
-  HeadQuerySchema extends BaseObjectSchemaType,
-  HeadOutput extends OutputObject,
-  PatchBodySchema extends BaseSchemaType,
-  PatchQuerySchema extends BaseObjectSchemaType,
-  PatchOutput extends OutputObject,
-  BodySchema extends GetBodySchema &
-    PutBodySchema &
-    PostBodySchema &
-    DeleteBodySchema &
-    OptionsBodySchema &
-    HeadBodySchema &
-    PatchBodySchema,
-  QuerySchema extends GetQuerySchema &
-    PutQuerySchema &
-    PostQuerySchema &
-    DeleteQuerySchema &
-    OptionsQuerySchema &
-    HeadQuerySchema &
-    PatchQuerySchema
->(
-  methodHandlers: DefineApiRouteParams<
-    GetBodySchema,
-    GetQuerySchema,
-    GetOutput,
-    PutBodySchema,
-    PutQuerySchema,
-    PutOutput,
-    PostBodySchema,
-    PostQuerySchema,
-    PostOutput,
-    DeleteBodySchema,
-    DeleteQuerySchema,
-    DeleteOutput,
-    OptionsBodySchema,
-    OptionsQuerySchema,
-    OptionsOutput,
-    HeadBodySchema,
-    HeadQuerySchema,
-    HeadOutput,
-    PatchBodySchema,
-    PatchQuerySchema,
-    PatchOutput
-  > = {}
-) => {
-  return async (
-    req: TypedNextApiRequest<
-      SchemaReturnType<BodySchema>,
-      SchemaReturnType<QuerySchema>
-    >,
-    res: NextApiResponse
-  ) => {
+export const routeOperation: RouteOperation = (openApiOperation) => {
+  return {
+    input: (input) => ({
+      output: (output) => ({
+        handler: (handler) => ({
+          _config: {
+            openApiOperation,
+            input,
+            output: output as OutputObject[] | undefined,
+            handler: handler as NextRouteHandler | undefined
+          }
+        })
+      }),
+      handler: (handler) => ({
+        _config: {
+          openApiOperation,
+          input,
+          handler: handler as NextRouteHandler | undefined
+        }
+      })
+    }),
+    output: (output) => ({
+      handler: (handler) => ({
+        _config: {
+          openApiOperation,
+          output: output as OutputObject[] | undefined,
+          handler: handler as NextRouteHandler | undefined
+        }
+      })
+    }),
+    handler: (handler) => ({
+      _config: {
+        openApiOperation,
+        handler: handler as NextRouteHandler | undefined
+      }
+    })
+  };
+};
+
+export const apiRouteHandler = (methodHandlers: ApiRouteParams) => {
+  return async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const { method, body, query, headers, url: pathname } = req;
+
+      const handleMethodNotAllowed = () => {
+        res.setHeader('Allow', Object.keys(methodHandlers).join(', '));
+        res.status(405).json({ message: DEFAULT_ERRORS.methodNotAllowed });
+      };
+
+      if (!isValidMethod(method)) {
+        handleMethodNotAllowed();
+        return;
+      }
 
       if (headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT) {
         const route = decodeURIComponent(pathname ?? '');
@@ -287,12 +222,11 @@ ${error}`);
       const methodHandler = methodHandlers[method];
 
       if (!methodHandler) {
-        res.setHeader('Allow', Object.keys(methodHandlers).join(', '));
-        res.status(405).json({ message: DEFAULT_ERRORS.methodNotAllowed });
+        handleMethodNotAllowed();
         return;
       }
 
-      const { input, handler } = methodHandler;
+      const { input, handler } = methodHandler._config;
 
       if (input) {
         const { body: bodySchema, query: querySchema, contentType } = input;
@@ -316,6 +250,7 @@ ${error}`);
               message: 'Invalid request body.',
               errors
             });
+
             return;
           }
         }
@@ -337,10 +272,53 @@ ${error}`);
         }
       }
 
+      if (!handler) {
+        throw Error('Handler not found.');
+      }
+
       await handler(req, res);
     } catch (error) {
       logNextRestFrameworkError(error);
       res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
+  };
+};
+
+export const apiRouteOperation: ApiRouteOperation = (openApiOperation) => {
+  return {
+    input: (input) => ({
+      output: (output) => ({
+        handler: (handler) => ({
+          _config: {
+            openApiOperation,
+            input,
+            output: output as OutputObject[] | undefined,
+            handler: handler as NextApiHandler | undefined
+          }
+        })
+      }),
+      handler: (handler) => ({
+        _config: {
+          openApiOperation,
+          input,
+          handler: handler as NextApiHandler | undefined
+        }
+      })
+    }),
+    output: (output) => ({
+      handler: (handler) => ({
+        _config: {
+          openApiOperation,
+          output: output as OutputObject[] | undefined,
+          handler: handler as NextApiHandler | undefined
+        }
+      })
+    }),
+    handler: (handler) => ({
+      _config: {
+        openApiOperation,
+        handler: handler as NextApiHandler | undefined
+      }
+    })
   };
 };

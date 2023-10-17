@@ -1,4 +1,3 @@
-import { defineDocsRoute, defineRoute } from '../../src';
 import {
   createMockRouteRequest,
   resetCustomGlobals,
@@ -14,6 +13,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import chalk from 'chalk';
 import * as openApiUtils from '../../src/utils/open-api';
+import { docsRouteHandler, routeHandler, routeOperation } from '../../src';
 
 const createDirent = (name: string) => ({
   isDirectory: () => false,
@@ -52,82 +52,76 @@ beforeEach(() => {
 
 const schema = z.object({ foo: z.string() });
 
-const fooMethodHandlers = defineRoute({
-  POST: {
-    input: {
+const fooMethodHandlers = routeHandler({
+  POST: routeOperation()
+    .input({
       contentType: 'application/json',
       body: schema,
       query: z.object({
         foo: z.string()
       })
-    },
-    output: [
+    })
+    .output([
       {
         status: 201,
         schema,
         contentType: 'application/json'
       }
-    ],
-    handler: async (req) => {
+    ])
+    .handler(async (req) => {
       const body = await req.json();
       return NextResponse.json(body, { status: 201 });
-    }
-  }
+    })
 });
 
-const fooBarMethodHandlers = defineRoute({
-  PUT: {
-    input: {
+const fooBarMethodHandlers = routeHandler({
+  PUT: routeOperation()
+    .input({
       contentType: 'application/json',
       body: schema,
       query: z.object({
         foo: z.string()
       })
-    },
-    output: [
+    })
+    .output([
       {
         status: 203,
         schema,
         contentType: 'application/json'
       }
-    ],
-    handler: async (req) => {
+    ])
+    .handler(async (req) => {
       const body = await req.json();
       return NextResponse.json(body, { status: 203 });
-    }
-  }
+    })
 });
 
-const fooBarBazMethodHandlers = defineRoute({
-  GET: {
-    output: [
+const fooBarBazMethodHandlers = routeHandler({
+  GET: routeOperation()
+    .output([
       {
         status: 200,
         schema,
         contentType: 'application/json'
       }
-    ],
-    handler: async (req) => {
-      const body = await req.json();
-      return NextResponse.json(body, { status: 200 });
-    }
-  }
+    ])
+    .handler(async () => {
+      return NextResponse.json({ foo: 'bar' }, { status: 200 });
+    })
 });
 
-const fooBarBazQuxMethodHandlers = defineRoute({
-  GET: {
-    output: [
+const fooBarBazQuxMethodHandlers = routeHandler({
+  GET: routeOperation()
+    .output([
       {
         status: 200,
         schema,
         contentType: 'application/json'
       }
-    ],
-    handler: async (req) => {
-      const body = await req.json();
-      return NextResponse.json(body, { status: 200 });
-    }
-  }
+    ])
+    .handler(async () => {
+      return NextResponse.json({ foo: 'bar' }, { status: 200 });
+    })
 });
 
 jest.mock(
@@ -196,7 +190,7 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
     path: '/api'
   });
 
-  await defineDocsRoute()(req, context);
+  await docsRouteHandler()(req, context);
 
   const spec = getExpectedSpec({
     zodSchema: schema,
@@ -271,7 +265,7 @@ it.each([
       path: '/api'
     });
 
-    await defineDocsRoute({
+    await docsRouteHandler({
       allowedPaths
     })(req, context);
 
@@ -359,7 +353,7 @@ it.each([
       path: '/api'
     });
 
-    await defineDocsRoute({
+    await docsRouteHandler({
       deniedPaths
     })(req, context);
 
@@ -408,7 +402,7 @@ it('handles error if the OpenAPI spec generation fails', async () => {
     path: '/api'
   });
 
-  await defineDocsRoute()(req, context);
+  await docsRouteHandler()(req, context);
 
   const spec = getExpectedSpec({
     zodSchema: schema,

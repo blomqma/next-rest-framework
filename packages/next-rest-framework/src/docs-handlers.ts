@@ -1,18 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
-import { type NextRestFrameworkConfig } from './types';
+import { type BaseQuery, type NextRestFrameworkConfig } from './types';
 import { getConfig, syncOpenApiSpec } from './utils';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { getHtmlForDocs } from './utils/docs';
 import { logInitInfo, logNextRestFrameworkError } from './utils/logging';
 
-export const defineDocsRoute = (_config?: NextRestFrameworkConfig) => {
+export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
 
-  return async (
-    req: NextRequest,
-    _context: { params: Record<string, unknown> }
-  ) => {
+  return async (req: NextRequest, _context: { params: BaseQuery }) => {
     try {
       const { headers, url } = req;
 
@@ -57,7 +54,7 @@ export const defineDocsRoute = (_config?: NextRestFrameworkConfig) => {
   };
 };
 
-export const defineDocsApiRoute = (_config?: NextRestFrameworkConfig) => {
+export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
 
   return async (req: NextApiRequest, res: NextApiResponse) => {

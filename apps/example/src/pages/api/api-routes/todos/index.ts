@@ -1,5 +1,4 @@
-import { routeHandler, routeOperation } from 'next-rest-framework';
-import { NextResponse } from 'next/server';
+import { apiRouteHandler, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -10,11 +9,11 @@ const TODOS = [
   }
 ];
 
-// Example App Router route handler with GET/POST handlers.
-const handler = routeHandler({
-  GET: routeOperation({
+// Example Pages Router API route with GET/POST handlers.
+export default apiRouteHandler({
+  GET: apiRouteOperation({
     operationId: 'getTodos',
-    tags: ['example-api', 'todos', 'app-router']
+    tags: ['example-api', 'todos', 'pages-router']
   })
     .output([
       {
@@ -29,15 +28,13 @@ const handler = routeHandler({
         )
       }
     ])
-    .handler(() => {
-      return NextResponse.json(TODOS, {
-        status: 200
-      });
+    .handler((req, res) => {
+      res.status(200).json(TODOS);
     }),
 
-  POST: routeOperation({
+  POST: apiRouteOperation({
     operationId: 'createTodo',
-    tags: ['example-api', 'todos', 'app-router']
+    tags: ['example-api', 'todos', 'pages-router']
   })
     .input({
       contentType: 'application/json',
@@ -52,14 +49,9 @@ const handler = routeHandler({
         schema: z.string()
       }
     ])
-    .handler(async (req) => {
-      const { name } = await req.json();
+    .handler((req, res) => {
+      const { name } = req.body;
       console.log('Strongly typed TODO name: ', name);
-
-      return NextResponse.json('New TODO created.', {
-        status: 201
-      });
+      res.status(201).json('New TODO created.');
     })
 });
-
-export { handler as GET, handler as POST };

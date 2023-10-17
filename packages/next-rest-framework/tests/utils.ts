@@ -6,7 +6,6 @@ import {
   VERSION,
   type ValidMethod
 } from '../src/constants';
-import { type TypedNextRequest, type Modify } from '../src/types';
 import {
   createMocks,
   type RequestOptions,
@@ -15,7 +14,8 @@ import {
 import { defaultResponse } from '../src/utils';
 import chalk from 'chalk';
 import zodToJsonSchema from 'zod-to-json-schema';
-import { type NextApiResponse } from 'next/types';
+import { type NextApiRequest, type NextApiResponse } from 'next/types';
+import { type BaseQuery, type Modify } from '../src/types';
 
 export const resetCustomGlobals = () => {
   global.nextRestFrameworkConfig = undefined;
@@ -24,10 +24,7 @@ export const resetCustomGlobals = () => {
   global.ignoredPathsLogged = false;
 };
 
-export const createMockRouteRequest = <
-  Body,
-  Query extends Record<string, string>
->({
+export const createMockRouteRequest = <Body, Query>({
   path = '/',
   body,
   method,
@@ -39,10 +36,10 @@ export const createMockRouteRequest = <
   path?: string;
   body?: Body;
   query?: Query;
-  params?: Record<string, unknown>;
+  params?: BaseQuery;
   headers?: Record<string, string>;
 }): {
-  req: TypedNextRequest<Body, Query>;
+  req: NextRequest;
   context: { params: typeof params };
 } => ({
   req: new NextRequest(
@@ -58,7 +55,7 @@ export const createMockRouteRequest = <
         ...headers
       }
     }
-  ) as TypedNextRequest<Body, Query>,
+  ),
   context: { params }
 });
 
@@ -79,10 +76,7 @@ export const createMockApiRouteRequest = <
   };
 
   // @ts-expect-error: The `NextApiRequest` does not satisfy the types for `Request`.
-  return createMocks<TypedNextApiRequest<Body, Query>, NextApiResponse>(
-    reqOptions,
-    resOptions
-  );
+  return createMocks<NextApiRequest, NextApiResponse>(reqOptions, resOptions);
 };
 
 export const getExpectedSpec = ({

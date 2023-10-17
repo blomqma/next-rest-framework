@@ -9,6 +9,8 @@ type NextRestFrameworkOpenApiSpec = Partial<
   >
 >;
 
+export type DocsProvider = 'redoc' | 'swagger-ui';
+
 export interface NextRestFrameworkConfig {
   /*!
    * Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec.
@@ -32,6 +34,8 @@ export interface NextRestFrameworkConfig {
   autoGenerateOpenApiSpec?: boolean;
   /*! Customization options for the generate docs. */
   docsConfig?: {
+    /*! Docs provider determining whether to render Redoc or SwaggerUI. Defaults to Redoc. */
+    provider?: DocsProvider;
     /*! Custom HTML title. */
     title?: string;
     /*! Custom HTML description. */
