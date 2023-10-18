@@ -22,11 +22,9 @@ export const DEFAULT_CONFIG: NextRestFrameworkConfig = {
   autoGenerateOpenApiSpec: true,
   docsConfig: {
     provider: 'redoc',
-    meta: {
-      title: DEFAULT_TITLE,
-      description: DEFAULT_DESCRIPTION,
-      faviconUrl: DEFAULT_FAVICON_URL
-    },
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    faviconUrl: DEFAULT_FAVICON_URL,
     logoUrl: DEFAULT_LOGO_URL
   },
   suppressInfo: false,

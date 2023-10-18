@@ -127,11 +127,9 @@ it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
     const _config: NextRestFrameworkConfig = {
       docsConfig: {
         provider,
-        meta: {
-          title: 'foo',
-          description: 'bar',
-          faviconUrl: 'baz.ico'
-        },
+        title: 'foo',
+        description: 'bar',
+        faviconUrl: 'baz.ico',
         logoUrl: 'qux.jpeg'
       }
     };

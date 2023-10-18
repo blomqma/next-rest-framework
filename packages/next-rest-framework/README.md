@@ -271,11 +271,13 @@ The following options can be passed to the `docsRouteHandler` (App Router) and `
 
 The docs config options can be used to customize the generated docs:
 
-| Name       | Description                                                                                                 |
-| ---------- | ----------------------------------------------------------------------------------------------------------- |
-| `provider` | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. |
-| `meta`     | An object supporting `title`, `description` and `faviconUrl` properties for custom HTML meta tag values.    |
-| `logoUrl`  | A URL for a custom logo rendered in the docs.                                                               |
+| Name          | Description                                                                                                 |
+| ------------- | ----------------------------------------------------------------------------------------------------------- |
+| `provider`    | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. |
+| `title`       | Custom title, used for the visible title and HTML title.                                                    |
+| `description` | Custom description, used for the visible description and HTML meta description.                             |
+| `faviconUrl`  | Custom HTML meta favicon URL.                                                                               |
+| `logoUrl`     | A URL for a custom logo.                                                                                    |
 
 ### [Route handler options](#route-handler-options)
 

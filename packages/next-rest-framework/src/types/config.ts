@@ -33,15 +33,13 @@ export interface NextRestFrameworkConfig {
   docsConfig?: {
     /*! Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. */
     provider?: DocsProvider;
-    meta?: {
-      /*! Custom HTML meta title.  */
-      title?: string;
-      /*! Custom HTML meta description. */
-      description?: string;
-      /*! Custom HTML meta favicon URL. */
-      faviconUrl?: string;
-    };
-    /*! A URL for a custom logo rendered in the docs. */
+    /*! Custom title, used for the visible title and HTML title.  */
+    title?: string;
+    /*! Custom description, used for the visible description and HTML meta description. */
+    description?: string;
+    /*! Custom HTML meta favicon URL. */
+    faviconUrl?: string;
+    /*! A URL for a custom logo. */
     logoUrl?: string;
   };
   /*! Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`. */

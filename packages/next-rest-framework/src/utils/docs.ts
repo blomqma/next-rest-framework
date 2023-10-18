@@ -12,11 +12,9 @@ export const getHtmlForDocs = ({
     openApiObject,
     docsConfig: {
       provider,
-      meta: {
-        title = openApiObject?.info.title ?? DEFAULT_TITLE,
-        description = openApiObject?.info.description ?? DEFAULT_DESCRIPTION,
-        faviconUrl = DEFAULT_FAVICON_URL
-      } = {},
+      title = openApiObject?.info.title ?? DEFAULT_TITLE,
+      description = openApiObject?.info.description ?? DEFAULT_DESCRIPTION,
+      faviconUrl = DEFAULT_FAVICON_URL,
       logoUrl = DEFAULT_LOGO_URL
     } = {}
   },
@@ -47,12 +45,16 @@ export const getHtmlForDocs = ({
     <div id="redoc"></div>
     <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
     <script>
-      fetch('${url}')
-        .then(res => res.json())
-        .then(spec => {
-          spec.info['x-logo'] = { url: "${logoUrl}" };
-          Redoc.init(spec, {}, document.getElementById('redoc'));
-        });
+      window.onload = () => {
+        fetch('${url}')
+          .then(res => res.json())
+          .then(spec => {
+            spec.info['title'] = "${title}";
+            spec.info['description'] = "${description}";
+            spec.info['x-logo'] = { url: "${logoUrl}" };
+            Redoc.init(spec, {}, document.getElementById('redoc'));
+          });
+      };
     </script>
   </body>
 </html>`;
@@ -81,19 +83,26 @@ export const getHtmlForDocs = ({
     <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-standalone-preset.js" crossorigin></script>
     <script>
       window.onload = () => {
-        window.ui = SwaggerUIBundle({
-          url: '${url}',
-          dom_id: '#swagger-ui',
-          presets: [
-            SwaggerUIBundle.presets.apis,
-            SwaggerUIStandalonePreset
-          ],
-          layout: 'StandaloneLayout',
-          deepLinking: true,
-          displayOperationId: true,
-          displayRequestDuration: true,
-          filter: true
-        });
+        fetch('${url}')
+          .then(res => res.json())
+          .then(spec => {
+            spec.info['title'] = "${title}";
+            spec.info['description'] = "${description}";
+
+            window.ui = SwaggerUIBundle({
+              spec,
+              dom_id: '#swagger-ui',
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset
+              ],
+              layout: 'StandaloneLayout',
+              deepLinking: true,
+              displayOperationId: true,
+              displayRequestDuration: true,
+              filter: true
+            });
+          });
       };
     </script>
   </body>
