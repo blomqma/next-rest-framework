@@ -1,6 +1,48 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.0.0 - 2023-10-18
+
+### Changed
+
+This is another breaking change before another
+major release. This mostly changes the API on
+creating new endpoints. The old object-based
+definition of API endpoints is replaced by
+a functional model, familiar from e.g. the trpc
+library.
+
+The docs route handlers and route handler functions
+are renamed, followed up with new utility function
+used in conjunction with the new `routeHandler` and
+`apiRouteHandler` functions. The new additional
+`routeOperation` (App Router) and `apiRouteOperation`
+(Pages Router) functions expose the same old API
+including the input, output and handler definitions
+in a slightly new format by chaining the oprations
+after each other.
+
+We also recently dropped SwaggerUI that was replaced
+by Redoc. This change allows the user to defined their
+desired docs frontend, bringing back the option to
+use SwaggerUI or even both Redoc and SwaggerUI at the
+same time.
+
+### Fixed
+
+This fixes the query parameter typings
+that were incorrect for both routers so that they
+are safer to use.
+
+This also fixes duplicate inclusion of the parameters
+in the OpenAPI spec when using dynamic routes.
+
+There are also some typings improvements for response
+status codes, that we're not working previously.
+Unfortunately, for App Router the status codes are
+still not limited to the user-defined response statuses,
+because the `NextResponse` API makes this impossible.
+
 ### 2.0.1 - 2023-10-15
 
 ### Fixed
