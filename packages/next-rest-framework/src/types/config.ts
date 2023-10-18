@@ -1,13 +1,7 @@
 import { type OpenAPIV3_1 } from 'openapi-types';
 import { type Modify } from './utility-types';
-type NextRestFrameworkOpenApiSpec = Partial<
-  Modify<
-    Omit<OpenAPIV3_1.Document, 'openapi'>,
-    {
-      info: Partial<OpenAPIV3_1.InfoObject>;
-    }
-  >
->;
+
+export type DocsProvider = 'redoc' | 'swagger-ui';
 
 export interface NextRestFrameworkConfig {
   /*!
@@ -24,21 +18,30 @@ export interface NextRestFrameworkConfig {
    * Defaults to all paths being allowed.
    */
   allowedPaths?: string[];
-  /*! Overrides to the generated OpenAPI spec. */
-  openApiSpecOverrides?: NextRestFrameworkOpenApiSpec;
+  /*! An OpenAPI Object that can be used to override and extend the auto-generated specification: https://swagger.io/specification/#openapi-object */
+  openApiObject?: Modify<
+    Omit<OpenAPIV3_1.Document, 'openapi'>,
+    {
+      info: Partial<OpenAPIV3_1.InfoObject>;
+    }
+  >;
   /*! Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder. */
   openApiJsonPath?: string;
   /*! Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`. */
   autoGenerateOpenApiSpec?: boolean;
-  /*! Customization options for the generate docs. */
+  /*! Customization options for the generated docs. */
   docsConfig?: {
-    /*! Custom HTML title. */
-    title?: string;
-    /*! Custom HTML description. */
-    description?: string;
-    /*! Custom favicon URL. */
-    faviconUrl?: string;
-    /*! Custom logo URL. */
+    /*! Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. */
+    provider?: DocsProvider;
+    meta?: {
+      /*! Custom HTML meta title.  */
+      title?: string;
+      /*! Custom HTML meta description. */
+      description?: string;
+      /*! Custom HTML meta favicon URL. */
+      faviconUrl?: string;
+    };
+    /*! A URL for a custom logo rendered in the docs. */
     logoUrl?: string;
   };
   /*! Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`. */

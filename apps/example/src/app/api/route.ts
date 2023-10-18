@@ -1,6 +1,6 @@
-import { defineDocsRoute } from 'next-rest-framework';
+import { docsRouteHandler } from 'next-rest-framework';
 
-export const GET = defineDocsRoute({
+export const GET = docsRouteHandler({
   deniedPaths: ['/api/*/some-api'],
   openApiJsonPath: '/openapi.json'
 });

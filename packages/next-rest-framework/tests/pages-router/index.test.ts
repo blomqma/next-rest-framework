@@ -1,11 +1,18 @@
-import { defineApiRoute, defineDocsApiRoute } from '../../src';
 import { DEFAULT_CONFIG, getConfig, validateSchema } from '../../src/utils';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import chalk from 'chalk';
 import { createMockApiRouteRequest, resetCustomGlobals } from '../utils';
 import { z } from 'zod';
-import { type NextRestFrameworkConfig } from '../../src/types';
+import {
+  type DocsProvider,
+  type NextRestFrameworkConfig
+} from '../../src/types';
 import { getHtmlForDocs } from '../../src/utils/docs';
+import {
+  apiRouteHandler,
+  apiRouteOperation,
+  docsApiRouteHandler
+} from '../../src';
 
 jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
@@ -31,7 +38,7 @@ it('uses the default config by default', async () => {
   });
 
   expect(global.nextRestFrameworkConfig).toEqual(undefined);
-  await defineDocsApiRoute()(req, res);
+  await docsApiRouteHandler()(req, res);
   expect(global.nextRestFrameworkConfig).toEqual(DEFAULT_CONFIG);
 });
 
@@ -42,17 +49,16 @@ it('sets the global config', async () => {
   });
 
   const customConfig: NextRestFrameworkConfig = {
-    openApiSpecOverrides: {
+    openApiObject: {
       info: {
         title: 'Some Title',
         version: '1.2.3'
-      },
-      paths: {}
+      }
     },
     openApiJsonPath: '/foo/bar'
   };
 
-  await defineDocsApiRoute(customConfig)(req, res);
+  await docsApiRouteHandler(customConfig)(req, res);
   expect(global.nextRestFrameworkConfig).toEqual(getConfig(customConfig));
 });
 
@@ -64,7 +70,7 @@ it('logs init, reserved paths and config changed info', async () => {
     path: '/api'
   });
 
-  await defineDocsApiRoute()(req, res);
+  await docsApiRouteHandler()(req, res);
 
   expect(console.info).toHaveBeenNthCalledWith(
     1,
@@ -94,7 +100,7 @@ OpenAPI JSON: http://localhost:3000/openapi.json`)
     path: '/api/foo/bar'
   }));
 
-  await defineDocsApiRoute({ openApiJsonPath: '/api/bar/baz' })(req, res);
+  await docsApiRouteHandler({ openApiJsonPath: '/api/bar/baz' })(req, res);
 
   expect(console.info).toHaveBeenNthCalledWith(
     5,
@@ -110,34 +116,40 @@ OpenAPI JSON: http://localhost:3000/api/bar/baz`)
   expect(console.info).toHaveBeenCalledTimes(6);
 });
 
-it('returns the docs HTML', async () => {
-  const { req, res } = createMockApiRouteRequest({
-    method: ValidMethod.GET,
-    path: '/api'
-  });
+it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
+  'returns the docs HTML: %s',
+  async (provider) => {
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.GET,
+      path: '/api'
+    });
 
-  const _config: NextRestFrameworkConfig = {
-    docsConfig: {
-      title: 'foo',
-      description: 'bar',
-      faviconUrl: 'baz.ico',
-      logoUrl: 'qux.jpeg'
-    }
-  };
+    const _config: NextRestFrameworkConfig = {
+      docsConfig: {
+        provider,
+        meta: {
+          title: 'foo',
+          description: 'bar',
+          faviconUrl: 'baz.ico'
+        },
+        logoUrl: 'qux.jpeg'
+      }
+    };
 
-  await defineDocsApiRoute(_config)(req, res);
-  const text = res._getData();
+    await docsApiRouteHandler(_config)(req, res);
+    const text = res._getData();
 
-  const html = getHtmlForDocs({
-    config: getConfig(_config),
-    baseUrl: 'http://localhost:3000'
-  });
+    const html = getHtmlForDocs({
+      config: getConfig(_config),
+      baseUrl: 'http://localhost:3000'
+    });
 
-  expect(text).toEqual(html);
-  expect(text).toContain('foo');
-  expect(text).toContain('bar');
-  expect(text).toContain('baz.ico');
-});
+    expect(text).toEqual(html);
+    expect(text).toContain('foo');
+    expect(text).toContain('bar');
+    expect(text).toContain('baz.ico');
+  }
+);
 
 it.each(Object.values(ValidMethod))(
   'works with HTTP method: %p',
@@ -146,64 +158,58 @@ it.each(Object.values(ValidMethod))(
       method
     });
 
-    const output = [
-      {
-        status: 200,
-        contentType: 'application/json',
-        schema: z.array(z.string())
-      }
-    ];
-
     const data = ['All good!'];
-    const handler = () => {
-      res.json(data);
-    };
 
-    await defineApiRoute({
-      GET: {
-        output,
-        handler
-      },
-      PUT: {
-        output,
-        handler
-      },
-      POST: {
-        output,
-        handler
-      },
-      DELETE: {
-        output,
-        handler
-      },
-      OPTIONS: {
-        output,
-        handler
-      },
-      HEAD: {
-        output,
-        handler
-      },
-      PATCH: {
-        output,
-        handler
-      }
+    const operation = apiRouteOperation()
+      .output([
+        {
+          status: 200,
+          contentType: 'application/json',
+          schema: z.array(z.string())
+        }
+      ])
+      .handler(() => {
+        res.json(data);
+      });
+
+    await apiRouteHandler({
+      GET: operation,
+      PUT: operation,
+      POST: operation,
+      DELETE: operation,
+      OPTIONS: operation,
+      HEAD: operation,
+      PATCH: operation
     })(req, res);
 
     expect(res._getJSONData()).toEqual(data);
   }
 );
 
+it('returns error for missing handler', async () => {
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.GET
+  });
+
+  await apiRouteHandler({
+    GET: apiRouteOperation().handler()
+  })(req, res);
+
+  const json = res._getJSONData();
+  expect(res.statusCode).toEqual(500);
+
+  expect(json).toEqual({
+    message: DEFAULT_ERRORS.unexpectedError
+  });
+});
+
 it('returns error for valid methods with no handlers', async () => {
   const { req, res } = createMockApiRouteRequest({
     method: ValidMethod.POST
   });
 
-  await defineApiRoute({
-    GET: {
-      output: [],
-      handler: () => {}
-    }
+  await apiRouteHandler({
+    GET: apiRouteOperation().handler(() => {})
   })(req, res);
 
   expect(res.statusCode).toEqual(405);
@@ -231,15 +237,13 @@ it('returns error for invalid request body', async () => {
     foo: z.number()
   });
 
-  await defineApiRoute({
-    POST: {
-      input: {
+  await apiRouteHandler({
+    POST: apiRouteOperation()
+      .input({
         contentType: 'application/json',
         body: schema
-      },
-      output: [],
-      handler: () => {}
-    }
+      })
+      .handler(() => {})
   })(req, res);
 
   expect(res.statusCode).toEqual(400);
@@ -266,18 +270,16 @@ it('returns error for invalid query parameters', async () => {
   });
 
   const schema = z.object({
-    foo: z.number()
+    bar: z.string()
   });
 
-  await defineApiRoute({
-    POST: {
-      input: {
+  await apiRouteHandler({
+    POST: apiRouteOperation()
+      .input({
         contentType: 'application/json',
         query: schema
-      },
-      output: [],
-      handler: () => {}
-    }
+      })
+      .handler(() => {})
   })(req, res);
 
   expect(res.statusCode).toEqual(400);
@@ -301,15 +303,13 @@ it('returns error for invalid content-type', async () => {
     }
   });
 
-  await defineApiRoute({
-    POST: {
-      input: {
+  await apiRouteHandler({
+    POST: apiRouteOperation()
+      .input({
         contentType: 'application/json',
         body: z.string()
-      },
-      output: [],
-      handler: () => {}
-    }
+      })
+      .handler(() => {})
   })(req, res);
 
   expect(res.statusCode).toEqual(415);
@@ -345,15 +345,15 @@ it.each([
       }
     });
 
-    await defineApiRoute({
-      POST: {
-        input: {
+    await apiRouteHandler({
+      POST: apiRouteOperation()
+        .input({
           contentType: definedContentType,
           body: z.object({
             foo: z.string()
           })
-        },
-        output: [
+        })
+        .output([
           {
             status: 201,
             contentType: 'application/json',
@@ -361,11 +361,10 @@ it.each([
               foo: z.string()
             })
           }
-        ],
-        handler: () => {
+        ])
+        .handler(() => {
           res.json({ foo: 'bar' });
-        }
-      }
+        })
     })(req, res);
 
     expect(res.statusCode).toEqual(200);
@@ -380,13 +379,10 @@ it('returns a default error response', async () => {
 
   console.error = jest.fn();
 
-  await defineApiRoute({
-    GET: {
-      output: [],
-      handler: () => {
-        throw Error('Something went wrong');
-      }
-    }
+  await apiRouteHandler({
+    GET: apiRouteOperation().handler(() => {
+      throw Error('Something went wrong');
+    })
   })(req, res);
 
   expect(res._getJSONData()).toEqual({

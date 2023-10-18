@@ -1,10 +1,12 @@
 import { type OpenAPIV3_1 } from 'openapi-types';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { type ZodSchema } from 'zod';
-import { type BaseObjectSchemaType, type BaseSchemaType } from '../types';
+import { type AnyZodObject, type ZodSchema } from 'zod';
 
-export const isZodSchema = (schema: unknown): schema is ZodSchema =>
+const isZodSchema = (schema: unknown): schema is ZodSchema =>
   !!schema && typeof schema === 'object' && '_def' in schema;
+
+const isZodObjectSchema = (schema: unknown): schema is AnyZodObject =>
+  isZodSchema(schema) && 'shape' in schema;
 
 const zodSchemaValidator = ({
   schema,
@@ -26,7 +28,7 @@ export const validateSchema = async ({
   schema,
   obj
 }: {
-  schema: BaseSchemaType;
+  schema: ZodSchema;
   obj: unknown;
 }) => {
   if (isZodSchema(schema)) {
@@ -39,7 +41,7 @@ export const validateSchema = async ({
 export const getJsonSchema = ({
   schema
 }: {
-  schema: BaseSchemaType;
+  schema: ZodSchema;
 }): OpenAPIV3_1.SchemaObject => {
   if (isZodSchema(schema)) {
     return zodToJsonSchema(schema, {
@@ -50,8 +52,8 @@ export const getJsonSchema = ({
   throw Error('Invalid schema.');
 };
 
-export const getSchemaKeys = ({ schema }: { schema: BaseObjectSchemaType }) => {
-  if (isZodSchema(schema)) {
+export const getSchemaKeys = ({ schema }: { schema: ZodSchema }) => {
+  if (isZodObjectSchema(schema)) {
     return Object.keys(schema._def.shape());
   }
 

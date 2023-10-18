@@ -98,7 +98,12 @@ export default function Page() {
         <ul className="flex gap-4">
           <li>
             <a className="link link-primary" href="/api">
-              API docs
+              Redoc
+            </a>
+          </li>
+          <li>
+            <a className="link link-primary" href="/api/swagger-ui">
+              SwaggerUI
             </a>
           </li>
           <li>

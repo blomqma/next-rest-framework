@@ -1,2 +1,7 @@
-export { defineRoute, defineApiRoute } from './route-handlers';
-export { defineDocsRoute, defineDocsApiRoute } from './docs-handlers';
+export {
+  routeHandler,
+  routeOperation,
+  apiRouteHandler,
+  apiRouteOperation
+} from './route-handlers';
+export { docsRouteHandler, docsApiRouteHandler } from './docs-handlers';

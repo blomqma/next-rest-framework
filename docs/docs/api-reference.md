@@ -4,54 +4,65 @@ sidebar_position: 3
 
 # API reference
 
-### [Config options](#config-options)
+### [Docs handler options](#docs-handler-options)
 
-The optional config options allow you to customize Next REST Framework. The following options can be passed to the `defineDocsRoute` (App Router) and `defineDocsApiRoute` (Pages Router) docs route handler functions:
+The following options can be passed to the `docsRouteHandler` (App Router) and `docsApiRouteHandler` (Pages Router) functions for customizing Next REST Framework:
 
 | Name                      | Description                                                                                                                                                                                                                                                                                                            |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `deniedPaths`             | Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/disallowed-path', '/api/disallowed-path-2/*', '/api/disallowed-path-3/**']` Defaults to no paths being disallowed. |
 | `allowedPaths`            | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.               |
-| `openApiSpecOverrides`    | Overrides to the generated OpenAPI spec.                                                                                                                                                                                                                                                                               |
+| `openApiObject`           | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.                                                                                                                                                                        |
 | `openApiJsonPath`         | Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder.                                                                                                                                   |
 | `autoGenerateOpenApiSpec` | Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`.                                                                                                                                                                    |
 | `docsConfig`              | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
 | `suppressInfo`            | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                             |
 | `generatePathsTimeout`    | Timeout in milliseconds for generating the OpenAPI spec. Defaults to 5000. For large applications you might have to increase this.                                                                                                                                                                                     |
 
-### [Route config](#route-config)
+### [Docs config](#docs-config)
 
-The route config parameters passed to the `defineRoute` (App Router) and `defineApiRoute` (Pages Router) functions define an individual route, applicable for all endpoints that are using that route:
+The docs config options can be used to customize the generated docs:
 
-| Name                                                       | Description                                                                                                                                                                   | Required |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `GET \| PUT \| POST \| DELETE \| OPTIONS \| HEAD \| PATCH` | A [Method handler](#method-handlers) object.                                                                                                                                  | `true`   |
-| `openApiSpecOverrides`                                     | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated and higher level specifications. | `false`  |
+| Name       | Description                                                                                                 |
+| ---------- | ----------------------------------------------------------------------------------------------------------- |
+| `provider` | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. |
+| `meta`     | An object supporting `title`, `description` and `faviconUrl` properties for custom HTML meta tag values.    |
+| `logoUrl`  | A URL for a custom logo rendered in the docs.                                                               |
 
-#### [Method handlers](#method-handlers)
+### [Route handler options](#route-handler-options)
 
-The method handler parameters define an individual endpoint:
+The following options cam be passed to the `routeHandler` (App Router) and `apiRouteHandler` (Pages Router) functions to create new API endpoints:
 
-| Name                   | Description                                                                                                                                                                                                                                                                                                                               | Required |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `input`                | An [Input object](#input-object) object.                                                                                                                                                                                                                                                                                                  | `false`  |
-| `output`               | An array of [Output objects](#output-object).                                                                                                                                                                                                                                                                                             |  `true`  |
-| `handler`              | A strongly-typed handler function for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. | `true`   |
-| `openApiSpecOverrides` | An OpenAPI [Operation object](https://swagger.io/specification/#operation-object) that can be used to override and extend the auto-generated and higher level specifications.                                                                                                                                                             | `false`  |
+| Name                                                       | Description                                                                                                                                                 | Required |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `GET \| PUT \| POST \| DELETE \| OPTIONS \| HEAD \| PATCH` | A [Method handler](#method-handlers) object.                                                                                                                | `true`   |
+| `openApiPath`                                              | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated specification. | `false`  |
 
-##### [Input object](#input-object)
+#### [Route operations](#route-operations)
 
-The input object is used for the validation and OpenAPI documentation of the incoming request:
+The route operation functions `routeOperation` (App Router) and `apiRouteOperation` (Pages Router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
 
-| Name          | Description                                                                                                                                  | Required |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `contentType` | The content type header of the request. A request with no content type header or a incorrect content type header will get an error response. | `true`   |
-| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body.                                                 | `true`   |
-| `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters.                                             | `false`  |
+| Name      | Description                                                                                  |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `input`   | An [Input](#input) function for defining the validation and documentation of the request.    |
+| `output`  | An [Output](#output) function for defining the validation and documentation of the response. |
+| `handler` | A [Handler](#handler) function for defining your business logic.                             |
 
-##### [Output object](#output-object)
+##### [Input](#input)
 
-The output objects define what kind of responses are returned from your API handler and is used for the OpenAPI documentation of the response:
+The input function is used for validation and documentation of the request, taking in an object with the following properties:
+
+| Name          | Description                                                                                                                                           | Required |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `contentType` | The content type header of the request. When the content type is defined, a request with an incorrect content type header will get an error response. | `false`  |
+| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body.                                                          | `false`  |
+| `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters.                                                      | `false`  |
+
+Calling the input function allows you to chain your API handler logic with the [Output](#output) and [Handler](#handler) functions.
+
+##### [Output](#output)
+
+The output function is used for validation and documentation of the response, taking in an array of objects with the following properties:
 
 | Name          | Description                                                                                                                                                       | Required |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -59,13 +70,8 @@ The output objects define what kind of responses are returned from your API hand
 | `contentType` | The content type header of the response.                                                                                                                          | `true`   |
 | `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. A response body not matching to the schema will lead to a TS error. |  `true`  |
 
-### [Docs config](#docs-config)
+Calling the input function allows you to chain your API handler logic with the [Handler](#handler) function.
 
-The docs config object can be used to customize the generated docs:
+##### [Handler](#handler)
 
-| Name          | Description                             |
-| ------------- | --------------------------------------- |
-| `title`       | Custom page title meta tag value.       |
-| `description` | Custom page description meta tag value. |
-| `faviconUrl`  | A URL for a custom favicon.             |
-| `logoUrl`     | A URL for a custom logo.                |
+The handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
