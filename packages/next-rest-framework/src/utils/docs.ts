@@ -1,9 +1,24 @@
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_FAVICON_URL,
+  DEFAULT_LOGO_URL,
+  DEFAULT_TITLE
+} from '../constants';
 import { type NextRestFrameworkConfig } from '../types';
 
 export const getHtmlForDocs = ({
   config: {
     openApiJsonPath,
-    docsConfig: { provider, title, description, faviconUrl, logoUrl } = {}
+    openApiObject,
+    docsConfig: {
+      provider,
+      meta: {
+        title = openApiObject?.info.title ?? DEFAULT_TITLE,
+        description = openApiObject?.info.description ?? DEFAULT_DESCRIPTION,
+        faviconUrl = DEFAULT_FAVICON_URL
+      } = {},
+      logoUrl = DEFAULT_LOGO_URL
+    } = {}
   },
   baseUrl
 }: {
@@ -27,16 +42,18 @@ export const getHtmlForDocs = ({
       href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700"
       rel="stylesheet"
     />
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-    </style>
   </head>
   <body>
-    <redoc spec-url="${url}"></redoc>
+    <div id="redoc"></div>
     <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+    <script>
+      fetch('${url}')
+        .then(res => res.json())
+        .then(spec => {
+          spec.info['x-logo'] = { url: "${logoUrl}" };
+          Redoc.init(spec, {}, document.getElementById('redoc'));
+        });
+    </script>
   </body>
 </html>`;
 
@@ -52,15 +69,30 @@ export const getHtmlForDocs = ({
     />
     <link rel="icon" type="image/x-icon" href="${faviconUrl}">
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
+    <style>
+      .topbar-wrapper img {
+        content:url('${logoUrl}');
+      }
+    </style>
   </head>
   <body>
     <div id="swagger-ui"></div>
     <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-bundle.js" crossorigin></script>
+    <script src="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui-standalone-preset.js" crossorigin></script>
     <script>
       window.onload = () => {
         window.ui = SwaggerUIBundle({
           url: '${url}',
           dom_id: '#swagger-ui',
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+          ],
+          layout: 'StandaloneLayout',
+          deepLinking: true,
+          displayOperationId: true,
+          displayRequestDuration: true,
+          filter: true
         });
       };
     </script>

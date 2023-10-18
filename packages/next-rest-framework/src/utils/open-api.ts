@@ -252,14 +252,9 @@ export const syncOpenApiSpec = async ({
 
     const newSpec = merge(
       {
-        openapi: OPEN_API_VERSION,
-        info: {
-          'x-logo': {
-            url: config.docsConfig?.logoUrl
-          }
-        }
+        openapi: OPEN_API_VERSION
       },
-      config.openApiSpecOverrides,
+      config.openApiObject,
       { paths }
     );
 

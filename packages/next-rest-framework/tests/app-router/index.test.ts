@@ -52,12 +52,11 @@ it('sets the global config', async () => {
   });
 
   const customConfig: NextRestFrameworkConfig = {
-    openApiSpecOverrides: {
+    openApiObject: {
       info: {
         title: 'Some Title',
         version: '1.2.3'
-      },
-      paths: {}
+      }
     },
     openApiJsonPath: '/foo/bar'
   };
@@ -131,9 +130,11 @@ it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
     const _config: NextRestFrameworkConfig = {
       docsConfig: {
         provider,
-        title: 'foo',
-        description: 'bar',
-        faviconUrl: 'baz.ico',
+        meta: {
+          title: 'foo',
+          description: 'bar',
+          faviconUrl: 'baz.ico'
+        },
         logoUrl: 'qux.jpeg'
       }
     };

@@ -260,7 +260,7 @@ The following options can be passed to the `docsRouteHandler` (App Router) and `
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `deniedPaths`             | Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/disallowed-path', '/api/disallowed-path-2/*', '/api/disallowed-path-3/**']` Defaults to no paths being disallowed. |
 | `allowedPaths`            | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.               |
-| `openApiSpecOverrides`    | Overrides to the generated OpenAPI spec.                                                                                                                                                                                                                                                                               |
+| `openApiObject`           | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.                                                                                                                                                                        |
 | `openApiJsonPath`         | Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder.                                                                                                                                   |
 | `autoGenerateOpenApiSpec` | Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`.                                                                                                                                                                    |
 | `docsConfig`              | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
@@ -271,13 +271,11 @@ The following options can be passed to the `docsRouteHandler` (App Router) and `
 
 The docs config options can be used to customize the generated docs:
 
-| Name          | Description                                                                        |
-| ------------- | ---------------------------------------------------------------------------------- |
-| `provider`    | Docs provider determining whether to render Redoc or SwaggerUI. Defaults to Redoc. |
-| `title`       | Custom page title meta tag value.                                                  |
-| `description` | Custom page description meta tag value.                                            |
-| `faviconUrl`  | A URL for a custom favicon.                                                        |
-| `logoUrl`     | A URL for a custom logo.                                                           |
+| Name       | Description                                                                                                 |
+| ---------- | ----------------------------------------------------------------------------------------------------------- |
+| `provider` | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. |
+| `meta`     | An object supporting `title`, `description` and `faviconUrl` properties for custom HTML meta tag values.    |
+| `logoUrl`  | A URL for a custom logo rendered in the docs.                                                               |
 
 ### [Route handler options](#route-handler-options)
 

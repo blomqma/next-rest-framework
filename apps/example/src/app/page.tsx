@@ -97,7 +97,7 @@ export default function Page() {
         </div>
         <ul className="flex gap-4">
           <li>
-            <a className="link link-primary" href="/api/redoc">
+            <a className="link link-primary" href="/api">
               Redoc
             </a>
           </li>
