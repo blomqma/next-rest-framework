@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.1.1 - 2023-10-19
+
+### Fixed
+
+- Fix request handling when using a proxy or HTTPS connections locally.
+
 ### 3.1.0 - 2023-10-19
 
 ### Added
