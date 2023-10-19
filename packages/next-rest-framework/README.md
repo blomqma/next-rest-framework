@@ -14,9 +14,6 @@
     <a href="https://github.com/blomqma/next-rest-framework/stargazers">
       <img src="https://img.shields.io/github/stars/blomqma/next-rest-framework" alt="Github Stars" />
     </a>
-    <a href="https://packagephobia.com/result?p=next-rest-framework">
-      <img src="https://packagephobia.com/badge?p=next-rest-framework" alt="Bundle Size"/>
-    </a>
     <a href="https://opensource.org/licenses/ISC" rel="nofollow">
       <img src="https://img.shields.io/badge/License-ISC-blue.svg" alt="License">
     </a>
@@ -107,7 +104,7 @@ import { docsApiRouteHandler } from 'next-rest-framework';
 export default docsApiRouteHandler();
 ```
 
-This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the [CLI](#cli) command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler](#docs-handler-options) section.
+This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the [CLI](#cli) command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
 
 ### [Create endpoint](#create-endpoint)
 
@@ -336,11 +333,11 @@ The Next REST Framework CLI supports generating and validating the `openapi.json
 The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
 
 | Name                    | Description                                                                                                                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--skipBuild <boolean>` | By default this command runs `next build` to build your routes. If you have already created the build, you can skip this step by setting this to `true`.                                       |
 | `--distDir <string>`    | Path to your production build directory. Defaults to `.next`.                                                                                                                                  |
-| `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |     |
-| `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |     |
+| `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |
+| `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |
 
 ## [Changelog](#changelog)
 

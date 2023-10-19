@@ -87,8 +87,8 @@ The Next REST Framework CLI supports generating and validating the `openapi.json
 The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
 
 | Name                    | Description                                                                                                                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--skipBuild <boolean>` | By default this command runs `next build` to build your routes. If you have already created the build, you can skip this step by setting this to `true`.                                       |
 | `--distDir <string>`    | Path to your production build directory. Defaults to `.next`.                                                                                                                                  |
-| `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |     |
-| `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |     |
+| `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |
+| `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |
