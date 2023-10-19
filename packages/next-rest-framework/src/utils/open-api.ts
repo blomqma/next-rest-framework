@@ -96,6 +96,9 @@ export const generatePathsFromDev = async ({
   baseUrl: string;
   url: string;
 }): Promise<OpenAPIV3_1.PathsObject> => {
+  // Disable TLS certificate validation in development mode to enable local development using HTTPS.
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
   const ignoredPaths: string[] = [];
 
   // Check if the route is allowed or denied by the user.
@@ -206,7 +209,7 @@ export const generatePathsFromDev = async ({
             'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT,
             'Content-Type': 'application/json',
             'x-forwarded-proto': baseUrl.split('://')[0],
-            'x-forwarded-host': baseUrl.split('://')[1]
+            host: baseUrl.split('://')[1]
           },
           signal: controller.signal
         });

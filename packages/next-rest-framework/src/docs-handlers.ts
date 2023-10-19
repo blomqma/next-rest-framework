@@ -45,7 +45,11 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
 
   const handler = async (req: NextRequest, _context: { params: BaseQuery }) => {
     try {
-      const { headers, url } = req;
+      const { headers, nextUrl } = req;
+      const proto = headers.get('x-forwarded-proto') ?? 'http';
+      const host = headers.get('host');
+      const baseUrl = `${proto}://${host}`;
+      const url = baseUrl + nextUrl.pathname;
 
       // Return 403 if called internally by the framework.
       if (headers.get('user-agent') === NEXT_REST_FRAMEWORK_USER_AGENT) {
@@ -56,10 +60,6 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
           { status: 403 }
         );
       }
-
-      const proto = new URL(url).protocol;
-      const host = headers.get('host');
-      const baseUrl = `${proto}//${host}`;
 
       if (!config.suppressInfo) {
         logInitInfo({ config, baseUrl, url });
@@ -109,12 +109,7 @@ export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
         return;
       }
 
-      const _proto = req.headers['x-forwarded-proto'];
-
-      const proto = Array.isArray(_proto)
-        ? _proto[0]
-        : _proto?.split(',')[0] ?? 'http';
-
+      const proto = req.headers['x-forwarded-proto'] ?? 'http';
       const host = req.headers.host;
       const baseUrl = `${proto}://${host}`;
       const url = baseUrl + req.url;
