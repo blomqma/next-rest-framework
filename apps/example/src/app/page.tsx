@@ -107,13 +107,8 @@ export default function Page() {
             </a>
           </li>
           <li>
-            <a className="link link-primary" href="/api/foo/openapi.json">
-              OpenAPI JSON
-            </a>
-          </li>
-          <li>
-            <a className="link link-primary" href="/api/bar/openapi.yaml">
-              OpenAPI YAML
+            <a className="link link-primary" href="/openapi.json">
+              openapi.json
             </a>
           </li>
         </ul>
