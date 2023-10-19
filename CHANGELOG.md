@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.1.0 - 2023-10-19
+
+### Added
+
+- Add new `next-rest-framework validate` CLI command, that checks that the generated `openapi.json` file is up to date.
+
+### Changed
+
+- Improves the CLI performance, making it supported in any runtime.
+
 ### 3.0.1 - 2023-10-18
 
 ### Changed
