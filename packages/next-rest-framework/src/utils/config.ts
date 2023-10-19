@@ -8,7 +8,7 @@ import {
 } from '../constants';
 import { type NextRestFrameworkConfig } from '../types';
 
-export const DEFAULT_CONFIG: NextRestFrameworkConfig = {
+export const DEFAULT_CONFIG: Required<NextRestFrameworkConfig> = {
   deniedPaths: [],
   allowedPaths: ['**'],
   openApiObject: {
@@ -27,8 +27,7 @@ export const DEFAULT_CONFIG: NextRestFrameworkConfig = {
     faviconUrl: DEFAULT_FAVICON_URL,
     logoUrl: DEFAULT_LOGO_URL
   },
-  suppressInfo: false,
-  generatePathsTimeout: 5000
+  suppressInfo: false
 };
 
 export const getConfig = (config?: NextRestFrameworkConfig) =>

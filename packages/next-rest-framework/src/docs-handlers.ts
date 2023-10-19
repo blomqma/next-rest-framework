@@ -1,15 +1,49 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import { type BaseQuery, type NextRestFrameworkConfig } from './types';
-import { getConfig, syncOpenApiSpec } from './utils';
+import { generatePathsFromDev, getConfig, syncOpenApiSpec } from './utils';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { getHtmlForDocs } from './utils/docs';
-import { logInitInfo, logNextRestFrameworkError } from './utils/logging';
+import { logNextRestFrameworkError } from './utils/logging';
+import { isEqualWith } from 'lodash';
+import chalk from 'chalk';
+
+const logInitInfo = ({
+  config,
+  baseUrl,
+  url
+}: {
+  config: Required<NextRestFrameworkConfig>;
+  baseUrl: string;
+  url: string;
+}) => {
+  const configsEqual = isEqualWith(global.nextRestFrameworkConfig, config);
+
+  const logReservedPaths = () => {
+    console.info(
+      chalk.yellowBright(`Docs: ${url}
+OpenAPI JSON: ${baseUrl}${config.openApiJsonPath}`)
+    );
+  };
+
+  if (!global.nextRestFrameworkConfig) {
+    global.nextRestFrameworkConfig = config;
+    console.info(chalk.green('Next REST Framework initialized! 🚀'));
+    logReservedPaths();
+  } else if (!configsEqual) {
+    console.info(
+      chalk.green('Next REST Framework config changed, re-initializing!')
+    );
+
+    global.nextRestFrameworkConfig = config;
+    logReservedPaths();
+  }
+};
 
 export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
 
-  return async (req: NextRequest, _context: { params: BaseQuery }) => {
+  const handler = async (req: NextRequest, _context: { params: BaseQuery }) => {
     try {
       const { headers, url } = req;
 
@@ -31,8 +65,12 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
         logInitInfo({ config, baseUrl, url });
       }
 
-      if (config.autoGenerateOpenApiSpec) {
-        await syncOpenApiSpec({ config, baseUrl, url });
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        config.autoGenerateOpenApiSpec
+      ) {
+        const paths = await generatePathsFromDev({ config, baseUrl, url });
+        await syncOpenApiSpec({ config, paths });
       }
 
       const html = getHtmlForDocs({ config, baseUrl });
@@ -52,12 +90,15 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
       );
     }
   };
+
+  handler.nextRestFrameworkConfig = config;
+  return handler;
 };
 
 export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
 
-  return async (req: NextApiRequest, res: NextApiResponse) => {
+  const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       // Return 403 if called internally by the framework.
       if (req.headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT) {
@@ -82,8 +123,12 @@ export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
         logInitInfo({ config, baseUrl, url });
       }
 
-      if (config.autoGenerateOpenApiSpec) {
-        await syncOpenApiSpec({ config, baseUrl, url });
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        config.autoGenerateOpenApiSpec
+      ) {
+        const paths = await generatePathsFromDev({ config, baseUrl, url });
+        await syncOpenApiSpec({ config, paths });
       }
 
       const html = getHtmlForDocs({
@@ -98,4 +143,7 @@ export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
       res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
   };
+
+  handler.nextRestFrameworkConfig = config;
+  return handler;
 };

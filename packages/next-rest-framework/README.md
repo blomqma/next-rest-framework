@@ -42,10 +42,11 @@
   - [Docs handler options](#docs-handler-options)
   - [Docs config](#docs-config)
   - [Route handler options](#route-handler-options)
-    - [Route operations](#route-operations)
-      - [Input](#input)
-      - [Output](#output)
-      - [Handler](#handler)
+  - [Route operations](#route-operations)
+    - [Input](#input)
+    - [Output](#output)
+    - [Handler](#handler)
+- [CLI](#cli)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
 - [License](#license)
@@ -106,7 +107,7 @@ import { docsApiRouteHandler } from 'next-rest-framework';
 export default docsApiRouteHandler();
 ```
 
-This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the CLI command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler](#docs-handler-options) section.
+This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the [CLI](#cli) command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler](#docs-handler-options) section.
 
 ### [Create endpoint](#create-endpoint)
 
@@ -265,7 +266,6 @@ The following options can be passed to the `docsRouteHandler` (App Router) and `
 | `autoGenerateOpenApiSpec` | Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`.                                                                                                                                                                    |
 | `docsConfig`              | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
 | `suppressInfo`            | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                             |
-| `generatePathsTimeout`    | Timeout in milliseconds for generating the OpenAPI spec. Defaults to 5000. For large applications you might have to increase this.                                                                                                                                                                                     |
 
 ### [Docs config](#docs-config)
 
@@ -288,7 +288,7 @@ The following options cam be passed to the `routeHandler` (App Router) and `apiR
 | `GET \| PUT \| POST \| DELETE \| OPTIONS \| HEAD \| PATCH` | A [Method handler](#method-handlers) object.                                                                                                                | `true`   |
 | `openApiPath`                                              | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated specification. | `false`  |
 
-#### [Route operations](#route-operations)
+### [Route operations](#route-operations)
 
 The route operation functions `routeOperation` (App Router) and `apiRouteOperation` (Pages Router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
 
@@ -298,7 +298,7 @@ The route operation functions `routeOperation` (App Router) and `apiRouteOperati
 | `output`  | An [Output](#output) function for defining the validation and documentation of the response. |
 | `handler` | A [Handler](#handler) function for defining your business logic.                             |
 
-##### [Input](#input)
+#### [Input](#input)
 
 The input function is used for validation and documentation of the request, taking in an object with the following properties:
 
@@ -310,7 +310,7 @@ The input function is used for validation and documentation of the request, taki
 
 Calling the input function allows you to chain your API handler logic with the [Output](#output) and [Handler](#handler) functions.
 
-##### [Output](#output)
+#### [Output](#output)
 
 The output function is used for validation and documentation of the response, taking in an array of objects with the following properties:
 
@@ -322,9 +322,25 @@ The output function is used for validation and documentation of the response, ta
 
 Calling the input function allows you to chain your API handler logic with the [Handler](#handler) function.
 
-##### [Handler](#handler)
+#### [Handler](#handler)
 
 The handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
+
+## [CLI](#cli)
+
+The Next REST Framework CLI supports generating and validating the `openapi.json` file:
+
+- `npx next-rest-framework generate` to generate the `openapi.json` file.
+- `npx next-rest-framework validate` to validate that the generated OpenAPI spec matches the previously generated `openapi.json` file.
+
+The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
+
+| Name                    | Description                                                                                                                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `--skipBuild <boolean>` | By default this command runs `next build` to build your routes. If you have already created the build, you can skip this step by setting this to `true`.                                       |
+| `--distDir <string>`    | Path to your production build directory. Defaults to `.next`.                                                                                                                                  |
+| `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |     |
+| `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |     |
 
 ## [Changelog](#changelog)
 

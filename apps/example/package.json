@@ -6,6 +6,7 @@
     "dev": "pnpm prebuild && next dev",
     "build": "pnpm prebuild && next build",
     "generate": "pnpm prebuild && next-rest-framework generate",
+    "validate": "pnpm prebuild && next-rest-framework validate",
     "start": "next start",
     "type-check": "tsc --noEmit"
   },

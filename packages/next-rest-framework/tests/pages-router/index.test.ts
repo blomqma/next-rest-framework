@@ -13,11 +13,12 @@ import {
   apiRouteOperation,
   docsApiRouteHandler
 } from '../../src';
+import fs from 'fs';
 
 jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
   readdirSync: () => [],
-  readFileSync: () => '',
+  readFileSync: () => Buffer.from(''), // No OpenAPI spec found.
   writeFileSync: () => {},
   existsSync: () => true
 }));
@@ -85,12 +86,12 @@ OpenAPI JSON: http://localhost:3000/openapi.json`)
 
   expect(console.info).toHaveBeenNthCalledWith(
     3,
-    chalk.yellowBright('No API spec found, generating openapi.json')
+    chalk.yellowBright('No OpenAPI spec found, generating `openapi.json`...')
   );
 
   expect(console.info).toHaveBeenNthCalledWith(
     4,
-    chalk.green('API spec generated successfully!')
+    chalk.green('OpenAPI spec generated successfully!')
   );
 
   expect(console.info).toHaveBeenCalledTimes(4);
@@ -100,6 +101,7 @@ OpenAPI JSON: http://localhost:3000/openapi.json`)
     path: '/api/foo/bar'
   }));
 
+  jest.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from('{}')); // OpenAPI spec found.
   await docsApiRouteHandler({ openApiJsonPath: '/api/bar/baz' })(req, res);
 
   expect(console.info).toHaveBeenNthCalledWith(
@@ -113,7 +115,17 @@ OpenAPI JSON: http://localhost:3000/openapi.json`)
 OpenAPI JSON: http://localhost:3000/api/bar/baz`)
   );
 
-  expect(console.info).toHaveBeenCalledTimes(6);
+  expect(console.info).toHaveBeenNthCalledWith(
+    7,
+    chalk.yellowBright('OpenAPI spec changed, regenerating `openapi.json`...')
+  );
+
+  expect(console.info).toHaveBeenNthCalledWith(
+    8,
+    chalk.green('OpenAPI spec generated successfully!')
+  );
+
+  expect(console.info).toHaveBeenCalledTimes(8);
 });
 
 it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(

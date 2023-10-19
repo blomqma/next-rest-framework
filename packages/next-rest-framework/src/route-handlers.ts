@@ -22,7 +22,7 @@ import {
 } from 'next/types';
 
 export const routeHandler = (methodHandlers: RouteParams) => {
-  return async (req: NextRequest, context: { params: BaseQuery }) => {
+  const handler = async (req: NextRequest, context: { params: BaseQuery }) => {
     try {
       const { method, headers, nextUrl } = req;
       const { pathname } = nextUrl;
@@ -146,6 +146,14 @@ ${error}`);
       );
     }
   };
+
+  handler.getPaths = (route: string) =>
+    getPathsFromMethodHandlers({
+      methodHandlers,
+      route
+    });
+
+  return handler;
 };
 
 export const routeOperation: RouteOperation = (openApiOperation) => {
@@ -188,7 +196,7 @@ export const routeOperation: RouteOperation = (openApiOperation) => {
 };
 
 export const apiRouteHandler = (methodHandlers: ApiRouteParams) => {
-  return async (req: NextApiRequest, res: NextApiResponse) => {
+  const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const { method, body, query, headers, url: pathname } = req;
 
@@ -282,6 +290,14 @@ ${error}`);
       res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
   };
+
+  handler.getPaths = (route: string) =>
+    getPathsFromMethodHandlers({
+      methodHandlers,
+      route
+    });
+
+  return handler;
 };
 
 export const apiRouteOperation: ApiRouteOperation = (openApiOperation) => {

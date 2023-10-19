@@ -28,7 +28,7 @@
     "preinstall": "mkdir -p dist && touch ./dist/cli.js && echo \"#!/usr/bin/env node\" > ./dist/cli.js",
     "type-check": "tsc --noEmit",
     "build": "rm -rf dist && tsc --project tsconfig.build.json",
-    "test": "jest",
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "test:watch": "jest --watch"
   },
   "bin": {
@@ -38,6 +38,7 @@
     "chalk": "4.1.2",
     "commander": "10.0.1",
     "lodash": "4.17.21",
+    "prettier": "3.0.2",
     "wait-on": "7.0.1",
     "zod-to-json-schema": "3.21.4"
   },

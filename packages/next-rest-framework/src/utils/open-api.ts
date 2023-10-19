@@ -15,52 +15,97 @@ import { merge, isEqualWith } from 'lodash';
 import { getJsonSchema, getSchemaKeys } from './schemas';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
+import prettier from 'prettier';
 
 // Traverse the base path and find all nested files.
-const getNestedRoutes = (basePath: string, dir: string): string[] => {
+export const getNestedFiles = (basePath: string, dir: string): string[] => {
   const dirents = readdirSync(join(basePath, dir), { withFileTypes: true });
 
   const files = dirents.map((dirent) => {
     const res = join(dir, dirent.name);
-    return dirent.isDirectory() ? getNestedRoutes(basePath, res) : res;
+    return dirent.isDirectory() ? getNestedFiles(basePath, res) : res;
   });
 
   return files.flat();
 };
 
-// Generate the OpenAPI paths from the Next.js routes and API routes.
-const generatePaths = async ({
+// Match wildcard paths with single or multiple segments.
+export const isWildcardMatch = ({
+  pattern,
+  path
+}: {
+  pattern: string;
+  path: string;
+}) => {
+  const regexPattern = pattern
+    .split('/')
+    .map((segment) =>
+      segment === '*' ? '[^/]*' : segment === '**' ? '.*' : segment
+    )
+    .join('/');
+
+  const regex = new RegExp(`^${regexPattern}$`);
+  return regex.test(path);
+};
+
+export const getRouteName = (file: string) =>
+  `/${file}`
+    .replace('/route.js', '')
+    .replace('/route.ts', '')
+    .replace(/\\/g, '/')
+    .replace('[', '{')
+    .replace(']', '}');
+
+export const getApiRouteName = (file: string) =>
+  `/api/${file}`
+    .replace('/index', '')
+    .replace(/\\/g, '/')
+    .replace('[', '{')
+    .replace(']', '}')
+    .replace('.js', '')
+    .replace('.ts', '');
+
+export const logIgnoredPaths = (paths: string[]) => {
+  console.info(
+    chalk.yellowBright(
+      `The following paths are ignored by Next REST Framework: ${chalk.bold(
+        paths.map((p) => `\n- ${p}`)
+      )}`
+    )
+  );
+};
+
+export const getSortedPaths = (paths: OpenAPIV3_1.PathsObject) => {
+  const sortedPathKeys = Object.keys(paths).sort();
+  const sortedPaths: typeof paths = {};
+
+  for (const key of sortedPathKeys) {
+    sortedPaths[key] = paths[key];
+  }
+
+  return sortedPaths;
+};
+
+// Generate the OpenAPI paths from the Next.js routes and API routes when running the dev server.
+export const generatePathsFromDev = async ({
   config,
   baseUrl,
   url
 }: {
-  config: NextRestFrameworkConfig;
+  config: Required<NextRestFrameworkConfig>;
   baseUrl: string;
   url: string;
 }): Promise<OpenAPIV3_1.PathsObject> => {
-  // Match wildcard paths with single or multiple segments.
-  const isWildcardMatch = (pattern: string, path: string) => {
-    const regexPattern = pattern
-      .split('/')
-      .map((segment) =>
-        segment === '*' ? '[^/]*' : segment === '**' ? '.*' : segment
-      )
-      .join('/');
-
-    const regex = new RegExp(`^${regexPattern}$`);
-    return regex.test(path);
-  };
-
   const ignoredPaths: string[] = [];
 
   // Check if the route is allowed or denied by the user.
   const isAllowedRoute = (path: string) => {
-    const isAllowed = config.allowedPaths?.some((allowedPath) =>
-      isWildcardMatch(allowedPath, path)
+    const isAllowed = config.allowedPaths.some((allowedPath) =>
+      isWildcardMatch({ pattern: allowedPath, path })
     );
 
-    const isDenied = config.deniedPaths?.some((deniedPath) =>
-      isWildcardMatch(deniedPath, path)
+    const isDenied = config.deniedPaths.some((deniedPath) =>
+      isWildcardMatch({ pattern: deniedPath, path })
     );
 
     const routeIsAllowed = isAllowed && !isDenied;
@@ -85,16 +130,10 @@ const generatePaths = async ({
       .filter((file) => file.endsWith('route.ts'))
       .filter((file) => !file.includes('[...'))
       .filter((file) => file !== `${url.split('/').at(-1)}/route.ts`)
-      .map((file) =>
-        `/${file}`
-          .replace('/route.ts', '')
-          .replace(/\\/g, '/')
-          .replace('[', '{')
-          .replace(']', '}')
-      )
+      .map(getRouteName)
       .filter(isAllowedRoute);
 
-  let _routes: string[] = [];
+  let routes: string[] = [];
 
   /*
    * Clean and filter the API routes to paths:
@@ -107,14 +146,7 @@ const generatePaths = async ({
   const getCleanedApiRoutes = (files: string[]) =>
     files
       .filter((file) => !file.includes('[...'))
-      .map((file) =>
-        `/api/${file}`
-          .replace('/index', '')
-          .replace(/\\/g, '/')
-          .replace('[', '{')
-          .replace(']', '}')
-          .replace('.ts', '')
-      )
+      .map(getApiRouteName)
       .filter((route) => route !== `/${url.split('/').at(-1)}`)
       .filter(isAllowedRoute);
 
@@ -123,13 +155,13 @@ const generatePaths = async ({
     const path = join(process.cwd(), 'app');
 
     if (existsSync(path)) {
-      _routes = getCleanedRoutes(getNestedRoutes(path, ''));
+      routes = getCleanedRoutes(getNestedFiles(path, ''));
     } else {
       // Scan `src/app` folder.
       const path = join(process.cwd(), 'src/app');
 
       if (existsSync(path)) {
-        _routes = getCleanedRoutes(getNestedRoutes(path, ''));
+        routes = getCleanedRoutes(getNestedFiles(path, ''));
       }
     }
   } catch {}
@@ -141,46 +173,32 @@ const generatePaths = async ({
     const path = join(process.cwd(), 'pages/api');
 
     if (existsSync(path)) {
-      apiRoutes = getCleanedApiRoutes(getNestedRoutes(path, ''));
+      apiRoutes = getCleanedApiRoutes(getNestedFiles(path, ''));
     } else {
       // Scan `src/pages/api` folder.
       const path = join(process.cwd(), 'src/pages/api');
 
       if (existsSync(path)) {
-        apiRoutes = getCleanedApiRoutes(getNestedRoutes(path, ''));
+        apiRoutes = getCleanedApiRoutes(getNestedFiles(path, ''));
       }
     }
   } catch {}
 
-  if (
-    !config.suppressInfo &&
-    ignoredPaths.length &&
-    !global.ignoredPathsLogged
-  ) {
-    console.info(
-      chalk.yellowBright(
-        `The following paths are ignored by Next REST Framework: ${chalk.bold(
-          ignoredPaths.map((p) => `\n- ${p}`)
-        )}`
-      )
-    );
-
-    global.ignoredPathsLogged = true;
+  if (!config.suppressInfo && ignoredPaths.length) {
+    logIgnoredPaths(ignoredPaths);
   }
-
-  const routes = [..._routes, ...apiRoutes];
 
   let paths: OpenAPIV3_1.PathsObject = {};
 
   // Call the API routes to get the OpenAPI paths.
   await Promise.all(
-    routes.map(async (route) => {
+    [...routes, ...apiRoutes].map(async (route) => {
       const url = `${baseUrl}${route}`;
       const controller = new AbortController();
 
       const abortRequest = setTimeout(() => {
         controller.abort();
-      }, config.generatePathsTimeout);
+      }, 5000);
 
       try {
         const res = await fetch(url, {
@@ -216,87 +234,83 @@ const generatePaths = async ({
     })
   );
 
-  const sortedPathKeys = Object.keys(paths).sort();
-  const sortedPaths: typeof paths = {};
-
-  for (const key of sortedPathKeys) {
-    sortedPaths[key] = paths[key];
-  }
-
-  return sortedPaths;
+  return getSortedPaths(paths);
 };
 
-// In prod use the existing openapi.json file - in development mode update it whenever the generated API spec changes.
-export const syncOpenApiSpec = async ({
-  config,
-  baseUrl,
-  url
+export const generateOpenApiSpec = async ({
+  path,
+  spec
 }: {
-  config: NextRestFrameworkConfig;
-  baseUrl: string;
-  url: string;
+  path: string;
+  spec: Record<string, unknown>;
 }) => {
-  let specFileFound = false;
-
   try {
-    const data = readFileSync(
-      join(process.cwd(), 'public', config.openApiJsonPath ?? '')
-    );
+    if (!existsSync(join(process.cwd(), 'public'))) {
+      console.info(
+        chalk.redBright(
+          'The `public` folder was not found. Generating OpenAPI spec aborted.'
+        )
+      );
 
-    global.openApiSpec = JSON.parse(data.toString());
-    specFileFound = true;
-  } catch {}
-
-  if (process.env.NODE_ENV !== 'production') {
-    const paths = await generatePaths({ config, baseUrl, url });
-
-    const newSpec = merge(
-      {
-        openapi: OPEN_API_VERSION
-      },
-      config.openApiObject,
-      { paths }
-    );
-
-    if (!isEqualWith(global.openApiSpec, newSpec)) {
-      if (!specFileFound) {
-        console.info(
-          chalk.yellowBright('No API spec found, generating openapi.json')
-        );
-      } else {
-        console.info(
-          chalk.yellowBright('API spec changed, regenerating openapi.json')
-        );
-      }
-
-      const publicPath = join(process.cwd(), 'public');
-
-      if (!existsSync(publicPath)) {
-        console.info(
-          chalk.redBright(
-            `The \`public\` folder was not found. Generating OpenAPI spec aborted.`
-          )
-        );
-
-        return;
-      }
-
-      const path = join(process.cwd(), 'public', config.openApiJsonPath ?? '');
-      const jsonSpec = JSON.stringify(newSpec, null, 2) + '\n';
-      writeFileSync(path, jsonSpec, null);
-
-      if (!global.apiSpecGeneratedLogged) {
-        console.info(chalk.green('API spec generated successfully!'));
-      }
-
-      global.openApiSpec = newSpec;
-    } else if (!global.apiSpecGeneratedLogged) {
-      console.info(chalk.green('API spec up to date, skipping generation.'));
+      return;
     }
 
-    global.apiSpecGeneratedLogged = true;
+    const jsonSpec = await prettier.format(JSON.stringify(spec), {
+      parser: 'json'
+    });
+
+    writeFileSync(path, jsonSpec, null);
+    console.info(chalk.green('OpenAPI spec generated successfully!'));
+  } catch (e) {
+    console.error(chalk.red(`Error while generating the API spec: ${e}`));
   }
 };
+
+export const syncOpenApiSpec = async ({
+  config,
+  paths
+}: {
+  config: Required<NextRestFrameworkConfig>;
+  paths: OpenAPIV3_1.PathsObject;
+}) => {
+  const path = join(process.cwd(), 'public', config.openApiJsonPath);
+
+  const newSpec = merge(
+    {
+      openapi: OPEN_API_VERSION
+    },
+    config.openApiObject,
+    { paths }
+  );
+
+  try {
+    const data = readFileSync(path);
+    const openApiSpec = JSON.parse(data.toString());
+
+    if (!isEqualWith(openApiSpec, newSpec)) {
+      console.info(
+        chalk.yellowBright(
+          'OpenAPI spec changed, regenerating `openapi.json`...'
+        )
+      );
+
+      await generateOpenApiSpec({ path, spec: newSpec });
+    } else {
+      console.info(
+        chalk.green('OpenAPI spec up to date, skipping generation.')
+      );
+    }
+  } catch {
+    console.info(
+      chalk.yellowBright('No OpenAPI spec found, generating `openapi.json`...')
+    );
+
+    await generateOpenApiSpec({ path, spec: newSpec });
+  }
+};
+
+export const isValidMethod = (x: unknown): x is ValidMethod =>
+  Object.values(ValidMethod).includes(x as ValidMethod);
 
 export const defaultResponse: OpenAPIV3_1.ResponseObject = {
   description: DEFAULT_ERRORS.unexpectedError,
@@ -311,9 +325,6 @@ export const defaultResponse: OpenAPIV3_1.ResponseObject = {
     }
   }
 };
-
-export const isValidMethod = (x: unknown): x is ValidMethod =>
-  Object.values(ValidMethod).includes(x as ValidMethod);
 
 export const getPathsFromMethodHandlers = ({
   methodHandlers,

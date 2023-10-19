@@ -44,6 +44,4 @@ export interface NextRestFrameworkConfig {
   };
   /*! Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`. */
   suppressInfo?: boolean;
-  /*! Timeout in milliseconds for generating the OpenAPI spec. Defaults to 5000. For large applications you might have to increase this. */
-  generatePathsTimeout?: number;
 }
