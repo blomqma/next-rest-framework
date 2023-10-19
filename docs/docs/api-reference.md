@@ -14,7 +14,7 @@ The following options can be passed to the `docsRouteHandler` (App Router) and `
 | `allowedPaths`            | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.               |
 | `openApiObject`           | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.                                                                                                                                                                        |
 | `openApiJsonPath`         | Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder.                                                                                                                                   |
-| `autoGenerateOpenApiSpec` | Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`.                                                                                                                                                                    |
+| `autoGenerateOpenApiSpec` | Setting this to `false` will not automatically update the generated OpenAPI spec when calling the docs handler endpoints. Defaults to `true`.                                                                                                                                                                          |
 | `docsConfig`              | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
 | `suppressInfo`            | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                             |
 
@@ -51,25 +51,25 @@ The route operation functions `routeOperation` (App Router) and `apiRouteOperati
 
 #### [Input](#input)
 
-The input function is used for validation and documentation of the request, taking in an object with the following properties:
+The input function is used for type-checking, validation and documentation of the request, taking in an object with the following properties:
 
-| Name          | Description                                                                                                                                           | Required |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `contentType` | The content type header of the request. When the content type is defined, a request with an incorrect content type header will get an error response. | `false`  |
-| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body.                                                          | `false`  |
-| `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters.                                                      | `false`  |
+| Name          | Description                                                                                                                                                                                            | Required |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| `contentType` | The content type header of the request. When the content type is defined, a request with an incorrect content type header will get an error response.                                                  | `false`  |
+| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body. When the body schema is defined, a quest with an invalid request body will get an error response.         | `false`  |
+| `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters. When the query schema is defined, a request with invalid query parameters will get an error response. | `false`  |
 
 Calling the input function allows you to chain your API handler logic with the [Output](#output) and [Handler](#handler) functions.
 
 #### [Output](#output)
 
-The output function is used for validation and documentation of the response, taking in an array of objects with the following properties:
+The output function is used for type-checking and documentation of the response, taking in an array of objects with the following properties:
 
-| Name          | Description                                                                                                                                                       | Required |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `status`      | A status code that your API can return.                                                                                                                           | `true`   |
-| `contentType` | The content type header of the response.                                                                                                                          | `true`   |
-| `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. A response body not matching to the schema will lead to a TS error. |  `true`  |
+| Name          | Description                                                                                   | Required |
+| ------------- | --------------------------------------------------------------------------------------------- | -------- |
+| `status`      | A status code that your API can return.                                                       | `true`   |
+| `contentType` | The content type header of the response.                                                      | `true`   |
+| `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. |  `true`  |
 
 Calling the input function allows you to chain your API handler logic with the [Handler](#handler) function.
 
@@ -82,13 +82,13 @@ The handler function is a strongly-typed function to implement the business logi
 The Next REST Framework CLI supports generating and validating the `openapi.json` file:
 
 - `npx next-rest-framework generate` to generate the `openapi.json` file.
-- `npx next-rest-framework validate` to validate that the generated OpenAPI spec matches the previously generated `openapi.json` file.
+- `npx next-rest-framework validate` to validate that the `openapi.json` file is up-to-date.
 
 The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
 
 | Name                    | Description                                                                                                                                                                                    |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--skipBuild <boolean>` | By default this command runs `next build` to build your routes. If you have already created the build, you can skip this step by setting this to `true`.                                       |
+| `--skipBuild <boolean>` | By default, `next build` is used to build your routes. If you have already created the build, you can skip this step by setting this to `true`.                                                |
 | `--distDir <string>`    | Path to your production build directory. Defaults to `.next`.                                                                                                                                  |
 | `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |
 | `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |

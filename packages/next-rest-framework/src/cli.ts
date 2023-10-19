@@ -335,7 +335,7 @@ program
   .command('generate')
   .option(
     '--skipBuild <boolean>',
-    'By default this command runs `next build` to build your routes. If you have already created the build, you can skip this step by setting this to `true`.'
+    'By default, `next build` is used to build your routes. If you have already created the build, you can skip this step by setting this to `true`.'
   )
   .option(
     '--distDir <string>',
@@ -395,7 +395,7 @@ program
   .command('validate')
   .option(
     '--skipBuild <boolean>',
-    'By default this command runs `next build` to build your routes. If you have already created the build, you can skip this step by setting this to `true`.'
+    'By default, `next build` is used to build your routes. If you have already created the build, you can skip this step by setting this to `true`.'
   )
   .option(
     '--distDir <string>',
