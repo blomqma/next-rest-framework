@@ -17,15 +17,9 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "id": {
-                        "type": "number"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "completed": {
-                        "type": "boolean"
-                      }
+                      "id": { "type": "number" },
+                      "name": { "type": "string" },
+                      "completed": { "type": "boolean" }
                     },
                     "required": ["id", "name", "completed"],
                     "additionalProperties": false
@@ -40,11 +34,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
@@ -59,11 +49,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  }
-                },
+                "properties": { "name": { "type": "string" } },
                 "required": ["name"],
                 "additionalProperties": false
               }
@@ -73,11 +59,7 @@
         "responses": {
           "201": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "default": {
@@ -86,11 +68,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
@@ -109,15 +87,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "number"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "completed": {
-                      "type": "boolean"
-                    }
+                    "id": { "type": "number" },
+                    "name": { "type": "string" },
+                    "completed": { "type": "boolean" }
                   },
                   "required": ["id", "name", "completed"],
                   "additionalProperties": false
@@ -127,11 +99,7 @@
           },
           "404": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "default": {
@@ -140,23 +108,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
           }
         },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true }],
         "operationId": "getTodoById",
         "tags": ["example-api", "todos", "pages-router"]
       },
@@ -164,20 +122,12 @@
         "responses": {
           "204": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "404": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "default": {
@@ -186,23 +136,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
           }
         },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true }],
         "operationId": "deleteTodo",
         "tags": ["example-api", "todos", "pages-router"]
       }
@@ -218,15 +158,9 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "id": {
-                        "type": "number"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "completed": {
-                        "type": "boolean"
-                      }
+                      "id": { "type": "number" },
+                      "name": { "type": "string" },
+                      "completed": { "type": "boolean" }
                     },
                     "required": ["id", "name", "completed"],
                     "additionalProperties": false
@@ -241,11 +175,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
@@ -260,11 +190,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  }
-                },
+                "properties": { "name": { "type": "string" } },
                 "required": ["name"],
                 "additionalProperties": false
               }
@@ -274,11 +200,7 @@
         "responses": {
           "201": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "default": {
@@ -287,11 +209,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
@@ -310,15 +228,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "number"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "completed": {
-                      "type": "boolean"
-                    }
+                    "id": { "type": "number" },
+                    "name": { "type": "string" },
+                    "completed": { "type": "boolean" }
                   },
                   "required": ["id", "name", "completed"],
                   "additionalProperties": false
@@ -328,11 +240,7 @@
           },
           "404": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "default": {
@@ -341,23 +249,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
           }
         },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true }],
         "operationId": "getTodoById",
         "tags": ["example-api", "todos", "app-router"]
       },
@@ -365,20 +263,12 @@
         "responses": {
           "204": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "404": {
             "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
-                }
-              }
+              "application/json": { "schema": { "type": "string" } }
             }
           },
           "default": {
@@ -387,23 +277,13 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    }
-                  }
+                  "properties": { "message": { "type": "string" } }
                 }
               }
             }
           }
         },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true }],
         "operationId": "deleteTodo",
         "tags": ["example-api", "todos", "app-router"]
       }

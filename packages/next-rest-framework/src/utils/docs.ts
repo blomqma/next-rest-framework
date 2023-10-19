@@ -16,11 +16,11 @@ export const getHtmlForDocs = ({
       description = openApiObject?.info.description ?? DEFAULT_DESCRIPTION,
       faviconUrl = DEFAULT_FAVICON_URL,
       logoUrl = DEFAULT_LOGO_URL
-    } = {}
+    }
   },
   baseUrl
 }: {
-  config: NextRestFrameworkConfig;
+  config: Required<NextRestFrameworkConfig>;
   baseUrl: string;
 }) => {
   const url = `${baseUrl}${openApiJsonPath}`;

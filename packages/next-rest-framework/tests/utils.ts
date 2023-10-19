@@ -20,9 +20,6 @@ import { type BaseQuery, type Modify } from '../src/types';
 
 export const resetCustomGlobals = () => {
   global.nextRestFrameworkConfig = undefined;
-  global.openApiSpec = undefined;
-  global.apiSpecGeneratedLogged = false;
-  global.ignoredPathsLogged = false;
 };
 
 export const createMockRouteRequest = <Body, Query>({

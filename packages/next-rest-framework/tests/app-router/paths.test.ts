@@ -10,7 +10,6 @@ import {
 } from '../../src/constants';
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
-import fs from 'fs';
 import chalk from 'chalk';
 import * as openApiUtils from '../../src/utils/open-api';
 import { docsRouteHandler, routeHandler, routeOperation } from '../../src';
@@ -37,9 +36,7 @@ jest.mock('fs', () => ({
   existsSync: () => true
 }));
 
-const writeFileSyncSpy = jest
-  .spyOn(fs, 'writeFileSync')
-  .mockImplementation(() => {});
+const generateOpenApiSpecSpy = jest.spyOn(openApiUtils, 'generateOpenApiSpec');
 
 jest.mock('path', () => ({
   ...jest.requireActual('path'),
@@ -203,8 +200,9 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
     deniedPaths: []
   });
 
-  expect(global.openApiSpec).toEqual(spec);
-  expect(writeFileSyncSpy).toHaveBeenCalled();
+  expect(generateOpenApiSpecSpy).toHaveBeenCalledWith(
+    expect.objectContaining({ spec })
+  );
 });
 
 it.each([
@@ -275,8 +273,9 @@ it.each([
       deniedPaths: expectedPathsToBeDenied
     });
 
-    expect(global.openApiSpec).toEqual(spec);
-    expect(writeFileSyncSpy).toHaveBeenCalled();
+    expect(generateOpenApiSpecSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ spec })
+    );
 
     if (expectedPathsToBeDenied.length) {
       expect(console.info).toHaveBeenNthCalledWith(
@@ -363,8 +362,9 @@ it.each([
       deniedPaths: expectedPathsToBeDenied
     });
 
-    expect(global.openApiSpec).toEqual(spec);
-    expect(writeFileSyncSpy).toHaveBeenCalled();
+    expect(generateOpenApiSpecSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ spec })
+    );
 
     if (expectedPathsToBeDenied.length) {
       expect(console.info).toHaveBeenNthCalledWith(
@@ -410,7 +410,9 @@ it('handles error if the OpenAPI spec generation fails', async () => {
     deniedPaths: []
   });
 
-  expect(global.openApiSpec).toEqual(spec);
-  expect(writeFileSyncSpy).toHaveBeenCalled();
+  expect(generateOpenApiSpecSpy).toHaveBeenCalledWith(
+    expect.objectContaining({ spec })
+  );
+
   expectOpenAPIGenerationErrors(error);
 });
