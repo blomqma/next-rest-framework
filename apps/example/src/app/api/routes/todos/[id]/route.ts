@@ -1,5 +1,8 @@
-import { routeHandler, routeOperation } from 'next-rest-framework';
-import { NextResponse } from 'next/server';
+import {
+  TypedNextResponse,
+  routeHandler,
+  routeOperation
+} from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -36,12 +39,12 @@ export const GET = routeHandler({
       const todo = TODOS.find((t) => t.id === Number(id));
 
       if (!todo) {
-        return NextResponse.json('TODO not found.', {
+        return TypedNextResponse.json('TODO not found.', {
           status: 404
         });
       }
 
-      return NextResponse.json(todo, {
+      return TypedNextResponse.json(todo, {
         status: 200
       });
     }),
@@ -67,12 +70,12 @@ export const GET = routeHandler({
       const todo = TODOS.find((t) => t.id === Number(id));
 
       if (!todo) {
-        return NextResponse.json('TODO not found.', {
+        return TypedNextResponse.json('TODO not found.', {
           status: 404
         });
       }
 
-      return NextResponse.json('TODO deleted.', {
+      return TypedNextResponse.json('TODO deleted.', {
         status: 204
       });
     })

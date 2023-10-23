@@ -1,6 +1,6 @@
 import { docsRouteHandler } from 'next-rest-framework';
 
 export const GET = docsRouteHandler({
-  deniedPaths: ['/api/*/some-api'],
+  deniedPaths: ['/api/routes/third-party-endpoint'],
   openApiJsonPath: '/openapi.json'
 });

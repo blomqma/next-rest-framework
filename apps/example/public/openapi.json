@@ -62,6 +62,11 @@
               "application/json": { "schema": { "type": "string" } }
             }
           },
+          "401": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          },
           "default": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
@@ -199,6 +204,11 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": { "schema": { "type": "string" } }
+            }
+          },
+          "401": {
             "content": {
               "application/json": { "schema": { "type": "string" } }
             }
