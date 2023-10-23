@@ -14,8 +14,9 @@ import { type NextURL } from 'next/dist/server/web/next-url';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import { type AnyContentTypeWithAutocompleteForMostCommonOnes } from './content-types';
 import { type ZodSchema, type z } from 'zod';
+import { type TypedNextResponse } from './typed-next-response';
 
-type BaseStatus = number;
+export type BaseStatus = number;
 type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
 export type BaseQuery = Record<string, string | string[]>;
 
@@ -57,8 +58,6 @@ type TypedNextRequest<Body, Query extends BaseQuery> = Modify<
   }
 >;
 
-type TypedNextResponse<Body> = NextResponse<Body>;
-
 type RouteHandler<
   Body = unknown,
   Query extends BaseQuery = BaseQuery,
@@ -67,7 +66,13 @@ type RouteHandler<
   Output extends ReadonlyArray<
     OutputObject<ResponseBody, Status>
   > = ReadonlyArray<OutputObject<ResponseBody, Status>>,
-  TypedResponse = TypedNextResponse<z.infer<Output[number]['schema']>> | void
+  TypedResponse =
+    | TypedNextResponse<
+        z.infer<Output[number]['schema']>,
+        Output[number]['status']
+      >
+    | NextResponse<z.infer<Output[number]['schema']>>
+    | void
 > = (
   req: TypedNextRequest<Body, Query>,
   context: { params: Record<string, string> }
