@@ -133,7 +133,7 @@ const handler = routeHandler({
 export { handler as GET, handler as POST };
 ```
 
-The `TypedNextResponse` ensures that the response status codes are type-checked. You can still use the regular `NextResponse` if you prefer to have less type-safety.
+The `TypedNextResponse` ensures that the response status codes and content-type headers are type-checked. You can still use the regular `NextResponse` if you prefer to have less type-safety.
 
 #### Pages Router:
 

@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.4.0 - 2023-10-24
+
+### Added
+
+- Add support for strongly-typed response content-type headers.
+
 ### 3.3.0 - 2023-10-23
 
 ### Added
