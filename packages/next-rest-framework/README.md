@@ -42,6 +42,7 @@
   - [Route operations](#route-operations)
     - [Input](#input)
     - [Output](#output)
+    - [Middleware](#middleware)
     - [Handler](#handler)
 - [CLI](#cli)
 - [Changelog](#changelog)
@@ -289,11 +290,12 @@ The following options cam be passed to the `routeHandler` (App Router) and `apiR
 
 The route operation functions `routeOperation` (App Router) and `apiRouteOperation` (Pages Router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
 
-| Name      | Description                                                                                  |
-| --------- | -------------------------------------------------------------------------------------------- |
-| `input`   | An [Input](#input) function for defining the validation and documentation of the request.    |
-| `output`  | An [Output](#output) function for defining the validation and documentation of the response. |
-| `handler` | A [Handler](#handler) function for defining your business logic.                             |
+| Name         | Description                                                                                    |
+| ------------ | ---------------------------------------------------------------------------------------------- |
+| `input`      | An [Input](#input) function for defining the validation and documentation of the request.      |
+| `output`     | An [Output](#output) function for defining the validation and documentation of the response.   |
+| `handler`    | A [Handler](#handler) function for defining your business logic.                               |
+| `middleware` | A [Middleware](#middleware) function that gets executed before the request input is validated. |
 
 #### [Input](#input)
 
@@ -305,7 +307,7 @@ The input function is used for type-checking, validation and documentation of th
 | `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body. When the body schema is defined, a quest with an invalid request body will get an error response.         | `false`  |
 | `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters. When the query schema is defined, a request with invalid query parameters will get an error response. | `false`  |
 
-Calling the input function allows you to chain your API handler logic with the [Output](#output) and [Handler](#handler) functions.
+Calling the input function allows you to chain your API handler logic with the [Output](#output), [Middleware](#middleware) and [Handler](#handler) functions.
 
 #### [Output](#output)
 
@@ -317,7 +319,11 @@ The output function is used for type-checking and documentation of the response,
 | `contentType` | The content type header of the response.                                                      | `true`   |
 | `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. |  `true`  |
 
-Calling the input function allows you to chain your API handler logic with the [Handler](#handler) function.
+Calling the input function allows you to chain your API handler logic with the [Middleware](#middleware) and [Handler](#handler) functions.
+
+#### [Middleware](#middleware)
+
+The middleware function is executed before validating the request input. The function takes in the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
 
 #### [Handler](#handler)
 
