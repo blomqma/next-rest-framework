@@ -1,13 +1,16 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from './constants';
 import {
   type RouteParams,
   type ApiRouteOperation,
   type ApiRouteParams,
   type RouteOperation,
+  type BaseQuery,
+  type RouteOperationDefinition,
+  type InputObject,
   type OutputObject,
   type NextRouteHandler,
-  type BaseQuery
+  type ApiRouteOperationDefinition
 } from './types';
 import {
   getPathsFromMethodHandlers,
@@ -65,7 +68,15 @@ ${error}`);
         return handleMethodNotAllowed();
       }
 
-      const { input, handler } = methodHandler._config;
+      const { input, handler, middleware } = methodHandler._config;
+
+      if (middleware) {
+        const res = await middleware(new NextRequest(req.clone()), context);
+
+        if (res) {
+          return res;
+        }
+      }
 
       if (input) {
         const { body: bodySchema, query: querySchema, contentType } = input;
@@ -157,41 +168,50 @@ ${error}`);
 };
 
 export const routeOperation: RouteOperation = (openApiOperation) => {
+  const createConfig = <Middleware, Handler>(
+    input: InputObject | undefined,
+    output: readonly OutputObject[] | undefined,
+    middleware: Middleware | undefined,
+    handler: Handler | undefined
+  ): RouteOperationDefinition => ({
+    _config: {
+      openApiOperation,
+      input,
+      output,
+      middleware: middleware as NextRouteHandler,
+      handler: handler as NextRouteHandler
+    }
+  });
+
   return {
     input: (input) => ({
       output: (output) => ({
-        handler: (handler) => ({
-          _config: {
-            openApiOperation,
-            input,
-            output: output as OutputObject[] | undefined,
-            handler: handler as NextRouteHandler | undefined
-          }
-        })
+        middleware: (middleware) => ({
+          handler: (handler) => createConfig(input, output, middleware, handler)
+        }),
+        handler: (handler) => createConfig(input, output, undefined, handler)
       }),
-      handler: (handler) => ({
-        _config: {
-          openApiOperation,
-          input,
-          handler: handler as NextRouteHandler | undefined
-        }
-      })
+      middleware: (middleware) => ({
+        output: (output) => ({
+          handler: (handler) => createConfig(input, output, middleware, handler)
+        }),
+        handler: (handler) =>
+          createConfig(input, undefined, middleware, handler)
+      }),
+      handler: (handler) => createConfig(input, undefined, undefined, handler)
     }),
     output: (output) => ({
-      handler: (handler) => ({
-        _config: {
-          openApiOperation,
-          output: output as OutputObject[] | undefined,
-          handler: handler as NextRouteHandler | undefined
-        }
-      })
+      middleware: (middleware) => ({
+        handler: (handler) =>
+          createConfig(undefined, output, middleware, handler)
+      }),
+      handler: (handler) => createConfig(undefined, output, undefined, handler)
     }),
-    handler: (handler) => ({
-      _config: {
-        openApiOperation,
-        handler: handler as NextRouteHandler | undefined
-      }
-    })
+    middleware: (middleware) => ({
+      handler: (handler) =>
+        createConfig(undefined, undefined, middleware, handler)
+    }),
+    handler: (handler) => createConfig(undefined, undefined, undefined, handler)
   };
 };
 
@@ -234,7 +254,15 @@ ${error}`);
         return;
       }
 
-      const { input, handler } = methodHandler._config;
+      const { input, handler, middleware } = methodHandler._config;
+
+      if (middleware) {
+        await middleware(req, res);
+
+        if (res.writableEnded) {
+          return;
+        }
+      }
 
       if (input) {
         const { body: bodySchema, query: querySchema, contentType } = input;
@@ -301,40 +329,49 @@ ${error}`);
 };
 
 export const apiRouteOperation: ApiRouteOperation = (openApiOperation) => {
+  const createConfig = <Middleware, Handler>(
+    input: InputObject | undefined,
+    output: readonly OutputObject[] | undefined,
+    middleware: Middleware | undefined,
+    handler: Handler | undefined
+  ): ApiRouteOperationDefinition => ({
+    _config: {
+      openApiOperation,
+      input,
+      output,
+      middleware: middleware as NextApiHandler,
+      handler: handler as NextApiHandler
+    }
+  });
+
   return {
     input: (input) => ({
       output: (output) => ({
-        handler: (handler) => ({
-          _config: {
-            openApiOperation,
-            input,
-            output: output as OutputObject[] | undefined,
-            handler: handler as NextApiHandler | undefined
-          }
-        })
+        middleware: (middleware) => ({
+          handler: (handler) => createConfig(input, output, middleware, handler)
+        }),
+        handler: (handler) => createConfig(input, output, undefined, handler)
       }),
-      handler: (handler) => ({
-        _config: {
-          openApiOperation,
-          input,
-          handler: handler as NextApiHandler | undefined
-        }
-      })
+      middleware: (middleware) => ({
+        output: (output) => ({
+          handler: (handler) => createConfig(input, output, middleware, handler)
+        }),
+        handler: (handler) =>
+          createConfig(input, undefined, middleware, handler)
+      }),
+      handler: (handler) => createConfig(input, undefined, undefined, handler)
     }),
     output: (output) => ({
-      handler: (handler) => ({
-        _config: {
-          openApiOperation,
-          output: output as OutputObject[] | undefined,
-          handler: handler as NextApiHandler | undefined
-        }
-      })
+      middleware: (middleware) => ({
+        handler: (handler) =>
+          createConfig(undefined, output, middleware, handler)
+      }),
+      handler: (handler) => createConfig(undefined, output, undefined, handler)
     }),
-    handler: (handler) => ({
-      _config: {
-        openApiOperation,
-        handler: handler as NextApiHandler | undefined
-      }
-    })
+    middleware: (middleware) => ({
+      handler: (handler) =>
+        createConfig(undefined, undefined, middleware, handler)
+    }),
+    handler: (handler) => createConfig(undefined, undefined, undefined, handler)
   };
 };

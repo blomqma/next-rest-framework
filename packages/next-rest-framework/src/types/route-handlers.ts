@@ -37,7 +37,7 @@ export interface OutputObject<
   contentType: BaseContentType;
 }
 
-export type TypedNextRequest<Body, Query extends BaseQuery> = Modify<
+type TypedNextRequest<Body, Query extends BaseQuery> = Modify<
   NextRequest,
   {
     json: () => Promise<Body>;
@@ -73,7 +73,11 @@ type RouteHandler<
   context: { params: Record<string, string> }
 ) => Promise<TypedResponse> | TypedResponse;
 
-type RouteOutput<Body = unknown, Query extends BaseQuery = BaseQuery> = <
+type RouteOutput<
+  Middleware extends boolean = false,
+  Body = unknown,
+  Query extends BaseQuery = BaseQuery
+> = <
   ResponseBody,
   Status extends BaseStatus,
   Output extends ReadonlyArray<OutputObject<ResponseBody, Status>>
@@ -83,20 +87,45 @@ type RouteOutput<Body = unknown, Query extends BaseQuery = BaseQuery> = <
   handler: (
     callback?: RouteHandler<Body, Query, ResponseBody, Status, Output>
   ) => RouteOperationDefinition;
-};
+} & (Middleware extends true
+  ? {
+      middleware: (
+        callback?: RouteHandler<Body, Query, ResponseBody, Status, Output>
+      ) => {
+        handler: (
+          callback?: RouteHandler<Body, Query, ResponseBody, Status, Output>
+        ) => RouteOperationDefinition;
+      };
+    }
+  : Record<string, unknown>);
 
-type RouteInput = <Body, Query extends BaseQuery>(
+type RouteInput<Middleware extends boolean = false> = <
+  Body,
+  Query extends BaseQuery
+>(
   params?: InputObject<Body, Query>
 ) => {
-  output: RouteOutput<Body, Query>;
+  output: RouteOutput<Middleware, Body, Query>;
   handler: (callback?: RouteHandler<Body, Query>) => RouteOperationDefinition;
-};
+} & (Middleware extends true
+  ? {
+      middleware: (callback?: RouteHandler<Body, Query>) => {
+        output: RouteOutput<false, Body, Query>;
+        handler: (
+          callback?: RouteHandler<Body, Query>
+        ) => RouteOperationDefinition;
+      };
+    }
+  : Record<string, unknown>);
 
 export type RouteOperation = (
   openApiOperation?: OpenAPIV3_1.OperationObject
 ) => {
-  input: RouteInput;
-  output: RouteOutput;
+  input: RouteInput<true>;
+  output: RouteOutput<true>;
+  middleware: (middleware?: RouteHandler) => {
+    handler: (callback?: RouteHandler) => RouteOperationDefinition;
+  };
   handler: (callback?: RouteHandler) => RouteOperationDefinition;
 };
 
@@ -105,11 +134,12 @@ export type NextRouteHandler = (
   context: { params: BaseQuery }
 ) => Promise<NextResponse>;
 
-interface RouteOperationDefinition {
+export interface RouteOperationDefinition {
   _config: {
     openApiOperation?: OpenAPIV3_1.OperationObject;
     input?: InputObject;
-    output?: OutputObject[];
+    output?: readonly OutputObject[];
+    middleware?: NextRouteHandler;
     handler?: NextRouteHandler;
   };
 }
@@ -158,7 +188,11 @@ type ApiRouteHandler<
   >
 ) => Promise<void> | void;
 
-type ApiRouteOutput<Body = unknown, Query extends BaseQuery = BaseQuery> = <
+type ApiRouteOutput<
+  Middleware extends boolean = false,
+  Body = unknown,
+  Query extends BaseQuery = BaseQuery
+> = <
   ResponseBody,
   Status extends BaseStatus,
   Output extends ReadonlyArray<OutputObject<ResponseBody, Status>>
@@ -168,30 +202,56 @@ type ApiRouteOutput<Body = unknown, Query extends BaseQuery = BaseQuery> = <
   handler: (
     callback?: ApiRouteHandler<Body, Query, ResponseBody, Status, Output>
   ) => ApiRouteOperationDefinition;
-};
+} & (Middleware extends true
+  ? {
+      middleware: (
+        callback?: ApiRouteHandler<Body, Query, ResponseBody, Status, Output>
+      ) => {
+        handler: (
+          callback?: ApiRouteHandler<Body, Query, ResponseBody, Status, Output>
+        ) => ApiRouteOperationDefinition;
+      };
+    }
+  : Record<string, unknown>);
 
-type ApiRouteInput = <Body, Query extends BaseQuery>(
+type ApiRouteInput<Middleware extends boolean = false> = <
+  Body,
+  Query extends BaseQuery
+>(
   params?: InputObject<Body, Query>
 ) => {
-  output: ApiRouteOutput<Body, Query>;
+  output: ApiRouteOutput<Middleware, Body, Query>;
   handler: (
     callback?: ApiRouteHandler<Body, Query>
   ) => ApiRouteOperationDefinition;
-};
+} & (Middleware extends true
+  ? {
+      middleware: (callback?: ApiRouteHandler<Body, Query>) => {
+        output: ApiRouteOutput<false, Body, Query>;
+        handler: (
+          callback?: ApiRouteHandler<Body, Query>
+        ) => ApiRouteOperationDefinition;
+      };
+    }
+  : Record<string, unknown>);
 
 export type ApiRouteOperation = (
   openApiOperation?: OpenAPIV3_1.OperationObject
 ) => {
-  input: ApiRouteInput;
-  output: ApiRouteOutput;
+  input: ApiRouteInput<true>;
+  output: ApiRouteOutput<true>;
+  middleware: (middleware?: ApiRouteHandler) => {
+    handler: (callback?: ApiRouteHandler) => ApiRouteOperationDefinition;
+  };
   handler: (callback?: ApiRouteHandler) => ApiRouteOperationDefinition;
 };
 
-interface ApiRouteOperationDefinition {
+export interface ApiRouteOperationDefinition {
   _config: {
     openApiOperation?: OpenAPIV3_1.OperationObject;
     input?: InputObject;
-    output?: OutputObject[];
+    output?: readonly OutputObject[];
+    middleware?: NextApiHandler;
     handler?: NextApiHandler;
   };
 }
