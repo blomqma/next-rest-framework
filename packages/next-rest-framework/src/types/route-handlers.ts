@@ -8,7 +8,7 @@ import {
 } from 'next/types';
 
 import { type ValidMethod } from '../constants';
-import { type Modify } from './utility-types';
+import { type AnyCase, type Modify } from './utility-types';
 import { type NextURL } from 'next/dist/server/web/next-url';
 
 import { type OpenAPIV3_1 } from 'openapi-types';
@@ -17,13 +17,10 @@ import { type ZodSchema, type z } from 'zod';
 import { type TypedNextResponse } from './typed-next-response';
 
 export type BaseStatus = number;
-type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
+export type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
 export type BaseQuery = Record<string, string | string[]>;
 
-export interface InputObject<
-  Body = unknown,
-  Query extends BaseQuery = BaseQuery
-> {
+export interface InputObject<Body = unknown, Query = BaseQuery> {
   contentType?: BaseContentType;
   body?: ZodSchema<Body>;
   query?: ZodSchema<Query>;
@@ -31,11 +28,12 @@ export interface InputObject<
 
 export interface OutputObject<
   Body = unknown,
-  Status extends BaseStatus = BaseStatus
+  Status extends BaseStatus = BaseStatus,
+  ContentType extends BaseContentType = BaseContentType
 > {
   schema: ZodSchema<Body>;
   status: Status;
-  contentType: BaseContentType;
+  contentType: ContentType;
 }
 
 type TypedNextRequest<Body, Query extends BaseQuery> = Modify<
@@ -63,13 +61,15 @@ type RouteHandler<
   Query extends BaseQuery = BaseQuery,
   ResponseBody = unknown,
   Status extends BaseStatus = BaseStatus,
+  ContentType extends BaseContentType = BaseContentType,
   Output extends ReadonlyArray<
-    OutputObject<ResponseBody, Status>
-  > = ReadonlyArray<OutputObject<ResponseBody, Status>>,
+    OutputObject<ResponseBody, Status, ContentType>
+  > = ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>,
   TypedResponse =
     | TypedNextResponse<
         z.infer<Output[number]['schema']>,
-        Output[number]['status']
+        Output[number]['status'],
+        Output[number]['contentType']
       >
     | NextResponse<z.infer<Output[number]['schema']>>
     | void
@@ -85,12 +85,20 @@ type RouteOutput<
 > = <
   ResponseBody,
   Status extends BaseStatus,
-  Output extends ReadonlyArray<OutputObject<ResponseBody, Status>>
+  ContentType extends BaseContentType,
+  Output extends ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>
 >(
   params?: Output
 ) => {
   handler: (
-    callback?: RouteHandler<Body, Query, ResponseBody, Status, Output>
+    callback?: RouteHandler<
+      Body,
+      Query,
+      ResponseBody,
+      Status,
+      ContentType,
+      Output
+    >
   ) => RouteOperationDefinition;
 } & (Middleware extends true
   ? {
@@ -100,11 +108,19 @@ type RouteOutput<
           BaseQuery,
           ResponseBody,
           Status,
+          ContentType,
           Output
         >
       ) => {
         handler: (
-          callback?: RouteHandler<Body, Query, ResponseBody, Status, Output>
+          callback?: RouteHandler<
+            Body,
+            Query,
+            ResponseBody,
+            Status,
+            ContentType,
+            Output
+          >
         ) => RouteOperationDefinition;
       };
     }
@@ -175,11 +191,38 @@ type TypedNextApiRequest<Body, Query> = Modify<
   }
 >;
 
-type TypedNextApiResponse<Body, Status> = Modify<
+type TypedNextApiResponse<Body, Status, ContentType> = Modify<
   NextApiResponse<Body>,
   {
-    status: (status: Status) => NextApiResponse<Body>;
-    redirect: (status: Status, url: string) => NextApiResponse<Body>;
+    status: (status: Status) => TypedNextApiResponse<Body, Status, ContentType>;
+    redirect: (
+      status: Status,
+      url: string
+    ) => TypedNextApiResponse<Body, Status, ContentType>;
+
+    setDraftMode: (options: {
+      enable: boolean;
+    }) => TypedNextApiResponse<Body, Status, ContentType>;
+
+    setPreviewData: (
+      data: object | string,
+      options?: {
+        maxAge?: number;
+        path?: string;
+      }
+    ) => TypedNextApiResponse<Body, Status, ContentType>;
+
+    clearPreviewData: (options?: {
+      path?: string;
+    }) => TypedNextApiResponse<Body, Status, ContentType>;
+
+    setHeader: <
+      K extends AnyCase<'Content-Type'> | string,
+      V extends number | string | readonly string[]
+    >(
+      name: K,
+      value: K extends AnyCase<'Content-Type'> ? ContentType : V
+    ) => void;
   }
 >;
 
@@ -188,14 +231,16 @@ type ApiRouteHandler<
   Query extends BaseQuery = BaseQuery,
   ResponseBody = unknown,
   Status extends BaseStatus = BaseStatus,
+  ContentType extends BaseContentType = BaseContentType,
   Output extends ReadonlyArray<
-    OutputObject<ResponseBody, Status>
-  > = ReadonlyArray<OutputObject<ResponseBody, Status>>
+    OutputObject<ResponseBody, Status, ContentType>
+  > = ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>
 > = (
   req: TypedNextApiRequest<Body, Query>,
   res: TypedNextApiResponse<
     z.infer<Output[number]['schema']>,
-    Output[number]['status']
+    Output[number]['status'],
+    Output[number]['contentType']
   >
 ) => Promise<void> | void;
 
@@ -206,12 +251,20 @@ type ApiRouteOutput<
 > = <
   ResponseBody,
   Status extends BaseStatus,
-  Output extends ReadonlyArray<OutputObject<ResponseBody, Status>>
+  ContentType extends BaseContentType,
+  Output extends ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>
 >(
   params?: Output
 ) => {
   handler: (
-    callback?: ApiRouteHandler<Body, Query, ResponseBody, Status, Output>
+    callback?: ApiRouteHandler<
+      Body,
+      Query,
+      ResponseBody,
+      Status,
+      ContentType,
+      Output
+    >
   ) => ApiRouteOperationDefinition;
 } & (Middleware extends true
   ? {
@@ -221,11 +274,19 @@ type ApiRouteOutput<
           BaseQuery,
           ResponseBody,
           Status,
+          ContentType,
           Output
         >
       ) => {
         handler: (
-          callback?: ApiRouteHandler<Body, Query, ResponseBody, Status, Output>
+          callback?: ApiRouteHandler<
+            Body,
+            Query,
+            ResponseBody,
+            Status,
+            ContentType,
+            Output
+          >
         ) => ApiRouteOperationDefinition;
       };
     }
