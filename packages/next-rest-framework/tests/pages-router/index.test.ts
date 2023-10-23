@@ -399,3 +399,76 @@ it('returns a default error response', async () => {
     message: DEFAULT_ERRORS.unexpectedError
   });
 });
+
+it('executes middleware before validating input', async () => {
+  const body = {
+    foo: 'bar'
+  };
+
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.POST,
+    body,
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
+
+  const schema = z.object({
+    foo: z.number()
+  });
+
+  console.log = jest.fn();
+
+  await apiRouteHandler({
+    POST: apiRouteOperation()
+      .input({
+        contentType: 'application/json',
+        body: schema
+      })
+      .middleware(() => {
+        console.log('foo');
+      })
+      .handler(() => {})
+  })(req, res);
+
+  const { errors } = await validateSchema({ schema, obj: body });
+
+  expect(res._getJSONData()).toEqual({
+    message: 'Invalid request body.',
+    errors
+  });
+
+  expect(res.statusCode).toEqual(400);
+  expect(console.log).toHaveBeenCalledWith('foo');
+});
+
+it('does not execute handler if middleware returns a response', async () => {
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.POST,
+    body: {
+      foo: 'bar'
+    },
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
+
+  console.log = jest.fn();
+
+  await apiRouteHandler({
+    POST: apiRouteOperation()
+      .middleware((_req, res) => {
+        res.status(200).json({ foo: 'bar' });
+      })
+      .handler(() => {
+        console.log('foo');
+      })
+  })(req, res);
+
+  expect(res._getJSONData()).toEqual({
+    foo: 'bar'
+  });
+
+  expect(res.statusCode).toEqual(200);
+  expect(console.log).not.toHaveBeenCalled();
+});
