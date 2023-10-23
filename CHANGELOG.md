@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.2.0 - 2023-10-23
+
+### Added
+
+- Adds an option to include a middleware function for the method handlers, that gets executed before the request input is validated.
+
 ### 3.1.1 - 2023-10-19
 
 ### Fixed
