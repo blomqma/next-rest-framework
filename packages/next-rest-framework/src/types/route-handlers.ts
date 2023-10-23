@@ -90,7 +90,13 @@ type RouteOutput<
 } & (Middleware extends true
   ? {
       middleware: (
-        callback?: RouteHandler<Body, Query, ResponseBody, Status, Output>
+        callback?: RouteHandler<
+          unknown,
+          BaseQuery,
+          ResponseBody,
+          Status,
+          Output
+        >
       ) => {
         handler: (
           callback?: RouteHandler<Body, Query, ResponseBody, Status, Output>
@@ -109,7 +115,7 @@ type RouteInput<Middleware extends boolean = false> = <
   handler: (callback?: RouteHandler<Body, Query>) => RouteOperationDefinition;
 } & (Middleware extends true
   ? {
-      middleware: (callback?: RouteHandler<Body, Query>) => {
+      middleware: (callback?: RouteHandler) => {
         output: RouteOutput<false, Body, Query>;
         handler: (
           callback?: RouteHandler<Body, Query>
@@ -205,7 +211,13 @@ type ApiRouteOutput<
 } & (Middleware extends true
   ? {
       middleware: (
-        callback?: ApiRouteHandler<Body, Query, ResponseBody, Status, Output>
+        callback?: ApiRouteHandler<
+          unknown,
+          BaseQuery,
+          ResponseBody,
+          Status,
+          Output
+        >
       ) => {
         handler: (
           callback?: ApiRouteHandler<Body, Query, ResponseBody, Status, Output>
@@ -226,7 +238,7 @@ type ApiRouteInput<Middleware extends boolean = false> = <
   ) => ApiRouteOperationDefinition;
 } & (Middleware extends true
   ? {
-      middleware: (callback?: ApiRouteHandler<Body, Query>) => {
+      middleware: (callback?: ApiRouteHandler) => {
         output: ApiRouteOutput<false, Body, Query>;
         handler: (
           callback?: ApiRouteHandler<Body, Query>
