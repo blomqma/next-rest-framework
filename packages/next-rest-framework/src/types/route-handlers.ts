@@ -159,7 +159,7 @@ export type RouteOperation = (
 export type NextRouteHandler = (
   req: NextRequest,
   context: { params: BaseQuery }
-) => Promise<NextResponse>;
+) => Promise<NextResponse> | NextResponse | Promise<void> | void;
 
 export interface RouteOperationDefinition {
   _config: {

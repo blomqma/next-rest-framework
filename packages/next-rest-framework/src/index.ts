@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+import { type TypedNextResponse as TypedNextResponseType } from './types';
 export {
   routeHandler,
   routeOperation,
@@ -5,4 +7,6 @@ export {
   apiRouteOperation
 } from './route-handlers';
 export { docsRouteHandler, docsApiRouteHandler } from './docs-handlers';
-export { TypedNextResponse } from './types';
+
+// @ts-expect-error - Keep the original NextResponse functionality with custom types.
+export const TypedNextResponse: typeof TypedNextResponseType = NextResponse;
