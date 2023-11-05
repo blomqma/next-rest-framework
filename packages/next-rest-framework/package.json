@@ -25,7 +25,6 @@
     "directory": "packages/next-rest-framework"
   },
   "scripts": {
-    "preinstall": "mkdir -p dist && touch ./dist/cli.js && echo \"#!/usr/bin/env node\" > ./dist/cli.js",
     "type-check": "tsc --noEmit",
     "build": "rm -rf dist && tsc --project tsconfig.build.json",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
