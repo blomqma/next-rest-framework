@@ -47,7 +47,7 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
     try {
       const { headers, nextUrl } = req;
       const proto = headers.get('x-forwarded-proto') ?? 'http';
-      const host = headers.get('host');
+      const host = headers.get('host') ?? '';
       const baseUrl = `${proto}://${host}`;
       const url = baseUrl + nextUrl.pathname;
 
@@ -73,7 +73,7 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
         await syncOpenApiSpec({ config, paths });
       }
 
-      const html = getHtmlForDocs({ config, baseUrl });
+      const html = getHtmlForDocs({ config, host });
 
       return new NextResponse(html, {
         headers: {
@@ -110,7 +110,7 @@ export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
       }
 
       const proto = req.headers['x-forwarded-proto'] ?? 'http';
-      const host = req.headers.host;
+      const host = req.headers.host ?? '';
       const baseUrl = `${proto}://${host}`;
       const url = baseUrl + req.url;
 
@@ -126,10 +126,7 @@ export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
         await syncOpenApiSpec({ config, paths });
       }
 
-      const html = getHtmlForDocs({
-        config,
-        baseUrl
-      });
+      const html = getHtmlForDocs({ config, host });
 
       res.setHeader('Content-Type', 'text/html');
       res.status(200).send(html);

@@ -18,12 +18,12 @@ export const getHtmlForDocs = ({
       logoUrl = DEFAULT_LOGO_URL
     }
   },
-  baseUrl
+  host
 }: {
   config: Required<NextRestFrameworkConfig>;
-  baseUrl: string;
+  host: string;
 }) => {
-  const url = `${baseUrl}${openApiJsonPath}`;
+  const url = `//${host}${openApiJsonPath}`; // Use protocol-relative URL to avoid mixed content warnings.
 
   const redocHtml = `<!DOCTYPE html>
 <html>
