@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.4.4 - 2023-11-06
+
+### Changed
+
+- Use content-relative URL for fetching the `openapi.json` in the docs clients.
+
 ### 3.4.3 - 2023-11-05
 
 ### Fixed
