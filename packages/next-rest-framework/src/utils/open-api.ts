@@ -53,15 +53,15 @@ export const getRouteName = (file: string) =>
     .replace('/route.js', '')
     .replace('/route.ts', '')
     .replace(/\\/g, '/')
-    .replace('[', '{')
-    .replace(']', '}');
+    .replaceAll('[', '{')
+    .replaceAll(']', '}');
 
 export const getApiRouteName = (file: string) =>
   `/api/${file}`
     .replace('/index', '')
     .replace(/\\/g, '/')
-    .replace('[', '{')
-    .replace(']', '}')
+    .replaceAll('[', '{')
+    .replaceAll(']', '}')
     .replace('.js', '')
     .replace('.ts', '');
 
