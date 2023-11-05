@@ -26,7 +26,13 @@ jest.mock('fs', () => ({
   ...jest.requireActual('fs'),
   readdirSync: (path: string) => {
     const paths = path.includes('pages')
-      ? ['foo.ts', 'foo/bar.ts', 'foo/bar/baz.ts', 'foo/bar/[qux]/index.ts']
+      ? [
+          'foo.ts',
+          'foo/bar.ts',
+          'foo/bar/baz.ts',
+          'foo/bar/[qux]/index.ts',
+          'foo/bar/[qux]/quux/[corge]/index.ts'
+        ]
       : [];
 
     return paths.map(createDirent);
@@ -117,6 +123,20 @@ const fooBarBazQuxMethodHandlers = apiRouteHandler({
     })
 });
 
+const fooBarBazQuxQuuxCorgeMethodHandlers = apiRouteHandler({
+  GET: apiRouteOperation()
+    .output([
+      {
+        status: 200,
+        schema,
+        contentType: 'application/json'
+      }
+    ])
+    .handler(async (_req, res) => {
+      res.status(200).json({ foo: 'corge' });
+    })
+});
+
 jest.mock(
   '../../../apps/src/dev/app/api/foo/route.ts',
   () => fooMethodHandlers,
@@ -143,6 +163,12 @@ jest.mock(
   { virtual: true }
 );
 
+jest.mock(
+  '../../../apps/src/dev/app/api/foo/bar/[qux]/quux/[corge]/route.ts',
+  () => fooBarBazQuxQuuxCorgeMethodHandlers,
+  { virtual: true }
+);
+
 // @ts-expect-error: TS expects the mock function to extend the typings of the global `fetch` function but we don't need those types here.
 global.fetch = async (url: string) => {
   const path = url.replace('http://localhost:3000', '');
@@ -162,7 +188,8 @@ global.fetch = async (url: string) => {
     '/api/foo': fooMethodHandlers,
     '/api/foo/bar': fooBarMethodHandlers,
     '/api/foo/bar/baz': fooBarBazMethodHandlers,
-    '/api/foo/bar/{qux}': fooBarBazQuxMethodHandlers
+    '/api/foo/bar/{qux}': fooBarBazQuxMethodHandlers,
+    '/api/foo/bar/{qux}/quux/{corge}': fooBarBazQuxQuuxCorgeMethodHandlers
   };
 
   const methodHandlers =
@@ -191,7 +218,8 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ],
     deniedPaths: []
   });
@@ -209,7 +237,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ]
   },
   {
@@ -218,7 +247,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ],
     expectedPathsToBeDenied: []
   },
@@ -228,20 +258,27 @@ it.each([
     expectedPathsToBeDenied: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ]
   },
   {
     allowedPaths: ['/api/foo/*/baz'],
     expectedPathsToBeAllowed: ['/api/foo/bar/baz'],
-    expectedPathsToBeDenied: ['/api/foo', '/api/foo/bar', '/api/foo/bar/{qux}']
+    expectedPathsToBeDenied: [
+      '/api/foo',
+      '/api/foo/bar',
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
+    ]
   },
   {
     allowedPaths: ['/api/foo/**'],
     expectedPathsToBeAllowed: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ],
     expectedPathsToBeDenied: ['/api/foo']
   }
@@ -293,7 +330,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ],
     expectedPathsToBeDenied: []
   },
@@ -304,7 +342,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ]
   },
   {
@@ -312,7 +351,8 @@ it.each([
     expectedPathsToBeAllowed: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ],
     expectedPathsToBeDenied: ['/api/foo']
   },
@@ -321,7 +361,8 @@ it.each([
     expectedPathsToBeAllowed: [
       '/api/foo',
       '/api/foo/bar',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ],
     expectedPathsToBeDenied: ['/api/foo/bar/baz']
   },
@@ -331,7 +372,8 @@ it.each([
     expectedPathsToBeDenied: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}'
+      '/api/foo/bar/{qux}',
+      '/api/foo/bar/{qux}/quux/{corge}'
     ]
   }
 ])(

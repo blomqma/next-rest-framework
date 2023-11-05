@@ -189,6 +189,35 @@ export const getExpectedSpec = ({
     };
   }
 
+  if (
+    !deniedPaths.includes('/api/foo/bar/{qux}/quux/{corge}') &&
+    allowedPaths.includes('/api/foo/bar/{qux}/quux/{corge}')
+  ) {
+    paths = {
+      ...paths,
+      '/api/foo/bar/{qux}/quux/{corge}': {
+        get: {
+          parameters: [
+            {
+              in: 'path',
+              name: 'qux',
+              required: true
+            },
+            {
+              in: 'path',
+              name: 'corge',
+              required: true
+            }
+          ],
+          responses: {
+            '200': responseContent,
+            default: defaultResponse
+          }
+        }
+      }
+    };
+  }
+
   const spec = {
     openapi: OPEN_API_VERSION,
     info: {
@@ -228,6 +257,13 @@ ${`Error: ${error}`}`)
     4,
     chalk.red(`Next REST Framework encountered an error:
 ${'Error: OpenAPI spec generation failed for route: /api/foo/bar/{qux}'}
+${`Error: ${error}`}`)
+  );
+
+  expect(console.error).toHaveBeenNthCalledWith(
+    5,
+    chalk.red(`Next REST Framework encountered an error:
+${'Error: OpenAPI spec generation failed for route: /api/foo/bar/{qux}/quux/{corge}'}
 ${`Error: ${error}`}`)
   );
 };
