@@ -1,12 +1,28 @@
-import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
-import { type ApiRouteParams } from '../types';
+import {
+  DEFAULT_ERRORS,
+  NEXT_REST_FRAMEWORK_USER_AGENT,
+  type ValidMethod
+} from '../constants';
 import {
   getPathsFromMethodHandlers,
   isValidMethod,
   validateSchema,
   logNextRestFrameworkError
-} from '../utils';
+} from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
+import { type OpenAPIV3_1 } from 'openapi-types';
+import { type ApiRouteOperationDefinition } from './api-route-operation';
+
+export interface ApiRouteParams {
+  openApiPath?: OpenAPIV3_1.PathItemObject;
+  [ValidMethod.GET]?: ApiRouteOperationDefinition;
+  [ValidMethod.PUT]?: ApiRouteOperationDefinition;
+  [ValidMethod.POST]?: ApiRouteOperationDefinition;
+  [ValidMethod.DELETE]?: ApiRouteOperationDefinition;
+  [ValidMethod.OPTIONS]?: ApiRouteOperationDefinition;
+  [ValidMethod.HEAD]?: ApiRouteOperationDefinition;
+  [ValidMethod.PATCH]?: ApiRouteOperationDefinition;
+}
 
 export const apiRouteHandler = (methodHandlers: ApiRouteParams) => {
   const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -30,12 +46,12 @@ export const apiRouteHandler = (methodHandlers: ApiRouteParams) => {
         const route = decodeURIComponent(pathname ?? '');
 
         try {
-          const nextRestFrameworkPaths = getPathsFromMethodHandlers({
+          const nrfOasData = getPathsFromMethodHandlers({
             methodHandlers,
             route
           });
 
-          res.status(200).json({ nextRestFrameworkPaths });
+          res.status(200).json({ nrfOasData });
           return;
         } catch (error) {
           throw Error(`OpenAPI spec generation failed for route: ${route}
@@ -79,7 +95,7 @@ ${error}`);
 
           if (!valid) {
             res.status(400).json({
-              message: 'Invalid request body.',
+              message: DEFAULT_ERRORS.invalidRequestBody,
               errors
             });
 
@@ -95,7 +111,7 @@ ${error}`);
 
           if (!valid) {
             res.status(400).json({
-              message: 'Invalid query parameters.',
+              message: DEFAULT_ERRORS.invalidQueryParameters,
               errors
             });
 
@@ -105,7 +121,7 @@ ${error}`);
       }
 
       if (!handler) {
-        throw Error('Handler not found.');
+        throw Error(DEFAULT_ERRORS.handlerNotFound);
       }
 
       await handler(req, res);

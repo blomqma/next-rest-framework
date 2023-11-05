@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
-import { type RouteParams, type BaseQuery } from '../types';
+import { type BaseQuery } from '../types';
 import {
   getPathsFromMethodHandlers,
   isValidMethod,
   validateSchema,
   logNextRestFrameworkError
-} from '../utils';
+} from '../shared';
+
+import { type ValidMethod } from '../constants';
+
+import { type OpenAPIV3_1 } from 'openapi-types';
+
+import { type RouteOperationDefinition } from './route-operation';
+
+export interface RouteParams {
+  openApiPath?: OpenAPIV3_1.PathItemObject;
+  [ValidMethod.GET]?: RouteOperationDefinition;
+  [ValidMethod.PUT]?: RouteOperationDefinition;
+  [ValidMethod.POST]?: RouteOperationDefinition;
+  [ValidMethod.DELETE]?: RouteOperationDefinition;
+  [ValidMethod.OPTIONS]?: RouteOperationDefinition;
+  [ValidMethod.HEAD]?: RouteOperationDefinition;
+  [ValidMethod.PATCH]?: RouteOperationDefinition;
+}
 
 export const routeHandler = (methodHandlers: RouteParams) => {
   const handler = async (req: NextRequest, context: { params: BaseQuery }) => {
@@ -37,12 +54,12 @@ export const routeHandler = (methodHandlers: RouteParams) => {
         const route = decodeURIComponent(pathname ?? '');
 
         try {
-          const nextRestFrameworkPaths = getPathsFromMethodHandlers({
+          const nrfOasData = getPathsFromMethodHandlers({
             methodHandlers,
             route
           });
 
-          return NextResponse.json({ nextRestFrameworkPaths }, { status: 200 });
+          return NextResponse.json({ nrfOasData }, { status: 200 });
         } catch (error) {
           throw Error(`OpenAPI spec generation failed for route: ${route}
 ${error}`);
@@ -91,7 +108,7 @@ ${error}`);
             if (!valid) {
               return NextResponse.json(
                 {
-                  message: 'Invalid request body.',
+                  message: DEFAULT_ERRORS.invalidRequestBody,
                   errors
                 },
                 {
@@ -102,7 +119,7 @@ ${error}`);
           } catch (error) {
             return NextResponse.json(
               {
-                message: 'Missing request body.'
+                message: DEFAULT_ERRORS.missingRequestBody
               },
               {
                 status: 400
@@ -119,7 +136,7 @@ ${error}`);
           if (!valid) {
             return NextResponse.json(
               {
-                message: 'Invalid query parameters.',
+                message: DEFAULT_ERRORS.invalidQueryParameters,
                 errors
               },
               {
@@ -131,7 +148,7 @@ ${error}`);
       }
 
       if (!handler) {
-        throw Error('Handler not found.');
+        throw Error(DEFAULT_ERRORS.handlerNotFound);
       }
 
       const res = await handler(req, context);

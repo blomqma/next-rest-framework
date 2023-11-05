@@ -8,15 +8,16 @@ import chalk from 'chalk';
 import { type NextRestFrameworkConfig } from './types';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import {
+  type NrfOasData,
   getApiRouteName,
   getNestedFiles,
   getRouteName,
-  getSortedPaths,
   isValidMethod,
   isWildcardMatch,
   logIgnoredPaths,
+  sortObjectByKeys,
   syncOpenApiSpec
-} from './utils';
+} from './shared';
 import { existsSync, readFileSync } from 'fs';
 import { isEqualWith, merge } from 'lodash';
 import { OPEN_API_VERSION } from './constants';
@@ -28,7 +29,7 @@ const generatePathsFromBuild = async ({
 }: {
   config: Required<NextRestFrameworkConfig>;
   distDir: string;
-}): Promise<OpenAPIV3_1.PathsObject> => {
+}): Promise<NrfOasData> => {
   const ignoredPaths: string[] = [];
 
   // Check if the route is allowed or denied by the user.
@@ -140,7 +141,7 @@ const generatePathsFromBuild = async ({
     logIgnoredPaths(ignoredPaths);
   }
 
-  return getSortedPaths(paths);
+  return { paths: sortObjectByKeys(paths) };
 };
 
 const findConfig = async ({
@@ -257,8 +258,8 @@ const syncOpenApiSpecFromBuild = async ({
   }
 
   console.log(chalk.yellowBright('Next REST Framework config found!'));
-  const paths = await generatePathsFromBuild({ config, distDir });
-  await syncOpenApiSpec({ config, paths });
+  const nrfOasData = await generatePathsFromBuild({ config, distDir });
+  await syncOpenApiSpec({ config, nrfOasData });
 };
 
 // Sync the `openapi.json` file from generated paths from the build output.

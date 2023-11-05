@@ -5,7 +5,11 @@ export const metadata = {
   description: 'Example application for Next REST Framework'
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({
+  children
+}: {
+  children: React.ReactNode;
+}) {
   const cookieStore = cookies();
   const theme = cookieStore.get('theme')?.value ?? 'light';
 

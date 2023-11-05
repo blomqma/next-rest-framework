@@ -5,14 +5,14 @@ import {
   DEFAULT_TITLE,
   OPEN_API_VERSION,
   VERSION,
-  type ValidMethod
+  ValidMethod
 } from '../src/constants';
 import {
   createMocks,
   type RequestOptions,
   type ResponseOptions
 } from 'node-mocks-http';
-import { defaultResponse } from '../src/utils';
+import { defaultResponse } from '../src/shared';
 import chalk from 'chalk';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
@@ -57,6 +57,35 @@ export const createMockRouteRequest = <Body, Query>({
   context: { params }
 });
 
+export const createMockRpcRouteRequest = <Body>({
+  path = '/',
+  body,
+  method = ValidMethod.POST,
+  operation = 'test',
+  headers
+}: {
+  method?: ValidMethod;
+  path?: string;
+  body?: Body;
+  operation?: string;
+  headers?: Record<string, string>;
+} = {}): {
+  req: NextRequest;
+} => {
+  const { req } = createMockRouteRequest({
+    path,
+    body,
+    method,
+    headers: {
+      'X-RPC-Operation': operation,
+      'Content-Type': 'application/json',
+      ...headers
+    }
+  });
+
+  return { req };
+};
+
 export const createMockApiRouteRequest = <
   Body,
   Query = Partial<Record<string, string | string[]>>
@@ -76,6 +105,30 @@ export const createMockApiRouteRequest = <
   // @ts-expect-error: The `NextApiRequest` does not satisfy the types for `Request`.
   return createMocks<NextApiRequest, NextApiResponse>(reqOptions, resOptions);
 };
+
+export const createMockRpcApiRouteRequest = <Body>({
+  path = '/',
+  body,
+  method = ValidMethod.POST,
+  operation = 'test',
+  headers
+}: {
+  method?: ValidMethod;
+  path?: string;
+  body?: Body;
+  operation?: string;
+  headers?: Record<string, string>;
+} = {}) =>
+  createMockApiRouteRequest({
+    path,
+    body,
+    method,
+    headers: {
+      'X-RPC-Operation': operation,
+      'Content-Type': 'application/json',
+      ...headers
+    }
+  });
 
 export const getExpectedSpec = ({
   zodSchema,
@@ -225,7 +278,7 @@ export const getExpectedSpec = ({
       description: DEFAULT_DESCRIPTION,
       version: `v${VERSION}`
     },
-    paths
+    paths: Object.keys(paths).length ? paths : undefined
   };
 
   return spec;

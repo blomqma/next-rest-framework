@@ -152,6 +152,81 @@
         "tags": ["example-api", "todos", "pages-router"]
       }
     },
+    "/api/routes/rpc": {
+      "post": {
+        "description": "RPC endpoint",
+        "tags": ["RPC"],
+        "operationId": "rpcCall",
+        "parameters": [
+          {
+            "name": "X-RPC-Operation",
+            "in": "header",
+            "schema": { "type": "string" },
+            "required": true,
+            "description": "The RPC operation to call."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "propertyName": "X-RPC-Operation",
+                  "mapping": {
+                    "getTodoById": "#/components/schemas/GetTodoByIdBody",
+                    "createTodo": "#/components/schemas/CreateTodoBody",
+                    "deleteTodo": "#/components/schemas/DeleteTodoBody"
+                  }
+                },
+                "oneOf": [
+                  "#/components/schemas/GetTodoByIdBody",
+                  "#/components/schemas/CreateTodoBody",
+                  "#/components/schemas/DeleteTodoBody"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "X-RPC-Operation",
+                    "mapping": {
+                      "getTodoById": "#/components/schemas/GetTodoByIdBody",
+                      "createTodo": "#/components/schemas/CreateTodoBody",
+                      "deleteTodo": "#/components/schemas/DeleteTodoBody"
+                    }
+                  },
+                  "oneOf": [
+                    "#/components/schemas/GetTodosResponse",
+                    "#/components/schemas/GetTodoByIdResponse",
+                    "#/components/schemas/GetTodoByIdResponse2",
+                    "#/components/schemas/CreateTodoResponse",
+                    "#/components/schemas/DeleteTodoResponse",
+                    "#/components/schemas/DeleteTodoResponse2"
+                  ]
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "message": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/routes/todos": {
       "get": {
         "responses": {
@@ -296,6 +371,65 @@
         "parameters": [{ "name": "id", "in": "path", "required": true }],
         "operationId": "deleteTodo",
         "tags": ["example-api", "todos", "app-router"]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateTodoBody": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "CreateTodoResponse": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"],
+        "additionalProperties": false
+      },
+      "DeleteTodoBody": { "type": "string" },
+      "DeleteTodoResponse": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } },
+        "required": ["error"],
+        "additionalProperties": false
+      },
+      "DeleteTodoResponse2": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"],
+        "additionalProperties": false
+      },
+      "GetTodoByIdBody": { "type": "string" },
+      "GetTodoByIdResponse": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } },
+        "required": ["error"],
+        "additionalProperties": false
+      },
+      "GetTodoByIdResponse2": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "name": { "type": "string" },
+          "completed": { "type": "boolean" }
+        },
+        "required": ["id", "name", "completed"],
+        "additionalProperties": false
+      },
+      "GetTodosResponse": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "number" },
+            "name": { "type": "string" },
+            "completed": { "type": "boolean" }
+          },
+          "required": ["id", "name", "completed"],
+          "additionalProperties": false
+        }
       }
     }
   }
