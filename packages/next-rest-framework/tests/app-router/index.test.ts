@@ -154,7 +154,7 @@ it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
 
     const html = getHtmlForDocs({
       config: getConfig(_config),
-      baseUrl: 'http://localhost:3000'
+      host: 'localhost:3000'
     });
 
     expect(text).toEqual(html);
