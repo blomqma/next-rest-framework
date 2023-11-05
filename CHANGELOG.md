@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.4.3 - 2023-11-05
+
+### Fixed
+
+- Fix OpenAPI generation with dynamic routes that contain multiple path parameters.
+
 ### 3.4.2 - 2023-11-05
 
 ### Fixed
