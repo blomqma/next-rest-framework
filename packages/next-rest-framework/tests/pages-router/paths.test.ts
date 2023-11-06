@@ -229,6 +229,20 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
   );
 });
 
+it('does not generate paths in prod', async () => {
+  const { env } = process.env;
+  process.env.NODE_ENV = 'production';
+
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.GET,
+    path: '/api'
+  });
+
+  await docsApiRouteHandler()(req, res);
+  expect(generateOpenApiSpecSpy).not.toHaveBeenCalled();
+  process.env.NODE_ENV = env;
+});
+
 it.each([
   {
     allowedPaths: ['*'],
@@ -451,5 +465,23 @@ it('handles error if the OpenAPI spec generation fails', async () => {
   expect(generateOpenApiSpecSpy).toHaveBeenCalledWith(
     expect.objectContaining({ spec })
   );
+
   expectOpenAPIGenerationErrors(error);
+});
+
+it('returns 403 if the docs handler is called internally by the framework', async () => {
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.GET,
+    path: '/api',
+    headers: {
+      'user-agent': NEXT_REST_FRAMEWORK_USER_AGENT
+    }
+  });
+
+  await docsApiRouteHandler()(req, res);
+  expect(res.statusCode).toEqual(403);
+
+  expect(res._getJSONData()).toEqual({
+    message: `${NEXT_REST_FRAMEWORK_USER_AGENT} user agent is not allowed.`
+  });
 });

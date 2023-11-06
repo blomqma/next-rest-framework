@@ -135,6 +135,21 @@ OpenAPI JSON: http://localhost:3000/api/bar/baz`)
   expect(console.info).toHaveBeenCalledTimes(8);
 });
 
+it('it does not log init info in prod', async () => {
+  const { env } = process.env;
+  process.env.NODE_ENV = 'production';
+  console.info = jest.fn();
+
+  const { req, context } = createMockRouteRequest({
+    method: ValidMethod.GET,
+    path: '/api'
+  });
+
+  await docsRouteHandler()(req, context);
+  expect(console.info).not.toHaveBeenCalled();
+  process.env.NODE_ENV = env;
+});
+
 it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
   'returns the docs HTML: %s',
   async (provider) => {
@@ -154,7 +169,7 @@ it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
     };
 
     const res = await docsRouteHandler(_config)(req, context);
-    const text = await res?.text();
+    const text = await res.text();
 
     const html = getHtmlForDocs({
       config: getConfig(_config),
