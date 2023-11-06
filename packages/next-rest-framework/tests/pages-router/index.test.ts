@@ -1,4 +1,9 @@
-import { DEFAULT_CONFIG, getConfig, validateSchema } from '../../src/utils';
+import {
+  DEFAULT_CONFIG,
+  getConfig,
+  validateSchema,
+  getHtmlForDocs
+} from '../../src/utils';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import chalk from 'chalk';
 import { createMockApiRouteRequest, resetCustomGlobals } from '../utils';
@@ -7,7 +12,6 @@ import {
   type DocsProvider,
   type NextRestFrameworkConfig
 } from '../../src/types';
-import { getHtmlForDocs } from '../../src/utils/docs';
 import {
   apiRouteHandler,
   apiRouteOperation,
@@ -126,6 +130,21 @@ OpenAPI JSON: http://localhost:3000/api/bar/baz`)
   );
 
   expect(console.info).toHaveBeenCalledTimes(8);
+});
+
+it('it does not log init info in prod', async () => {
+  const { env } = process.env;
+  process.env.NODE_ENV = 'production';
+  console.info = jest.fn();
+
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.GET,
+    path: '/api'
+  });
+
+  await docsApiRouteHandler()(req, res);
+  expect(console.info).not.toHaveBeenCalled();
+  process.env.NODE_ENV = env;
 });
 
 it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
