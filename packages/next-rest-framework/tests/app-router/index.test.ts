@@ -1,10 +1,14 @@
-import { DEFAULT_CONFIG, getConfig, validateSchema } from '../../src/utils';
+import {
+  DEFAULT_CONFIG,
+  getConfig,
+  validateSchema,
+  getHtmlForDocs
+} from '../../src/utils';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import chalk from 'chalk';
 import { createMockRouteRequest, resetCustomGlobals } from '../utils';
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
-import { getHtmlForDocs } from '../../src/utils/docs';
 import {
   type DocsProvider,
   type NextRestFrameworkConfig

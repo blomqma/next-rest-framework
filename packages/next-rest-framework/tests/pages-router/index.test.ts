@@ -1,4 +1,9 @@
-import { DEFAULT_CONFIG, getConfig, validateSchema } from '../../src/utils';
+import {
+  DEFAULT_CONFIG,
+  getConfig,
+  validateSchema,
+  getHtmlForDocs
+} from '../../src/utils';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import chalk from 'chalk';
 import { createMockApiRouteRequest, resetCustomGlobals } from '../utils';
@@ -7,7 +12,6 @@ import {
   type DocsProvider,
   type NextRestFrameworkConfig
 } from '../../src/types';
-import { getHtmlForDocs } from '../../src/utils/docs';
 import {
   apiRouteHandler,
   apiRouteOperation,
