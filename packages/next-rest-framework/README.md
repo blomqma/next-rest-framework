@@ -385,6 +385,7 @@ The `next-rest-framework validate` command is useful to have as part of the stat
 | `--distDir <string>`    | Path to your production build directory. Defaults to `.next`.                                                                                                                                  |
 | `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |
 | `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |
+| `--debug <boolean>`     | Inherit and display logs from the `next build` command. Defaults to `false`.                                                                                                                   |
 
 ## [Changelog](#changelog)
 
