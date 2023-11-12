@@ -349,17 +349,24 @@ program
     '--configPath <string>',
     'In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`.'
   )
+  .option(
+    '--debug <boolean>',
+    'Inherit and display logs from the `next build` command. Defaults to `false`.'
+  )
   .description('Generate an OpenAPI spec with Next REST Framework.')
   .action(async (options) => {
     const skipBuild: boolean = options.skipBuild ?? false;
     const distDir: string = options.distDir ?? '.next';
     const timeout: number = options.timeout ?? 60000;
     const configPath: string = options.configPath ?? '';
+    const debug: boolean = options.debug ?? false;
 
     console.log(chalk.yellowBright('Generating OpenAPI spec...'));
 
     if (!skipBuild) {
-      const server = spawn('npx', ['next', 'build']);
+      const server = spawn('npx', ['next', 'build'], {
+        stdio: debug ? 'inherit' : 'ignore'
+      });
 
       try {
         await waitOn({
@@ -409,17 +416,25 @@ program
     '--configPath <string>',
     'In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`.'
   )
+  .option(
+    '--debug <boolean>',
+    'Inherit and display logs from the `next build` command. Defaults to `false`.'
+  )
   .description('Validate an OpenAPI spec with Next REST Framework.')
   .action(async (options) => {
     const skipBuild: boolean = options.skipBuild ?? false;
     const distDir: string = options.distDir ?? '.next';
     const timeout: number = options.timeout ?? 60000;
-    const server = spawn('npx', ['next', 'build']);
     const configPath: string = options.configPath ?? '';
+    const debug: boolean = options.debug ?? false;
 
     console.log(chalk.yellowBright('Validating OpenAPI spec...'));
 
     if (!skipBuild) {
+      const server = spawn('npx', ['next', 'build'], {
+        stdio: debug ? 'inherit' : 'ignore'
+      });
+
       try {
         await waitOn({
           resources: [join(process.cwd(), distDir, 'BUILD_ID')],
@@ -453,7 +468,6 @@ program
         }
       } catch (e) {
         console.error(e);
-        server.kill();
         process.exit(1);
       }
     }

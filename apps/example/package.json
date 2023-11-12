@@ -5,8 +5,8 @@
     "prebuild": "cd ../.. && pnpm build && cd apps/example",
     "dev": "pnpm prebuild && next dev",
     "build": "pnpm prebuild && next build",
-    "generate": "pnpm prebuild && next-rest-framework generate",
-    "validate": "pnpm prebuild && next-rest-framework validate",
+    "generate": "pnpm prebuild && next-rest-framework generate --debug=true",
+    "validate": "pnpm prebuild && next-rest-framework validate --debug=true",
     "start": "next start",
     "type-check": "tsc --noEmit"
   },
