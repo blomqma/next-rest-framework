@@ -15,7 +15,7 @@ import { merge, isEqualWith } from 'lodash';
 import { getJsonSchema, getSchemaKeys } from './schemas';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
-import prettier from 'prettier';
+import * as prettier from 'prettier';
 
 // Traverse the base path and find all nested files.
 export const getNestedFiles = (basePath: string, dir: string): string[] => {
