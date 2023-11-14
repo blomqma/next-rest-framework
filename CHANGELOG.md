@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 3.4.7 - 2023-11-14
+
+### Fixed
+
+- Fix `prettier` import potentially causing a module resolution issue in some Node.js environments.
+
 ### 3.4.6 - 2023-11-12
 
 ### Added
