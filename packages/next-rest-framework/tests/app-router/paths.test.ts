@@ -11,7 +11,7 @@ import {
 import { z } from 'zod';
 import { NextResponse } from 'next/server';
 import chalk from 'chalk';
-import * as openApiUtils from '../../src/utils/open-api';
+import * as openApiUtils from '../../src/shared/open-api';
 import { docsRouteHandler, routeHandler, routeOperation } from '../../src';
 
 const createDirent = (name: string) => ({
@@ -433,10 +433,10 @@ it.each([
 it('handles error if the OpenAPI spec generation fails', async () => {
   console.error = jest.fn();
 
-  jest.mock('../../src/utils/open-api', () => {
+  jest.mock('../../src/shared/open-api', () => {
     return {
       __esModule: true,
-      ...jest.requireActual('../src/utils/open-api')
+      ...jest.requireActual('../../src/shared/open-api')
     };
   });
 

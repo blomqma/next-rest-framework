@@ -1,9 +1,9 @@
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
 import { type NextRestFrameworkConfig } from '../types';
-import { generatePathsFromDev, getConfig, syncOpenApiSpec } from '../utils';
+import { fetchOasDataFromDev, getConfig, syncOpenApiSpec } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { getHtmlForDocs } from '../utils/docs';
-import { logInitInfo, logNextRestFrameworkError } from '../utils/logging';
+import { getHtmlForDocs } from '../shared/docs';
+import { logInitInfo, logNextRestFrameworkError } from '../shared/logging';
 
 export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
@@ -31,8 +31,13 @@ export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
         }
 
         if (config.autoGenerateOpenApiSpec) {
-          const paths = await generatePathsFromDev({ config, baseUrl, url });
-          await syncOpenApiSpec({ config, paths });
+          const nrfOasData = await fetchOasDataFromDev({
+            config,
+            baseUrl,
+            url
+          });
+
+          await syncOpenApiSpec({ config, nrfOasData });
         }
       }
 

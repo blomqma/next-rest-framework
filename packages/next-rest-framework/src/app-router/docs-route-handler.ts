@@ -2,13 +2,13 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
 import { type BaseQuery, type NextRestFrameworkConfig } from '../types';
 import {
-  generatePathsFromDev,
+  fetchOasDataFromDev,
   getConfig,
   syncOpenApiSpec,
   logInitInfo,
   logNextRestFrameworkError,
   getHtmlForDocs
-} from '../utils';
+} from '../shared';
 
 export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
@@ -38,8 +38,13 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
         }
 
         if (config.autoGenerateOpenApiSpec) {
-          const paths = await generatePathsFromDev({ config, baseUrl, url });
-          await syncOpenApiSpec({ config, paths });
+          const nrfOasData = await fetchOasDataFromDev({
+            config,
+            baseUrl,
+            url
+          });
+
+          await syncOpenApiSpec({ config, nrfOasData });
         }
       }
 

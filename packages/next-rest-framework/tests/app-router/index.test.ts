@@ -3,7 +3,7 @@ import {
   getConfig,
   validateSchema,
   getHtmlForDocs
-} from '../../src/utils';
+} from '../../src/shared';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import chalk from 'chalk';
 import { createMockRouteRequest, resetCustomGlobals } from '../utils';
@@ -285,7 +285,7 @@ it('returns error for invalid request body', async () => {
   const { errors } = await validateSchema({ schema, obj: body });
 
   expect(json).toEqual({
-    message: 'Invalid request body.',
+    message: DEFAULT_ERRORS.invalidRequestBody,
     errors
   });
 });
@@ -322,7 +322,7 @@ it('returns error for invalid query parameters', async () => {
   const { errors } = await validateSchema({ schema, obj: query });
 
   expect(json).toEqual({
-    message: 'Invalid query parameters.',
+    message: DEFAULT_ERRORS.invalidQueryParameters,
     errors
   });
 });
@@ -458,34 +458,28 @@ it('executes middleware before validating input', async () => {
       .handler(() => {})
   })(req, context);
 
+  expect(console.log).toHaveBeenCalledWith('foo');
+
   const json = await res?.json();
   expect(res?.status).toEqual(400);
 
   const { errors } = await validateSchema({ schema, obj: body });
 
   expect(json).toEqual({
-    message: 'Invalid request body.',
+    message: DEFAULT_ERRORS.invalidRequestBody,
     errors
   });
-
-  expect(console.log).toHaveBeenCalledWith('foo');
 });
 
 it('does not execute handler if middleware returns a response', async () => {
   const { req, context } = createMockRouteRequest({
-    method: ValidMethod.POST,
-    body: {
-      foo: 'bar'
-    },
-    headers: {
-      'content-type': 'application/json'
-    }
+    method: ValidMethod.GET
   });
 
   console.log = jest.fn();
 
   const res = await routeHandler({
-    POST: routeOperation()
+    GET: routeOperation()
       .middleware(() => {
         return NextResponse.json({ foo: 'bar' }, { status: 200 });
       })
