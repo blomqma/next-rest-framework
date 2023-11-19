@@ -14,7 +14,7 @@ it.each(Object.values(ValidMethod))(
     const data = ['All good!'];
 
     const operation = rpcOperation()
-      .output([z.array(z.string())])
+      .output([{ schema: z.array(z.string()) }])
       .handler(() => data);
 
     await rpcApiRouteHandler({

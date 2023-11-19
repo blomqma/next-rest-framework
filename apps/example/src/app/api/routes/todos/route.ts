@@ -58,12 +58,14 @@ const handler = routeHandler({
       {
         status: 201,
         contentType: 'application/json',
-        schema: z.string()
+        schema: z.string(),
+        name: 'CreateTodoSuccessResponse' // Optional name for OpenAPI spec.
       },
       {
         status: 401,
         contentType: 'application/json',
-        schema: z.string()
+        schema: z.string(),
+        name: 'CreateTodoUnauthorizedResponse' // Optional name for OpenAPI spec.
       }
     ])
     // Optional middleware logic executed before request validation.

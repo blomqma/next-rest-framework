@@ -6,14 +6,14 @@ import {
   type AnyCase,
   type BaseQuery,
   type BaseStatus,
-  type BaseContentType
+  type BaseContentType,
+  type OpenApiOperation
 } from '../types';
 import {
   type NextApiRequest,
   type NextApiHandler,
   type NextApiResponse
 } from 'next/types';
-import { type OpenAPIV3_1 } from 'openapi-types';
 import { type z } from 'zod';
 
 type TypedNextApiRequest<Body, Query> = Modify<
@@ -148,8 +148,8 @@ type ApiRouteInput<Middleware extends boolean = false> = <
   : Record<string, unknown>);
 
 export interface ApiRouteOperationDefinition {
-  _config: {
-    openApiOperation?: OpenAPIV3_1.OperationObject;
+  _meta: {
+    openApiOperation?: OpenApiOperation;
     input?: InputObject;
     output?: readonly OutputObject[];
     middleware?: NextApiHandler;
@@ -157,7 +157,7 @@ export interface ApiRouteOperationDefinition {
   };
 }
 
-type ApiRouteOperation = (openApiOperation?: OpenAPIV3_1.OperationObject) => {
+type ApiRouteOperation = (openApiOperation?: OpenApiOperation) => {
   input: ApiRouteInput<true>;
   output: ApiRouteOutput<true>;
   middleware: (middleware?: ApiRouteHandler) => {
@@ -173,7 +173,7 @@ export const apiRouteOperation: ApiRouteOperation = (openApiOperation) => {
     middleware: Middleware | undefined,
     handler: Handler | undefined
   ): ApiRouteOperationDefinition => ({
-    _config: {
+    _meta: {
       openApiOperation,
       input,
       output,

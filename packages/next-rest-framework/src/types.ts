@@ -64,7 +64,27 @@ export interface OutputObject<
   schema: ZodSchema<Body>;
   status: Status;
   contentType: ContentType;
+  name?: string;
 }
+
+export type OpenApiPathItem = Pick<
+  OpenAPIV3_1.PathItemObject,
+  'summary' | 'description' | 'servers' | 'parameters'
+>;
+
+export type OpenApiOperation = Pick<
+  OpenAPIV3_1.OperationObject,
+  | 'tags'
+  | 'summary'
+  | 'description'
+  | 'externalDocs'
+  | 'operationId'
+  | 'parameters'
+  | 'callbacks'
+  | 'deprecated'
+  | 'security'
+  | 'servers'
+>;
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 

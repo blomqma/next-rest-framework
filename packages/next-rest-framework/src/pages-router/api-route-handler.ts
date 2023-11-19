@@ -4,17 +4,17 @@ import {
   type ValidMethod
 } from '../constants';
 import {
-  getPathsFromMethodHandlers,
+  getOasDataFromMethodHandlers,
   isValidMethod,
   validateSchema,
   logNextRestFrameworkError
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { type OpenAPIV3_1 } from 'openapi-types';
 import { type ApiRouteOperationDefinition } from './api-route-operation';
+import { type OpenApiPathItem } from '../types';
 
 export interface ApiRouteParams {
-  openApiPath?: OpenAPIV3_1.PathItemObject;
+  openApiPath?: OpenApiPathItem;
   [ValidMethod.GET]?: ApiRouteOperationDefinition;
   [ValidMethod.PUT]?: ApiRouteOperationDefinition;
   [ValidMethod.POST]?: ApiRouteOperationDefinition;
@@ -46,7 +46,7 @@ export const apiRouteHandler = (methodHandlers: ApiRouteParams) => {
         const route = decodeURIComponent(pathname ?? '');
 
         try {
-          const nrfOasData = getPathsFromMethodHandlers({
+          const nrfOasData = getOasDataFromMethodHandlers({
             methodHandlers,
             route
           });
@@ -66,7 +66,7 @@ ${error}`);
         return;
       }
 
-      const { input, handler, middleware } = methodHandler._config;
+      const { input, handler, middleware } = methodHandler._meta;
 
       if (middleware) {
         await middleware(req, res);
@@ -132,7 +132,7 @@ ${error}`);
   };
 
   handler.getPaths = (route: string) =>
-    getPathsFromMethodHandlers({
+    getOasDataFromMethodHandlers({
       methodHandlers,
       route
     });

@@ -11,40 +11,39 @@ const TODOS = [
 
 // Example App Router RPC handler.
 export const POST = rpcRouteHandler({
-  getTodos: rpcOperation({
-    // Optional OpenAPI operation documentation.
-    operationId: 'getTodos',
-    tags: ['example-api', 'todos', 'app-router', 'rpc']
-  })
+  getTodos: rpcOperation()
     // Output schema for strictly-typed responses and OpenAPI documentation.
     .output([
-      z.array(
-        z.object({
-          id: z.number(),
-          name: z.string(),
-          completed: z.boolean()
-        })
-      )
+      {
+        schema: z.array(
+          z.object({
+            id: z.number(),
+            name: z.string(),
+            completed: z.boolean()
+          })
+        )
+      }
     ])
     .handler(() => {
       // Type-checked response.
       return TODOS;
     }),
 
-  getTodoById: rpcOperation({
-    operationId: 'getTodoById',
-    tags: ['example-api', 'todos', 'app-router', 'rpc']
-  })
+  getTodoById: rpcOperation()
     .input(z.string())
     .output([
-      z.object({
-        error: z.string()
-      }),
-      z.object({
-        id: z.number(),
-        name: z.string(),
-        completed: z.boolean()
-      })
+      {
+        schema: z.object({
+          error: z.string()
+        })
+      },
+      {
+        schema: z.object({
+          id: z.number(),
+          name: z.string(),
+          completed: z.boolean()
+        })
+      }
     ])
     .handler((id) => {
       const todo = TODOS.find((t) => t.id === Number(id));
@@ -58,11 +57,7 @@ export const POST = rpcRouteHandler({
       return todo;
     }),
 
-  createTodo: rpcOperation({
-    // Optional OpenAPI operation documentation.
-    operationId: 'createTodo',
-    tags: ['example-api', 'todos', 'app-router', 'rpc']
-  })
+  createTodo: rpcOperation()
     // Input schema for strictly-typed request, request validation and OpenAPI documentation.
     .input(
       z.object({
@@ -70,20 +65,17 @@ export const POST = rpcRouteHandler({
       })
     )
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([z.object({ message: z.string() })])
+    .output([{ schema: z.object({ message: z.string() }) }])
     .handler(async ({ name }) => {
       // Type-checked response.
       return { message: `New TODO created: ${name}` };
     }),
 
-  deleteTodo: rpcOperation({
-    operationId: 'deleteTodo',
-    tags: ['example-api', 'todos', 'app-router', 'rpc']
-  })
+  deleteTodo: rpcOperation()
     .input(z.string())
     .output([
-      z.object({ error: z.string() }),
-      z.object({ message: z.string() })
+      { schema: z.object({ error: z.string() }) },
+      { schema: z.object({ message: z.string() }) }
     ])
     .handler((id) => {
       // Delete todo.

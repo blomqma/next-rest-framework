@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
-import { type BaseQuery } from '../types';
+import { type OpenApiPathItem, type BaseQuery } from '../types';
 import {
-  getPathsFromMethodHandlers,
+  getOasDataFromMethodHandlers,
   isValidMethod,
   validateSchema,
   logNextRestFrameworkError
@@ -10,12 +10,10 @@ import {
 
 import { type ValidMethod } from '../constants';
 
-import { type OpenAPIV3_1 } from 'openapi-types';
-
 import { type RouteOperationDefinition } from './route-operation';
 
 export interface RouteParams {
-  openApiPath?: OpenAPIV3_1.PathItemObject;
+  openApiPath?: OpenApiPathItem;
   [ValidMethod.GET]?: RouteOperationDefinition;
   [ValidMethod.PUT]?: RouteOperationDefinition;
   [ValidMethod.POST]?: RouteOperationDefinition;
@@ -54,7 +52,7 @@ export const routeHandler = (methodHandlers: RouteParams) => {
         const route = decodeURIComponent(pathname ?? '');
 
         try {
-          const nrfOasData = getPathsFromMethodHandlers({
+          const nrfOasData = getOasDataFromMethodHandlers({
             methodHandlers,
             route
           });
@@ -72,7 +70,7 @@ ${error}`);
         return handleMethodNotAllowed();
       }
 
-      const { input, handler, middleware } = methodHandler._config;
+      const { input, handler, middleware } = methodHandler._meta;
 
       if (middleware) {
         const res = await middleware(new NextRequest(req.clone()), context);
@@ -163,7 +161,7 @@ ${error}`);
   };
 
   handler.getPaths = (route: string) =>
-    getPathsFromMethodHandlers({
+    getOasDataFromMethodHandlers({
       methodHandlers,
       route
     });

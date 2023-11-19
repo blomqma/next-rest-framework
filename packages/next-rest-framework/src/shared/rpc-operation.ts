@@ -1,15 +1,23 @@
 import { type z, type ZodSchema } from 'zod';
-import { type OpenAPIV3_1 } from 'openapi-types';
+
+interface OutputObject {
+  schema: ZodSchema;
+  name?: string;
+}
 
 type OperationHandler<
   Input = unknown,
-  Output extends readonly ZodSchema[] = readonly ZodSchema[]
+  Output extends readonly OutputObject[] = readonly OutputObject[]
 > = (
   params: z.infer<ZodSchema<Input>>
-) => Promise<z.infer<Output[number]>> | z.infer<Output[number]>;
+) =>
+  | Promise<z.infer<Output[number]['schema']>>
+  | z.infer<Output[number]['schema']>;
 
-interface OperationDefinitionMeta<Input, Output extends readonly ZodSchema[]> {
-  openApiOperation?: OpenAPIV3_1.OperationObject;
+interface OperationDefinitionMeta<
+  Input,
+  Output extends readonly OutputObject[]
+> {
   input?: ZodSchema<Input | unknown>;
   output?: Output;
   middleware?: OperationHandler<Input, Output>;
@@ -18,39 +26,38 @@ interface OperationDefinitionMeta<Input, Output extends readonly ZodSchema[]> {
 
 export type OperationDefinition<
   Input = unknown,
-  Output extends readonly ZodSchema[] = readonly ZodSchema[],
+  Output extends readonly OutputObject[] = readonly OutputObject[],
   HasInput extends boolean = true
 > = (HasInput extends true
-  ? (body: z.infer<ZodSchema<Input>>) => Promise<z.infer<Output[number]>>
-  : () => Promise<z.infer<Output[number]>>) & {
+  ? (
+      body: z.infer<ZodSchema<Input>>
+    ) => Promise<z.infer<Output[number]['schema']>>
+  : () => Promise<z.infer<Output[number]['schema']>>) & {
   _meta: OperationDefinitionMeta<Input, Output>;
 };
 
-export const rpcOperation = (
-  openApiOperation?: OpenAPIV3_1.OperationObject
-) => {
-  function createOperation<Input, Output extends readonly ZodSchema[]>(
+export const rpcOperation = () => {
+  function createOperation<Input, Output extends readonly OutputObject[]>(
     input: ZodSchema<Input>,
     output: Output | undefined,
     middleware: OperationHandler<Input, Output> | undefined,
     handler: OperationHandler<Input, Output> | undefined
   ): OperationDefinition<Input, Output, true>;
 
-  function createOperation<Output extends readonly ZodSchema[]>(
+  function createOperation<Output extends readonly OutputObject[]>(
     input: undefined,
     output: Output | undefined,
     middleware: OperationHandler<unknown, Output> | undefined,
     handler: OperationHandler<unknown, Output> | undefined
   ): OperationDefinition<unknown, Output, false>;
 
-  function createOperation<Input, Output extends readonly ZodSchema[]>(
+  function createOperation<Input, Output extends readonly OutputObject[]>(
     input: ZodSchema<Input> | undefined,
     output: Output | undefined,
     middleware: OperationHandler<Input, Output> | undefined,
     handler: OperationHandler<Input, Output> | undefined
   ): OperationDefinition<Input, Output, boolean> {
     const meta = {
-      openApiOperation,
       input,
       output,
       middleware,
@@ -70,7 +77,7 @@ export const rpcOperation = (
 
   return {
     input: <Input>(input: ZodSchema<Input>) => ({
-      output: <Output extends readonly ZodSchema[]>(output: Output) => ({
+      output: <Output extends readonly OutputObject[]>(output: Output) => ({
         middleware: (middleware: OperationHandler<Input, Output>) => ({
           handler: (handler: OperationHandler<Input, Output>) =>
             createOperation(input, output, middleware, handler)
@@ -79,7 +86,7 @@ export const rpcOperation = (
           createOperation(input, output, undefined, handler)
       }),
       middleware: (middleware: OperationHandler<Input>) => ({
-        output: <Output extends readonly ZodSchema[]>(output: Output) => ({
+        output: <Output extends readonly OutputObject[]>(output: Output) => ({
           handler: (handler: OperationHandler<Input, Output>) =>
             createOperation(input, output, middleware, handler)
         }),
@@ -89,7 +96,7 @@ export const rpcOperation = (
       handler: (handler: OperationHandler<Input>) =>
         createOperation(input, undefined, undefined, handler)
     }),
-    output: <Output extends readonly ZodSchema[]>(output: Output) => ({
+    output: <Output extends readonly OutputObject[]>(output: Output) => ({
       middleware: (middleware: OperationHandler<unknown, Output>) => ({
         handler: (handler: OperationHandler<unknown, Output>) =>
           createOperation(undefined, output, middleware, handler)

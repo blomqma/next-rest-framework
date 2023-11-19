@@ -2,6 +2,7 @@ import { type ZodSchema } from 'zod';
 import { NextRequest } from 'next/server';
 import {
   DEFAULT_DESCRIPTION,
+  DEFAULT_ERRORS,
   DEFAULT_TITLE,
   OPEN_API_VERSION,
   VERSION,
@@ -12,11 +13,11 @@ import {
   type RequestOptions,
   type ResponseOptions
 } from 'node-mocks-http';
-import { defaultResponse } from '../src/shared';
 import chalk from 'chalk';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { type BaseQuery, type Modify } from '../src/types';
+import { type OpenAPIV3_1 } from 'openapi-types';
 
 export const resetCustomGlobals = () => {
   global.nextRestFrameworkConfig = undefined;
@@ -141,44 +142,82 @@ export const getExpectedSpec = ({
 }) => {
   const schema = zodToJsonSchema(zodSchema, { target: 'openApi3' });
 
-  const requestBody = {
-    content: {
-      'application/json': {
-        schema
-      }
-    }
-  };
-
-  const responseContent = {
-    content: {
-      'application/json': {
-        schema
-      }
-    }
-  };
-
-  const parameters = [
+  const parameters: OpenAPIV3_1.ParameterObject[] = [
     {
       name: 'foo',
-      in: 'query'
+      in: 'query',
+      required: true,
+      schema: {
+        type: 'string'
+      }
     }
   ];
 
-  let paths = {};
+  let paths: OpenAPIV3_1.PathsObject = {};
+  let schemas: Record<string, OpenAPIV3_1.SchemaObject> = {};
+
+  const defaultResponses: OpenAPIV3_1.ResponsesObject = {
+    '500': {
+      description: DEFAULT_ERRORS.unexpectedError,
+      content: {
+        'application/json': {
+          schema: {
+            $ref: '#/components/schemas/UnexpectedError'
+          }
+        }
+      }
+    }
+  };
+
+  const defaultSchemas: Record<string, OpenAPIV3_1.SchemaObject> = {
+    UnexpectedError: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        message: {
+          type: 'string'
+        }
+      }
+    }
+  };
 
   if (!deniedPaths.includes('/api/foo') && allowedPaths.includes('/api/foo')) {
     paths = {
       ...paths,
       '/api/foo': {
         post: {
-          requestBody,
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/PostFooRequestBody'
+                }
+              }
+            }
+          },
           responses: {
-            '201': responseContent,
-            default: defaultResponse
+            '201': {
+              description: 'Response for status 201',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/PostFooResponseBody'
+                  }
+                }
+              }
+            },
+            ...defaultResponses
           },
           parameters
         }
       }
+    };
+
+    schemas = {
+      ...schemas,
+      ...defaultSchemas,
+      PostFooRequestBody: schema,
+      PostFooResponseBody: schema
     };
   }
 
@@ -190,14 +229,38 @@ export const getExpectedSpec = ({
       ...paths,
       '/api/foo/bar': {
         put: {
-          requestBody,
+          requestBody: {
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/PutBarRequestBody'
+                }
+              }
+            }
+          },
           responses: {
-            '203': responseContent,
-            default: defaultResponse
+            '203': {
+              description: 'Response for status 203',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/PutBarResponseBody'
+                  }
+                }
+              }
+            },
+            ...defaultResponses
           },
           parameters
         }
       }
+    };
+
+    schemas = {
+      ...schemas,
+      ...defaultSchemas,
+      PutBarRequestBody: schema,
+      PutBarResponseBody: schema
     };
   }
 
@@ -210,11 +273,26 @@ export const getExpectedSpec = ({
       '/api/foo/bar/baz': {
         get: {
           responses: {
-            '200': responseContent,
-            default: defaultResponse
+            '200': {
+              description: 'Response for status 200',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/GetBazResponseBody'
+                  }
+                }
+              }
+            },
+            ...defaultResponses
           }
         }
       }
+    };
+
+    schemas = {
+      ...schemas,
+      ...defaultSchemas,
+      GetBazResponseBody: schema
     };
   }
 
@@ -230,15 +308,31 @@ export const getExpectedSpec = ({
             {
               in: 'path',
               name: 'qux',
-              required: true
+              required: true,
+              schema: { type: 'string' }
             }
           ],
           responses: {
-            '200': responseContent,
-            default: defaultResponse
+            '200': {
+              description: 'Response for status 200',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/GetBarResponseBody'
+                  }
+                }
+              }
+            },
+            ...defaultResponses
           }
         }
       }
+    };
+
+    schemas = {
+      ...schemas,
+      ...defaultSchemas,
+      GetBarResponseBody: schema
     };
   }
 
@@ -254,31 +348,51 @@ export const getExpectedSpec = ({
             {
               in: 'path',
               name: 'qux',
-              required: true
+              required: true,
+              schema: { type: 'string' }
             },
             {
               in: 'path',
               name: 'corge',
-              required: true
+              required: true,
+              schema: { type: 'string' }
             }
           ],
           responses: {
-            '200': responseContent,
-            default: defaultResponse
+            '200': {
+              description: 'Response for status 200',
+              content: {
+                'application/json': {
+                  schema: {
+                    $ref: '#/components/schemas/GetQuuxResponseBody'
+                  }
+                }
+              }
+            },
+            ...defaultResponses
           }
         }
       }
     };
+
+    schemas = {
+      ...schemas,
+      ...defaultSchemas,
+      GetQuuxResponseBody: schema
+    };
   }
 
-  const spec = {
+  const spec: OpenAPIV3_1.Document = {
     openapi: OPEN_API_VERSION,
     info: {
       title: DEFAULT_TITLE,
       description: DEFAULT_DESCRIPTION,
       version: `v${VERSION}`
     },
-    paths: Object.keys(paths).length ? paths : undefined
+    paths,
+    components: {
+      schemas
+    }
   };
 
   return spec;

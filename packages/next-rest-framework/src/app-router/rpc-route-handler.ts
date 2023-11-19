@@ -11,11 +11,16 @@ import {
 } from '../shared';
 import { type Client } from '../client/rpc-client';
 import { type OperationDefinition } from '../shared/rpc-operation';
+import { type OpenApiOperation, type OpenApiPathItem } from '../types';
 
 export const rpcRouteHandler = <
   T extends Record<string, OperationDefinition<any, any>>
 >(
-  operations: T
+  operations: T,
+  options?: {
+    openApiPath?: OpenApiPathItem;
+    openApiOperation?: OpenApiOperation;
+  }
 ) => {
   const handler = async (req: NextRequest) => {
     try {
@@ -43,7 +48,8 @@ export const rpcRouteHandler = <
         try {
           const nrfOasData = getOasDataFromRpcOperations({
             operations,
-            route
+            route,
+            options
           });
 
           return NextResponse.json({ nrfOasData }, { status: 200 });
@@ -136,6 +142,7 @@ ${error}`);
   handler.getPaths = (route: string) =>
     getOasDataFromRpcOperations({
       operations,
+      options,
       route
     });
 

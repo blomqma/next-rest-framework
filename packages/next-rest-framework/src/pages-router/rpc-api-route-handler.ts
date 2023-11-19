@@ -6,16 +6,21 @@ import {
 import {
   validateSchema,
   logNextRestFrameworkError,
-  type OperationDefinition,
-  getOasDataFromRpcOperations
+  getOasDataFromRpcOperations,
+  type OperationDefinition
 } from '../shared';
 import { type Client } from '../client/rpc-client';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
+import { type OpenApiOperation, type OpenApiPathItem } from '../types';
 
 export const rpcApiRouteHandler = <
   T extends Record<string, OperationDefinition<any, any>>
 >(
-  operations: T
+  operations: T,
+  options?: {
+    openApiPath?: OpenApiPathItem;
+    openApiOperation?: OpenApiOperation;
+  }
 ) => {
   const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
@@ -36,6 +41,7 @@ export const rpcApiRouteHandler = <
         try {
           const nrfOasData = getOasDataFromRpcOperations({
             operations,
+            options,
             route
           });
 
@@ -111,6 +117,7 @@ ${error}`);
   handler.getPaths = (route: string) =>
     getOasDataFromRpcOperations({
       operations,
+      options,
       route
     });
 
