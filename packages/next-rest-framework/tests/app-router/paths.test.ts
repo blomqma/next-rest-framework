@@ -443,7 +443,7 @@ it('handles error if the OpenAPI spec generation fails', async () => {
   const error = 'Something went wrong';
 
   jest
-    .spyOn(openApiUtils, 'getPathsFromMethodHandlers')
+    .spyOn(openApiUtils, 'getOasDataFromMethodHandlers')
     .mockImplementation(() => {
       throw Error(error);
     });

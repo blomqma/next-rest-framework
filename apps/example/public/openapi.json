@@ -10,32 +10,20 @@
       "get": {
         "responses": {
           "200": {
+            "description": "Response for status 200",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "number" },
-                      "name": { "type": "string" },
-                      "completed": { "type": "boolean" }
-                    },
-                    "required": ["id", "name", "completed"],
-                    "additionalProperties": false
-                  }
+                  "$ref": "#/components/schemas/GetTodosResponseBody"
                 }
               }
             }
           },
-          "default": {
+          "500": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
-                }
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
@@ -47,34 +35,36 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": { "name": { "type": "string" } },
-                "required": ["name"],
-                "additionalProperties": false
-              }
+              "schema": { "$ref": "#/components/schemas/PostTodosRequestBody" }
             }
           }
         },
         "responses": {
           "201": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "401": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Response for status 201",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
+                  "$ref": "#/components/schemas/PostTodosResponseBody"
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Response for status 401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostTodosErrorResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
@@ -87,67 +77,84 @@
       "get": {
         "responses": {
           "200": {
+            "description": "Response for status 200",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": { "type": "number" },
-                    "name": { "type": "string" },
-                    "completed": { "type": "boolean" }
-                  },
-                  "required": ["id", "name", "completed"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/GetTodosResponseBody"
                 }
               }
             }
           },
           "404": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Response for status 404",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
+                  "$ref": "#/components/schemas/GetTodosErrorResponseBody"
                 }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
         },
-        "parameters": [{ "name": "id", "in": "path", "required": true }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "operationId": "getTodoById",
         "tags": ["example-api", "todos", "pages-router"]
       },
       "delete": {
         "responses": {
           "204": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Response for status 204",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
+                  "$ref": "#/components/schemas/DeleteTodosResponseBody"
                 }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteTodosErrorResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
         },
-        "parameters": [{ "name": "id", "in": "path", "required": true }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "operationId": "deleteTodo",
         "tags": ["example-api", "todos", "pages-router"]
       }
@@ -179,9 +186,9 @@
                   }
                 },
                 "oneOf": [
-                  "#/components/schemas/GetTodoByIdBody",
-                  "#/components/schemas/CreateTodoBody",
-                  "#/components/schemas/DeleteTodoBody"
+                  { "$ref": "#/components/schemas/GetTodoByIdBody" },
+                  { "$ref": "#/components/schemas/CreateTodoBody" },
+                  { "$ref": "#/components/schemas/DeleteTodoBody" }
                 ]
               }
             }
@@ -202,25 +209,22 @@
                     }
                   },
                   "oneOf": [
-                    "#/components/schemas/GetTodosResponse",
-                    "#/components/schemas/GetTodoByIdResponse",
-                    "#/components/schemas/GetTodoByIdResponse2",
-                    "#/components/schemas/CreateTodoResponse",
-                    "#/components/schemas/DeleteTodoResponse",
-                    "#/components/schemas/DeleteTodoResponse2"
+                    { "$ref": "#/components/schemas/GetTodosResponse" },
+                    { "$ref": "#/components/schemas/GetTodoByIdResponse" },
+                    { "$ref": "#/components/schemas/GetTodoByIdResponse2" },
+                    { "$ref": "#/components/schemas/CreateTodoResponse" },
+                    { "$ref": "#/components/schemas/DeleteTodoResponse" },
+                    { "$ref": "#/components/schemas/DeleteTodoResponse2" }
                   ]
                 }
               }
             }
           },
-          "default": {
+          "500": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
-                }
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
@@ -231,32 +235,20 @@
       "get": {
         "responses": {
           "200": {
+            "description": "Response for status 200",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": { "type": "number" },
-                      "name": { "type": "string" },
-                      "completed": { "type": "boolean" }
-                    },
-                    "required": ["id", "name", "completed"],
-                    "additionalProperties": false
-                  }
+                  "$ref": "#/components/schemas/GetTodosResponseBody"
                 }
               }
             }
           },
-          "default": {
+          "500": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
-                }
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
@@ -268,34 +260,36 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": { "name": { "type": "string" } },
-                "required": ["name"],
-                "additionalProperties": false
-              }
+              "schema": { "$ref": "#/components/schemas/PostTodosRequestBody" }
             }
           }
         },
         "responses": {
           "201": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "401": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Response for status 201",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
+                  "$ref": "#/components/schemas/CreateTodoSuccessResponse"
                 }
+              }
+            }
+          },
+          "401": {
+            "description": "Response for status 401",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTodoUnauthorizedResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
@@ -308,67 +302,84 @@
       "get": {
         "responses": {
           "200": {
+            "description": "Response for status 200",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": { "type": "number" },
-                    "name": { "type": "string" },
-                    "completed": { "type": "boolean" }
-                  },
-                  "required": ["id", "name", "completed"],
-                  "additionalProperties": false
+                  "$ref": "#/components/schemas/GetTodosResponseBody"
                 }
               }
             }
           },
           "404": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Response for status 404",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
+                  "$ref": "#/components/schemas/GetTodosErrorResponseBody"
                 }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
         },
-        "parameters": [{ "name": "id", "in": "path", "required": true }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "operationId": "getTodoById",
         "tags": ["example-api", "todos", "app-router"]
       },
       "delete": {
         "responses": {
           "204": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "404": {
-            "content": {
-              "application/json": { "schema": { "type": "string" } }
-            }
-          },
-          "default": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Response for status 204",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": { "message": { "type": "string" } }
+                  "$ref": "#/components/schemas/DeleteTodosResponseBody"
                 }
+              }
+            }
+          },
+          "404": {
+            "description": "Response for status 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteTodosErrorResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
               }
             }
           }
         },
-        "parameters": [{ "name": "id", "in": "path", "required": true }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
         "operationId": "deleteTodo",
         "tags": ["example-api", "todos", "app-router"]
       }
@@ -388,6 +399,8 @@
         "required": ["message"],
         "additionalProperties": false
       },
+      "CreateTodoSuccessResponse": { "type": "string" },
+      "CreateTodoUnauthorizedResponse": { "type": "string" },
       "DeleteTodoBody": { "type": "string" },
       "DeleteTodoResponse": {
         "type": "object",
@@ -401,6 +414,8 @@
         "required": ["message"],
         "additionalProperties": false
       },
+      "DeleteTodosErrorResponseBody": { "type": "string" },
+      "DeleteTodosResponseBody": { "type": "string" },
       "GetTodoByIdBody": { "type": "string" },
       "GetTodoByIdResponse": {
         "type": "object",
@@ -418,6 +433,7 @@
         "required": ["id", "name", "completed"],
         "additionalProperties": false
       },
+      "GetTodosErrorResponseBody": { "type": "string" },
       "GetTodosResponse": {
         "type": "array",
         "items": {
@@ -430,6 +446,29 @@
           "required": ["id", "name", "completed"],
           "additionalProperties": false
         }
+      },
+      "GetTodosResponseBody": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "name": { "type": "string" },
+          "completed": { "type": "boolean" }
+        },
+        "required": ["id", "name", "completed"],
+        "additionalProperties": false
+      },
+      "PostTodosErrorResponseBody": { "type": "string" },
+      "PostTodosRequestBody": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "PostTodosResponseBody": { "type": "string" },
+      "UnexpectedError": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "additionalProperties": false
       }
     }
   }

@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-invalid-void-type */
 
-import { type OpenAPIV3_1 } from 'openapi-types';
 import {
   type BaseStatus,
   type BaseQuery,
@@ -8,7 +7,8 @@ import {
   type OutputObject,
   type BaseContentType,
   type Modify,
-  type AnyCase
+  type AnyCase,
+  type OpenApiOperation
 } from '../types';
 import { type NextRequest, type NextResponse } from 'next/server';
 import { type z } from 'zod';
@@ -216,8 +216,8 @@ type NextRouteHandler = (
 ) => Promise<NextResponse> | NextResponse | Promise<void> | void;
 
 export interface RouteOperationDefinition {
-  _config: {
-    openApiOperation?: OpenAPIV3_1.OperationObject;
+  _meta: {
+    openApiOperation?: OpenApiOperation;
     input?: InputObject;
     output?: readonly OutputObject[];
     middleware?: NextRouteHandler;
@@ -225,7 +225,7 @@ export interface RouteOperationDefinition {
   };
 }
 
-type RouteOperation = (openApiOperation?: OpenAPIV3_1.OperationObject) => {
+type RouteOperation = (openApiOperation?: OpenApiOperation) => {
   input: RouteInput<true>;
   output: RouteOutput<true>;
   middleware: (middleware?: RouteHandler) => {
@@ -241,7 +241,7 @@ export const routeOperation: RouteOperation = (openApiOperation) => {
     middleware: Middleware | undefined,
     handler: Handler | undefined
   ): RouteOperationDefinition => ({
-    _config: {
+    _meta: {
       openApiOperation,
       input,
       output,

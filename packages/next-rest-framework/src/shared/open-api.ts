@@ -1,6 +1,11 @@
 import { join } from 'path';
-import { type NextRestFrameworkConfig } from '../types';
-import { type OpenAPIV3, type OpenAPIV3_1 } from 'openapi-types';
+import {
+  type OutputObject,
+  type NextRestFrameworkConfig,
+  type OpenApiPathItem,
+  type OpenApiOperation
+} from '../types';
+import { type OpenAPIV3_1 } from 'openapi-types';
 import {
   DEFAULT_ERRORS,
   NEXT_REST_FRAMEWORK_USER_AGENT,
@@ -13,8 +18,9 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import chalk from 'chalk';
 import * as prettier from 'prettier';
 import { type ApiRouteParams } from '../pages-router';
-import { type RouteParams } from '../app-router';
+import { type RouteOperationDefinition, type RouteParams } from '../app-router';
 import { type OperationDefinition } from './rpc-operation';
+import { type ZodObject, type ZodSchema, type ZodRawShape } from 'zod';
 
 // Traverse the base path and find all nested files.
 export const getNestedFiles = (basePath: string, dir: string): string[] => {
@@ -252,8 +258,8 @@ export const fetchOasDataFromDev = async ({
   );
 
   return {
-    paths: Object.keys(paths).length ? sortObjectByKeys(paths) : undefined,
-    schemas: Object.keys(schemas).length ? sortObjectByKeys(schemas) : undefined
+    paths: sortObjectByKeys(paths),
+    schemas: sortObjectByKeys(schemas)
   };
 };
 
@@ -295,13 +301,14 @@ export const syncOpenApiSpec = async ({
 }) => {
   const path = join(process.cwd(), 'public', config.openApiJsonPath);
 
-  const newSpec = merge(
+  const newSpec: OpenAPIV3_1.Document = merge(
     {
-      openapi: OPEN_API_VERSION
+      openapi: OPEN_API_VERSION,
+      info: config.openApiObject.info,
+      paths,
+      components: { schemas }
     },
-    config.openApiObject,
-    paths && { paths },
-    schemas && { components: { schemas } }
+    config.openApiObject as OpenAPIV3_1.Document
   );
 
   try {
@@ -333,21 +340,7 @@ export const syncOpenApiSpec = async ({
 export const isValidMethod = (x: unknown): x is ValidMethod =>
   Object.values(ValidMethod).includes(x as ValidMethod);
 
-export const defaultResponse: OpenAPIV3_1.ResponseObject = {
-  description: DEFAULT_ERRORS.unexpectedError,
-  content: {
-    'application/json': {
-      schema: {
-        type: 'object',
-        properties: {
-          message: { type: 'string' }
-        }
-      }
-    }
-  }
-};
-
-export const getPathsFromMethodHandlers = ({
+export const getOasDataFromMethodHandlers = ({
   methodHandlers,
   route
 }: {
@@ -361,96 +354,6 @@ export const getPathsFromMethodHandlers = ({
     ...openApiPath
   };
 
-  Object.keys(methodHandlers)
-    .filter(isValidMethod)
-    .forEach((_method) => {
-      const methodHandler = methodHandlers[_method];
-
-      if (!methodHandler) {
-        return;
-      }
-
-      const { openApiOperation, input, output } = methodHandler._config;
-      const method = _method.toLowerCase();
-      const generatedOperationObject: OpenAPIV3_1.OperationObject = {};
-
-      if (input?.body && input?.contentType) {
-        const schema = getJsonSchema({ schema: input.body });
-
-        generatedOperationObject.requestBody = {
-          content: {
-            [input.contentType]: {
-              schema
-            }
-          }
-        };
-      }
-
-      const generatedResponses = output?.reduce(
-        (obj, { status, contentType, schema }) => {
-          const responseSchema = getJsonSchema({ schema });
-
-          return Object.assign(obj, {
-            [status]: {
-              content: {
-                [contentType]: {
-                  schema: responseSchema
-                }
-              }
-            }
-          });
-        },
-        {}
-      );
-
-      generatedOperationObject.responses = {
-        ...generatedResponses,
-        default: defaultResponse
-      };
-
-      const pathParameters = route
-        .match(/{([^}]+)}/g)
-        ?.map((param) => param.replace(/[{}]/g, ''));
-
-      if (pathParameters) {
-        generatedOperationObject.parameters = pathParameters.map((name) => ({
-          name,
-          in: 'path',
-          required: true
-        }));
-      }
-
-      if (input?.query) {
-        generatedOperationObject.parameters = [
-          ...(generatedOperationObject.parameters ?? []),
-          ...getSchemaKeys({
-            schema: input.query
-          })
-            // Filter out query parameters that have already been added to the path parameters automatically.
-            .filter((key) => !pathParameters?.includes(key))
-            .map((key) => ({
-              name: key,
-              in: 'query'
-            }))
-        ];
-      }
-
-      paths[route] = {
-        ...paths[route],
-        [method]: merge(generatedOperationObject, openApiOperation)
-      };
-    });
-
-  return { paths };
-};
-
-export const getOasDataFromRpcOperations = ({
-  operations,
-  route
-}: {
-  operations: Record<string, OperationDefinition>;
-  route: string;
-}): NrfOasData => {
   const requestBodySchemas: Record<
     string,
     { key: string; ref: string; schema: OpenAPIV3_1.SchemaObject }
@@ -463,13 +366,220 @@ export const getOasDataFromRpcOperations = ({
 
   const capitalize = (str: string) => str[0].toUpperCase() + str.slice(1);
 
+  const getSchemaNameFromRoute = () => {
+    const routeComponents = route
+      .split('/')
+      .filter((c) => !c.startsWith('{') && c !== '');
+
+    if (routeComponents.length === 0) {
+      return '';
+    }
+
+    const lastComponent = routeComponents[routeComponents.length - 1];
+    return lastComponent.charAt(0).toUpperCase() + lastComponent.slice(1);
+  };
+
+  Object.entries(methodHandlers)
+    .filter(([method]) => isValidMethod(method))
+    .forEach(
+      ([
+        _method,
+        {
+          _meta: { openApiOperation, input, output }
+        }
+      ]: [string, RouteOperationDefinition]) => {
+        const method = _method.toLowerCase();
+        const generatedOperationObject: OpenAPIV3_1.OperationObject = {};
+
+        if (input?.body && input?.contentType) {
+          const key = `${capitalize(
+            method
+          )}${getSchemaNameFromRoute()}RequestBody`;
+          const schema = getJsonSchema({ schema: input.body });
+
+          requestBodySchemas[method] = {
+            key,
+            ref: `#/components/schemas/${key}`,
+            schema
+          };
+
+          generatedOperationObject.requestBody = {
+            content: {
+              [input.contentType]: {
+                schema: {
+                  $ref: `#/components/schemas/${key}`
+                }
+              }
+            }
+          };
+        }
+
+        const mapResponses = (output: OutputObject[]) =>
+          output.reduce(
+            (obj, { status, contentType, schema, name }, i) => {
+              const key =
+                name ??
+                `${capitalize(method)}${getSchemaNameFromRoute()}${
+                  status >= 400 ? 'Error' : ''
+                }ResponseBody${i > 0 ? i + 1 : ''}`;
+
+              responseBodySchemas[method] = [
+                ...(responseBodySchemas[method] ?? []),
+                {
+                  key,
+                  ref: `#/components/schemas/${key}`,
+                  schema: getJsonSchema({ schema })
+                }
+              ];
+
+              return Object.assign(obj, {
+                [status]: {
+                  description: `Response for status ${status}`,
+                  content: {
+                    [contentType]: {
+                      schema: {
+                        $ref: `#/components/schemas/${key}`
+                      }
+                    }
+                  }
+                }
+              });
+            },
+            {
+              500: {
+                description: DEFAULT_ERRORS.unexpectedError,
+                content: {
+                  'application/json': {
+                    schema: {
+                      $ref: `#/components/schemas/UnexpectedError`
+                    }
+                  }
+                }
+              }
+            }
+          );
+
+        generatedOperationObject.responses = {
+          ...mapResponses(output?.filter(({ status }) => status < 400) ?? []),
+          ...mapResponses(output?.filter(({ status }) => status >= 400) ?? [])
+        };
+
+        const pathParameters = route
+          .match(/{([^}]+)}/g)
+          ?.map((param) => param.replace(/[{}]/g, ''));
+
+        if (pathParameters) {
+          generatedOperationObject.parameters = pathParameters.map((name) => ({
+            name,
+            in: 'path',
+            required: true,
+            schema: { type: 'string' }
+          }));
+        }
+
+        if (input?.query) {
+          generatedOperationObject.parameters = [
+            ...(generatedOperationObject.parameters ?? []),
+            ...getSchemaKeys({
+              schema: input.query
+            })
+              // Filter out query parameters that have already been added to the path parameters automatically.
+              .filter((key) => !pathParameters?.includes(key))
+              .map((key) => {
+                const schema: ZodSchema = (
+                  input.query as ZodObject<ZodRawShape>
+                ).shape[key];
+
+                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+                return {
+                  name: key,
+                  in: 'query',
+                  required: !schema.isOptional(),
+                  schema: getJsonSchema({ schema })
+                } as OpenAPIV3_1.ParameterObject;
+              })
+          ];
+        }
+
+        paths[route] = {
+          ...paths[route],
+          [method]: merge(generatedOperationObject, openApiOperation)
+        };
+      }
+    );
+
+  const requestBodySchemaMapping = Object.values(requestBodySchemas).reduce<
+    Record<string, OpenAPIV3_1.SchemaObject>
+  >((acc, { key, schema }) => {
+    acc[key] = schema;
+    return acc;
+  }, {});
+
+  const responseBodySchemaMapping = Object.values(responseBodySchemas)
+    .flatMap((val) => val)
+    .reduce<Record<string, OpenAPIV3_1.SchemaObject>>(
+      (acc, { key, schema }) => {
+        acc[key] = schema;
+        return acc;
+      },
+      {
+        UnexpectedError: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          },
+          additionalProperties: false
+        }
+      }
+    );
+
+  const schemas: Record<string, OpenAPIV3_1.SchemaObject> = {
+    ...requestBodySchemaMapping,
+    ...responseBodySchemaMapping
+  };
+
+  return { paths, schemas };
+};
+
+export const getOasDataFromRpcOperations = ({
+  operations,
+  options,
+  route
+}: {
+  operations: Record<string, OperationDefinition<any, any>>;
+  options?: {
+    openApiPath?: OpenApiPathItem;
+    openApiOperation?: OpenApiOperation;
+  };
+  route: string;
+}): NrfOasData => {
+  const requestBodySchemas: Record<
+    string,
+    {
+      key: string;
+      ref: string;
+      schema: OpenAPIV3_1.SchemaObject;
+    }
+  > = {};
+
+  const responseBodySchemas: Record<
+    string,
+    Array<{
+      key: string;
+      ref: string;
+      schema: OpenAPIV3_1.SchemaObject;
+    }>
+  > = {};
+
+  const capitalize = (str: string) => str[0].toUpperCase() + str.slice(1);
+
   Object.entries(operations).forEach(
     ([
       operation,
       {
         _meta: { input, output }
       }
-    ]) => {
+    ]: [string, OperationDefinition]) => {
       if (input) {
         const key = `${capitalize(operation)}Body`;
 
@@ -482,16 +592,22 @@ export const getOasDataFromRpcOperations = ({
 
       if (output) {
         responseBodySchemas[operation] = output.reduce<
-          Array<{ key: string; ref: string; schema: OpenAPIV3_1.SchemaObject }>
+          Array<{
+            key: string;
+            ref: string;
+            schema: OpenAPIV3_1.SchemaObject;
+          }>
         >((acc, curr, i) => {
-          const key = `${capitalize(operation)}Response${i > 0 ? i + 1 : ''}`;
+          const key =
+            curr.name ??
+            `${capitalize(operation)}Response${i > 0 ? i + 1 : ''}`;
 
           return [
             ...acc,
             {
               key,
               ref: `#/components/schemas/${key}`,
-              schema: getJsonSchema({ schema: curr })
+              schema: getJsonSchema({ schema: curr.schema })
             }
           ];
         }, []);
@@ -513,63 +629,76 @@ export const getOasDataFromRpcOperations = ({
     return acc;
   }, {});
 
-  const paths: OpenAPIV3_1.PathsObject = {
-    [route]: {
-      post: {
-        description: 'RPC endpoint',
-        tags: ['RPC'],
-        operationId: 'rpcCall',
-        parameters: [
-          {
-            name: 'X-RPC-Operation',
-            in: 'header',
-            schema: {
-              type: 'string'
-            },
-            required: true,
-            description: 'The RPC operation to call.'
-          }
-        ],
-        requestBody: {
-          content: {
-            'application/json': {
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              schema: {
-                discriminator: {
-                  propertyName: 'X-RPC-Operation',
-                  mapping: requestBodySchemaRefMapping
-                },
-                oneOf: Object.values(requestBodySchemas).map(({ ref }) => ref)
-              } as OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject
-            }
-          }
+  const rpcOperation: OpenAPIV3_1.OperationObject = {
+    description: 'RPC endpoint',
+    tags: ['RPC'],
+    operationId: 'rpcCall',
+    parameters: [
+      {
+        name: 'X-RPC-Operation',
+        in: 'header',
+        schema: {
+          type: 'string'
         },
-        responses: {
-          '200': {
-            description: 'Successful response',
-            content: {
-              'application/json': {
-                // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-                schema: {
-                  discriminator: {
-                    propertyName: 'X-RPC-Operation',
-                    mapping: responseBodySchemaRefMapping
-                  },
-                  oneOf: Object.values(responseBodySchemas).flatMap((val) => [
-                    ...val.map(({ ref }) => ref)
-                  ])
-                } as OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject
-              }
+        required: true,
+        description: 'The RPC operation to call.'
+      }
+    ],
+    // eslint-disable-next-line
+    requestBody: {
+      content: {
+        'application/json': {
+          schema: {
+            discriminator: {
+              propertyName: 'X-RPC-Operation',
+              mapping: requestBodySchemaRefMapping
+            },
+            oneOf: Object.values(requestBodySchemas).map(({ ref }) => ({
+              $ref: ref
+            }))
+          }
+        }
+      }
+    } as OpenAPIV3_1.RequestBodyObject,
+    responses: {
+      '200': {
+        description: 'Successful response',
+        content: {
+          'application/json': {
+            schema: {
+              discriminator: {
+                propertyName: 'X-RPC-Operation',
+                mapping: responseBodySchemaRefMapping
+              },
+              oneOf: Object.values(responseBodySchemas).flatMap((val) => [
+                ...val.map(({ ref }) => ({ $ref: ref }))
+              ])
             }
-          },
-          default: defaultResponse as (
-            | OpenAPIV3_1.ReferenceObject
-            | OpenAPIV3_1.ResponseObject
-          ) &
-            (OpenAPIV3.ReferenceObject | OpenAPIV3.ResponseObject)
+          }
+        }
+      },
+      '500': {
+        description: DEFAULT_ERRORS.unexpectedError,
+        content: {
+          'application/json': {
+            schema: {
+              $ref: `#/components/schemas/UnexpectedError`
+            }
+          }
         }
       }
     }
+  };
+
+  const paths: OpenAPIV3_1.PathsObject = {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    [route]: merge(
+      {
+        ...operations.openApiPath,
+        post: merge(rpcOperation, options?.openApiOperation)
+      },
+      options?.openApiPath
+    ) as OpenAPIV3_1.PathItemObject
   };
 
   const requestBodySchemaMapping = Object.values(requestBodySchemas).reduce<
@@ -586,7 +715,15 @@ export const getOasDataFromRpcOperations = ({
         acc[key] = schema;
         return acc;
       },
-      {}
+      {
+        UnexpectedError: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          },
+          additionalProperties: false
+        }
+      }
     );
 
   const schemas: Record<string, OpenAPIV3_1.SchemaObject> = {
