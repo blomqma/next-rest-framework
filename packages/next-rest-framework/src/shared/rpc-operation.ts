@@ -7,59 +7,59 @@ interface OutputObject {
 
 type OperationHandler<
   Input = unknown,
-  Output extends readonly OutputObject[] = readonly OutputObject[]
+  Outputs extends readonly OutputObject[] = readonly OutputObject[]
 > = (
   params: z.infer<ZodSchema<Input>>
 ) =>
-  | Promise<z.infer<Output[number]['schema']>>
-  | z.infer<Output[number]['schema']>;
+  | Promise<z.infer<Outputs[number]['schema']>>
+  | z.infer<Outputs[number]['schema']>;
 
 interface OperationDefinitionMeta<
   Input,
-  Output extends readonly OutputObject[]
+  Outputs extends readonly OutputObject[]
 > {
   input?: ZodSchema<Input | unknown>;
-  output?: Output;
-  middleware?: OperationHandler<Input, Output>;
-  handler?: OperationHandler<Input, Output>;
+  outputs?: Outputs;
+  middleware?: OperationHandler<Input, Outputs>;
+  handler?: OperationHandler<Input, Outputs>;
 }
 
 export type OperationDefinition<
   Input = unknown,
-  Output extends readonly OutputObject[] = readonly OutputObject[],
+  Outputs extends readonly OutputObject[] = readonly OutputObject[],
   HasInput extends boolean = true
 > = (HasInput extends true
   ? (
       body: z.infer<ZodSchema<Input>>
-    ) => Promise<z.infer<Output[number]['schema']>>
-  : () => Promise<z.infer<Output[number]['schema']>>) & {
-  _meta: OperationDefinitionMeta<Input, Output>;
+    ) => Promise<z.infer<Outputs[number]['schema']>>
+  : () => Promise<z.infer<Outputs[number]['schema']>>) & {
+  _meta: OperationDefinitionMeta<Input, Outputs>;
 };
 
 export const rpcOperation = () => {
-  function createOperation<Input, Output extends readonly OutputObject[]>(
+  function createOperation<Input, Outputs extends readonly OutputObject[]>(
     input: ZodSchema<Input>,
-    output: Output | undefined,
-    middleware: OperationHandler<Input, Output> | undefined,
-    handler: OperationHandler<Input, Output> | undefined
-  ): OperationDefinition<Input, Output, true>;
+    outputs: Outputs | undefined,
+    middleware: OperationHandler<Input, Outputs> | undefined,
+    handler: OperationHandler<Input, Outputs> | undefined
+  ): OperationDefinition<Input, Outputs, true>;
 
-  function createOperation<Output extends readonly OutputObject[]>(
+  function createOperation<Outputs extends readonly OutputObject[]>(
     input: undefined,
-    output: Output | undefined,
-    middleware: OperationHandler<unknown, Output> | undefined,
-    handler: OperationHandler<unknown, Output> | undefined
-  ): OperationDefinition<unknown, Output, false>;
+    outputs: Outputs | undefined,
+    middleware: OperationHandler<unknown, Outputs> | undefined,
+    handler: OperationHandler<unknown, Outputs> | undefined
+  ): OperationDefinition<unknown, Outputs, false>;
 
-  function createOperation<Input, Output extends readonly OutputObject[]>(
+  function createOperation<Input, Outputs extends readonly OutputObject[]>(
     input: ZodSchema<Input> | undefined,
-    output: Output | undefined,
-    middleware: OperationHandler<Input, Output> | undefined,
-    handler: OperationHandler<Input, Output> | undefined
-  ): OperationDefinition<Input, Output, boolean> {
+    outputs: Outputs | undefined,
+    middleware: OperationHandler<Input, Outputs> | undefined,
+    handler: OperationHandler<Input, Outputs> | undefined
+  ): OperationDefinition<Input, Outputs, boolean> {
     const meta = {
       input,
-      output,
+      outputs,
       middleware,
       handler
     };
@@ -67,28 +67,28 @@ export const rpcOperation = () => {
     if (input === undefined) {
       const operation = async () => {};
       operation._meta = meta;
-      return operation as OperationDefinition<unknown, Output, false>;
+      return operation as OperationDefinition<unknown, Outputs, false>;
     } else {
       const operation = async (_body: z.infer<ZodSchema<Input>>) => {};
       operation._meta = meta;
-      return operation as OperationDefinition<Input, Output, true>;
+      return operation as OperationDefinition<Input, Outputs, true>;
     }
   }
 
   return {
     input: <Input>(input: ZodSchema<Input>) => ({
-      output: <Output extends readonly OutputObject[]>(output: Output) => ({
+      outputs: <Output extends readonly OutputObject[]>(outputs: Output) => ({
         middleware: (middleware: OperationHandler<Input, Output>) => ({
           handler: (handler: OperationHandler<Input, Output>) =>
-            createOperation(input, output, middleware, handler)
+            createOperation(input, outputs, middleware, handler)
         }),
         handler: (handler: OperationHandler<Input, Output>) =>
-          createOperation(input, output, undefined, handler)
+          createOperation(input, outputs, undefined, handler)
       }),
       middleware: (middleware: OperationHandler<Input>) => ({
-        output: <Output extends readonly OutputObject[]>(output: Output) => ({
+        outputs: <Output extends readonly OutputObject[]>(outputs: Output) => ({
           handler: (handler: OperationHandler<Input, Output>) =>
-            createOperation(input, output, middleware, handler)
+            createOperation(input, outputs, middleware, handler)
         }),
         handler: (handler: OperationHandler<Input>) =>
           createOperation(input, undefined, middleware, handler)
@@ -96,13 +96,13 @@ export const rpcOperation = () => {
       handler: (handler: OperationHandler<Input>) =>
         createOperation(input, undefined, undefined, handler)
     }),
-    output: <Output extends readonly OutputObject[]>(output: Output) => ({
+    outputs: <Output extends readonly OutputObject[]>(outputs: Output) => ({
       middleware: (middleware: OperationHandler<unknown, Output>) => ({
         handler: (handler: OperationHandler<unknown, Output>) =>
-          createOperation(undefined, output, middleware, handler)
+          createOperation(undefined, outputs, middleware, handler)
       }),
       handler: (handler: OperationHandler<unknown, Output>) =>
-        createOperation(undefined, output, undefined, handler)
+        createOperation(undefined, outputs, undefined, handler)
     }),
     middleware: (middleware: OperationHandler) => ({
       handler: (handler: OperationHandler) =>

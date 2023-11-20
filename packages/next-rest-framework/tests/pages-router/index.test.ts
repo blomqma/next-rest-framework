@@ -190,7 +190,7 @@ it.each(Object.values(ValidMethod))(
     const data = ['All good!'];
 
     const operation = apiRouteOperation()
-      .output([
+      .outputs([
         {
           status: 200,
           contentType: 'application/json',
@@ -382,7 +382,7 @@ it.each([
             foo: z.string()
           })
         })
-        .output([
+        .outputs([
           {
             status: 201,
             contentType: 'application/json',

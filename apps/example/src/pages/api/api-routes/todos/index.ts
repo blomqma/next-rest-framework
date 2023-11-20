@@ -17,7 +17,7 @@ export default apiRouteHandler({
     tags: ['example-api', 'todos', 'pages-router']
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 200,
         contentType: 'application/json',
@@ -48,7 +48,7 @@ export default apiRouteHandler({
       })
     })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 201,
         contentType: 'application/json',

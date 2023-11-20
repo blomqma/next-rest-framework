@@ -41,7 +41,7 @@
   - [Route handler options](#route-handler-options)
   - [Route operations](#route-operations)
     - [Input](#input)
-    - [Output](#output)
+    - [Outputs](#outputs)
     - [Middleware](#middleware)
     - [Handler](#handler)
 - [CLI](#cli)
@@ -137,7 +137,7 @@ const handler = routeHandler({
     tags: ['example-api', 'todos', 'app-router']
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 200,
         contentType: 'application/json',
@@ -170,7 +170,7 @@ const handler = routeHandler({
       })
     })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 201,
         contentType: 'application/json',
@@ -230,7 +230,7 @@ export default apiRouteHandler({
     tags: ['example-api', 'todos', 'pages-router']
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 200,
         contentType: 'application/json',
@@ -261,7 +261,7 @@ export default apiRouteHandler({
       })
     })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 201,
         contentType: 'application/json',
@@ -334,7 +334,7 @@ The route operation functions `routeOperation` (App Router) and `apiRouteOperati
 | Name         | Description                                                                                    |
 | ------------ | ---------------------------------------------------------------------------------------------- |
 | `input`      | An [Input](#input) function for defining the validation and documentation of the request.      |
-| `output`     | An [Output](#output) function for defining the validation and documentation of the response.   |
+| `outputs`    | An [Outputs](#outputs) function for defining the validation and documentation of the response. |
 | `handler`    | A [Handler](#handler) function for defining your business logic.                               |
 | `middleware` | A [Middleware](#middleware) function that gets executed before the request input is validated. |
 
@@ -348,11 +348,11 @@ The input function is used for type-checking, validation and documentation of th
 | `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body. When the body schema is defined, a quest with an invalid request body will get an error response.         | `false`  |
 | `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters. When the query schema is defined, a request with invalid query parameters will get an error response. | `false`  |
 
-Calling the input function allows you to chain your API handler logic with the [Output](#output), [Middleware](#middleware) and [Handler](#handler) functions.
+Calling the input function allows you to chain your API handler logic with the [Outputs](#outputs), [Middleware](#middleware) and [Handler](#handler) functions.
 
-#### [Output](#output)
+#### [Outputs](#outputs)
 
-The output function is used for type-checking and documentation of the response, taking in an array of objects with the following properties:
+The outputs function is used for type-checking and documentation of the response, taking in an array of objects with the following properties:
 
 | Name          | Description                                                                                   | Required |
 | ------------- | --------------------------------------------------------------------------------------------- | -------- |

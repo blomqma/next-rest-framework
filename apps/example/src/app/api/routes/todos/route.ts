@@ -21,7 +21,7 @@ const handler = routeHandler({
     tags: ['example-api', 'todos', 'app-router']
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 200,
         contentType: 'application/json',
@@ -54,18 +54,16 @@ const handler = routeHandler({
       })
     })
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         status: 201,
         contentType: 'application/json',
-        schema: z.string(),
-        name: 'CreateTodoSuccessResponse' // Optional name for OpenAPI spec.
+        schema: z.string()
       },
       {
         status: 401,
         contentType: 'application/json',
-        schema: z.string(),
-        name: 'CreateTodoUnauthorizedResponse' // Optional name for OpenAPI spec.
+        schema: z.string()
       }
     ])
     // Optional middleware logic executed before request validation.

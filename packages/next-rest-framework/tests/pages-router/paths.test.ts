@@ -62,7 +62,7 @@ const fooMethodHandlers = apiRouteHandler({
         foo: z.string()
       })
     })
-    .output([
+    .outputs([
       {
         status: 201,
         schema,
@@ -83,7 +83,7 @@ const fooBarMethodHandlers = apiRouteHandler({
         foo: z.string()
       })
     })
-    .output([
+    .outputs([
       {
         status: 203,
         schema,
@@ -97,7 +97,7 @@ const fooBarMethodHandlers = apiRouteHandler({
 
 const fooBarBazMethodHandlers = apiRouteHandler({
   GET: apiRouteOperation()
-    .output([
+    .outputs([
       {
         status: 200,
         schema,
@@ -111,7 +111,7 @@ const fooBarBazMethodHandlers = apiRouteHandler({
 
 const fooBarBazQuxMethodHandlers = apiRouteHandler({
   GET: apiRouteOperation()
-    .output([
+    .outputs([
       {
         status: 200,
         schema,
@@ -125,7 +125,7 @@ const fooBarBazQuxMethodHandlers = apiRouteHandler({
 
 const fooBarBazQuxQuuxCorgeMethodHandlers = apiRouteHandler({
   GET: apiRouteOperation()
-    .output([
+    .outputs([
       {
         status: 200,
         schema,
