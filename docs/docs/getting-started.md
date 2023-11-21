@@ -219,7 +219,7 @@ export default apiRouteHandler({
 
 #### [RPC](#rpc)
 
-You can also define your APIs with RPC route handlers that also auto-generates the OpenAPI spec and provides a type-safe API client for end-to-end type safety.
+You can also define your APIs with RPC route handlers that also auto-generate the OpenAPI spec. The RPC endpoints can be consumed with the type-safe API client for end-to-end type safety.
 
 ##### App Router:
 

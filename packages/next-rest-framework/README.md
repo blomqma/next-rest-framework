@@ -304,7 +304,7 @@ export default apiRouteHandler({
 
 #### [RPC](#rpc)
 
-You can also define your APIs with RPC route handlers that also auto-generates the OpenAPI spec and provides a type-safe API client for end-to-end type safety.
+You can also define your APIs with RPC route handlers that also auto-generate the OpenAPI spec. The RPC endpoints can be consumed with the type-safe API client for end-to-end type safety.
 
 ##### App Router:
 
@@ -424,7 +424,7 @@ const handler = rpcApiRouteHandler({
 
 export default handler;
 
-export type RpcApiRouteClient = typeof handler.client;
+export type ApiRouteRpcClient = typeof handler.client;
 ```
 
 You can also use the `rpcOperation` function outside the `rpcRouteHandler` function and call it server-side anywhere in your code, just like you would call a Next.js [Server Action](https://nextjs.org/docs/app/api-reference/functions/server-actions).

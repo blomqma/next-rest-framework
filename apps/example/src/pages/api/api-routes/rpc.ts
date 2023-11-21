@@ -8,4 +8,4 @@ const handler = rpcApiRouteHandler({
 
 export default handler;
 
-export type RpcApiRouteClient = typeof handler.client;
+export type ApiRouteRpcClient = typeof handler.client;
