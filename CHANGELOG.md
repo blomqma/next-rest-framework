@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 4.0.0 - 2023-11-21
+
+### Add
+
+- Add support for creating RPC endpoints.
+
+#### Breaking change:
+
+The `output` function has been renamed to `outputs` for clarity, simply renaming this will be enough for upgrading.
+
 ### 3.4.7 - 2023-11-14
 
 ### Fixed
