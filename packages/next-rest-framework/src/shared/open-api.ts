@@ -385,7 +385,7 @@ export const getOasDataFromMethodHandlers = ({
       ([
         _method,
         {
-          _meta: { openApiOperation, input, output }
+          _meta: { openApiOperation, input, outputs }
         }
       ]: [string, RouteOperationDefinition]) => {
         const method = _method.toLowerCase();
@@ -414,8 +414,8 @@ export const getOasDataFromMethodHandlers = ({
           };
         }
 
-        const mapResponses = (output: OutputObject[]) =>
-          output.reduce(
+        const mapResponses = (outputs: OutputObject[]) =>
+          outputs.reduce(
             (obj, { status, contentType, schema, name }, i) => {
               const key =
                 name ??
@@ -460,8 +460,8 @@ export const getOasDataFromMethodHandlers = ({
           );
 
         generatedOperationObject.responses = {
-          ...mapResponses(output?.filter(({ status }) => status < 400) ?? []),
-          ...mapResponses(output?.filter(({ status }) => status >= 400) ?? [])
+          ...mapResponses(outputs?.filter(({ status }) => status < 400) ?? []),
+          ...mapResponses(outputs?.filter(({ status }) => status >= 400) ?? [])
         };
 
         const pathParameters = route
@@ -577,7 +577,7 @@ export const getOasDataFromRpcOperations = ({
     ([
       operation,
       {
-        _meta: { input, output }
+        _meta: { input, outputs }
       }
     ]: [string, OperationDefinition]) => {
       if (input) {
@@ -590,8 +590,8 @@ export const getOasDataFromRpcOperations = ({
         };
       }
 
-      if (output) {
-        responseBodySchemas[operation] = output.reduce<
+      if (outputs) {
+        responseBodySchemas[operation] = outputs.reduce<
           Array<{
             key: string;
             ref: string;

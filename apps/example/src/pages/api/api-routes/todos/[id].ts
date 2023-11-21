@@ -20,7 +20,7 @@ export default apiRouteHandler({
         id: z.string()
       })
     })
-    .output([
+    .outputs([
       {
         schema: z.object({
           id: z.number(),
@@ -56,7 +56,7 @@ export default apiRouteHandler({
         id: z.string()
       })
     })
-    .output([
+    .outputs([
       {
         schema: z.string(),
         status: 204,

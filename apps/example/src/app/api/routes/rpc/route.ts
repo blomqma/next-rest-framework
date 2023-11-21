@@ -13,7 +13,7 @@ const TODOS = [
 export const POST = rpcRouteHandler({
   getTodos: rpcOperation()
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([
+    .outputs([
       {
         schema: z.array(
           z.object({
@@ -31,7 +31,7 @@ export const POST = rpcRouteHandler({
 
   getTodoById: rpcOperation()
     .input(z.string())
-    .output([
+    .outputs([
       {
         schema: z.object({
           error: z.string()
@@ -65,7 +65,7 @@ export const POST = rpcRouteHandler({
       })
     )
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .output([{ schema: z.object({ message: z.string() }) }])
+    .outputs([{ schema: z.object({ message: z.string() }) }])
     .handler(async ({ name }) => {
       // Type-checked response.
       return { message: `New TODO created: ${name}` };
@@ -73,7 +73,7 @@ export const POST = rpcRouteHandler({
 
   deleteTodo: rpcOperation()
     .input(z.string())
-    .output([
+    .outputs([
       { schema: z.object({ error: z.string() }) },
       { schema: z.object({ message: z.string() }) }
     ])

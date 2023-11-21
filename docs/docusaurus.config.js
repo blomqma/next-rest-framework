@@ -9,7 +9,7 @@ const EDIT_URL =
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Next REST Framework',
-  tagline: 'Type-safe, self-documenting REST APIs for Next.js',
+  tagline: 'Type-safe, self-documenting APIs for Next.js',
   url: 'https://next-rest-framework.vercel.app',
   baseUrl: '/',
   onBrokenLinks: 'throw',

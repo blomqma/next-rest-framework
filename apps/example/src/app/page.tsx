@@ -49,9 +49,7 @@ export default function Page() {
 
       <main className="max-w-7xl grow w-full flex flex-col justify-center items-center gap-4">
         <h1 className="text-5xl font-bold">Next REST Framework</h1>
-        <p className="text-xl">
-          Type-safe, self-documenting REST APIs for Next.js
-        </p>
+        <p className="text-xl">Type-safe, self-documenting APIs for Next.js</p>
         <div className="flex gap-4">
           <a
             href="https://github.com/blomqma/next-rest-framework"

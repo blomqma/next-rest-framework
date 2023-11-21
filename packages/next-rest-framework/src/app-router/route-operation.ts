@@ -143,7 +143,7 @@ type RouteHandler<
   context: { params: Record<string, string> }
 ) => Promise<TypedResponse> | TypedResponse;
 
-type RouteOutput<
+type RouteOutputs<
   Middleware extends boolean = false,
   Body = unknown,
   Query extends BaseQuery = BaseQuery
@@ -197,12 +197,12 @@ type RouteInput<Middleware extends boolean = false> = <
 >(
   params?: InputObject<Body, Query>
 ) => {
-  output: RouteOutput<Middleware, Body, Query>;
+  outputs: RouteOutputs<Middleware, Body, Query>;
   handler: (callback?: RouteHandler<Body, Query>) => RouteOperationDefinition;
 } & (Middleware extends true
   ? {
       middleware: (callback?: RouteHandler) => {
-        output: RouteOutput<false, Body, Query>;
+        outputs: RouteOutputs<false, Body, Query>;
         handler: (
           callback?: RouteHandler<Body, Query>
         ) => RouteOperationDefinition;
@@ -219,7 +219,7 @@ export interface RouteOperationDefinition {
   _meta: {
     openApiOperation?: OpenApiOperation;
     input?: InputObject;
-    output?: readonly OutputObject[];
+    outputs?: readonly OutputObject[];
     middleware?: NextRouteHandler;
     handler?: NextRouteHandler;
   };
@@ -227,7 +227,7 @@ export interface RouteOperationDefinition {
 
 type RouteOperation = (openApiOperation?: OpenApiOperation) => {
   input: RouteInput<true>;
-  output: RouteOutput<true>;
+  outputs: RouteOutputs<true>;
   middleware: (middleware?: RouteHandler) => {
     handler: (callback?: RouteHandler) => RouteOperationDefinition;
   };
@@ -237,14 +237,14 @@ type RouteOperation = (openApiOperation?: OpenApiOperation) => {
 export const routeOperation: RouteOperation = (openApiOperation) => {
   const createConfig = <Middleware, Handler>(
     input: InputObject | undefined,
-    output: readonly OutputObject[] | undefined,
+    outputs: readonly OutputObject[] | undefined,
     middleware: Middleware | undefined,
     handler: Handler | undefined
   ): RouteOperationDefinition => ({
     _meta: {
       openApiOperation,
       input,
-      output,
+      outputs,
       middleware: middleware as NextRouteHandler,
       handler: handler as NextRouteHandler
     }
@@ -252,27 +252,29 @@ export const routeOperation: RouteOperation = (openApiOperation) => {
 
   return {
     input: (input) => ({
-      output: (output) => ({
+      outputs: (outputs) => ({
         middleware: (middleware) => ({
-          handler: (handler) => createConfig(input, output, middleware, handler)
+          handler: (handler) =>
+            createConfig(input, outputs, middleware, handler)
         }),
-        handler: (handler) => createConfig(input, output, undefined, handler)
+        handler: (handler) => createConfig(input, outputs, undefined, handler)
       }),
       middleware: (middleware) => ({
-        output: (output) => ({
-          handler: (handler) => createConfig(input, output, middleware, handler)
+        outputs: (outputs) => ({
+          handler: (handler) =>
+            createConfig(input, outputs, middleware, handler)
         }),
         handler: (handler) =>
           createConfig(input, undefined, middleware, handler)
       }),
       handler: (handler) => createConfig(input, undefined, undefined, handler)
     }),
-    output: (output) => ({
+    outputs: (outputs) => ({
       middleware: (middleware) => ({
         handler: (handler) =>
-          createConfig(undefined, output, middleware, handler)
+          createConfig(undefined, outputs, middleware, handler)
       }),
-      handler: (handler) => createConfig(undefined, output, undefined, handler)
+      handler: (handler) => createConfig(undefined, outputs, undefined, handler)
     }),
     middleware: (middleware) => ({
       handler: (handler) =>

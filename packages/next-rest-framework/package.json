@@ -1,7 +1,7 @@
 {
   "name": "next-rest-framework",
   "version": "3.4.7",
-  "description": "Next REST Framework - write type-safe, self-documenting REST APIs in Next.js",
+  "description": "Next REST Framework - Type-safe, self-documenting APIs for Next.js",
   "keywords": [
     "nextjs",
     "rest",

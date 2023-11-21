@@ -30,7 +30,9 @@ The docs config options can be used to customize the generated docs:
 | `faviconUrl`  | Custom HTML meta favicon URL.                                                                               |
 | `logoUrl`     | A URL for a custom logo.                                                                                    |
 
-### [Route handler options](#route-handler-options)
+### REST
+
+#### [Route handler options](#route-handler-options)
 
 The following options cam be passed to the `routeHandler` (App Router) and `apiRouteHandler` (Pages Router) functions to create new API endpoints:
 
@@ -39,32 +41,32 @@ The following options cam be passed to the `routeHandler` (App Router) and `apiR
 | `GET \| PUT \| POST \| DELETE \| OPTIONS \| HEAD \| PATCH` | A [Method handler](#method-handlers) object.                                                                                                                | `true`   |
 | `openApiPath`                                              | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated specification. | `false`  |
 
-### [Route operations](#route-operations)
+#### [Route operations](#route-operations)
 
 The route operation functions `routeOperation` (App Router) and `apiRouteOperation` (Pages Router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
 
-| Name         | Description                                                                                    |
-| ------------ | ---------------------------------------------------------------------------------------------- |
-| `input`      | An [Input](#input) function for defining the validation and documentation of the request.      |
-| `output`     | An [Output](#output) function for defining the validation and documentation of the response.   |
-| `handler`    | A [Handler](#handler) function for defining your business logic.                               |
-| `middleware` | A [Middleware](#middleware) function that gets executed before the request input is validated. |
+| Name         | Description                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `input`      | A [Route operation input](#route-operation-input) function for defining the validation and documentation of the request.       |
+| `outputs`    | An [Route operation outputs](#route-operation-outputs) function for defining the validation and documentation of the response. |
+| `handler`    | A [Route operation-handler](#route-operation-handler) function for defining your business logic.                               |
+| `middleware` | A [Route operation middleware](#route-operation-middleware) function that gets executed before the request input is validated. |
 
-#### [Input](#input)
+##### [Route operation input](#route-operation-input)
 
-The input function is used for type-checking, validation and documentation of the request, taking in an object with the following properties:
+The route operation input function is used for type-checking, validation and documentation of the request, taking in an object with the following properties:
 
 | Name          | Description                                                                                                                                                                                            | Required |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
 | `contentType` | The content type header of the request. When the content type is defined, a request with an incorrect content type header will get an error response.                                                  | `false`  |
-| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body. When the body schema is defined, a quest with an invalid request body will get an error response.         | `false`  |
+| `body`        | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the request body. When the body schema is defined, a request with an invalid request body will get an error response.       | `false`  |
 | `query`       | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the query parameters. When the query schema is defined, a request with invalid query parameters will get an error response. | `false`  |
 
-Calling the input function allows you to chain your API handler logic with the [Output](#output), [Middleware](#middleware) and [Handler](#handler) functions.
+Calling the route operation input function allows you to chain your API handler logic with the [Route operation outputs](#route-operation-outputs), [Route operation middleware](#route-operation-middleware) and [Route operation handler](#route-operation-handler) functions.
 
-#### [Output](#output)
+##### [Route operation outputs](#route-operation-outputs)
 
-The output function is used for type-checking and documentation of the response, taking in an array of objects with the following properties:
+The route operation outputs function is used for type-checking and documentation of the response, taking in an array of objects with the following properties:
 
 | Name          | Description                                                                                   | Required |
 | ------------- | --------------------------------------------------------------------------------------------- | -------- |
@@ -72,15 +74,66 @@ The output function is used for type-checking and documentation of the response,
 | `contentType` | The content type header of the response.                                                      | `true`   |
 | `schema`      | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. |  `true`  |
 
-Calling the input function allows you to chain your API handler logic with the [Middleware](#middleware) and [Handler](#handler) functions.
+Calling the route operation outputs function allows you to chain your API handler logic with the [Route operation middleware](#route-operation-middleware) and [Route operation handler](#route-operation-handler) functions.
 
-#### [Middleware](#middleware)
+##### [Route operation middleware](#route-operation-middleware)
 
-The middleware function is executed before validating the request input. The function takes in the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
+The route operation middleware function is executed before validating the request input. The function takes in the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
 
-#### [Handler](#handler)
+Calling the route operation middleware function allows you to chain your API handler logic with the [Handler](#handler) function.
 
-The handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
+##### [Route operation handler](#route-operation-handler)
+
+The route operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
+
+### RPC
+
+#### [RPC route handler options](#rpc-route-handler-options)
+
+The `rpcRouteHandler` (App Router) and `rpcApiRouteHandler` (Pages Router) functions allow the following options as the second parameter after passing your RPC operations.
+
+| Name               | Description                                                                                                                                                 | Required |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `openApiPath`      | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated specification. | `false`  |
+| `openApiOperation` | An OpenAPI [Path Item Object](https://swagger.io/specification/#operation-object) that can be used to override and extend the auto-generated specification. | `false`  |
+
+#### [RPC operations](#rpc-route-operations)
+
+The `rpcOperation` function allows you to define your API handlers for your RPC endpoint. Calling this function allows you to chain your API handler logic with the following functions.
+
+| Name         | Description                                                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `input`      | An [RPC operation input](#rpc-operation-input) function for defining the validation and documentation of the operation.       |
+| `outputs`    | An [RPC operation outputs](#rpc-operation-outputs) function for defining the validation and documentation of the response.    |
+| `handler`    | An [RPC operation handler](#rpc-operation-handler) function for defining your business logic.                                 |
+| `middleware` | An [RPC operation middleware](#rpc-operation-middleware) function that gets executed before the operation input is validated. |
+
+##### [RPC operation input](#rpc-operation-input)
+
+The RPC operation input function is used for type-checking, validation and documentation of the RPC call. It takes in a A [Zod](https://github.com/colinhacks/zod) schema as a parameter that describes the format of the operation input. When the input schema is defined, an RPC call with invalid input will get an error response.
+
+Calling the RPC input function allows you to chain your API handler logic with the [RPC operation outputs](#rpc-operation-outputs), [RPC middleware](#rpc-operation-middleware) and [RPC handler](#rpc-operation-handler) functions.
+
+##### [RPC operation outputs](#rpc-operation-outputs)
+
+The RPC operation outputs function is used for type-checking and documentation of the response, taking in an array of objects with the following properties:
+
+| Name     | Description                                                                                   | Required |
+| -------- | --------------------------------------------------------------------------------------------- | -------- |
+| `schema` | A [Zod](https://github.com/colinhacks/zod) schema describing the format of the response data. |  `true`  |
+| `name`   | An optional name used in the generated OpenAPI spec, e.g. `GetTodosErrorResponse`.            | `false`  |
+
+Calling the RPC operation outputs function allows you to chain your API handler logic with the [RPC operation middleware](#rpc-operation-middleware) and [RPC operation handler](#rpc-operation-handler) functions.
+
+##### [RPC operation middleware](#rpc-operation-middleware)
+
+The RPC operation middleware function is executed before validating RPC operation input. The function takes in strongly typed parameters typed by the [RPC operation input](#rpc-operation-input) function.
+
+Calling the RPC operation middleware function allows you to chain your RPC API handler logic with the [RPC operation handler](#rpc-operation-handler) function.
+
+##### [RPC operation handler](#rpc-operation-handler)
+
+The RPC operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly typed parameters typed by the [RPC operation input](#rpc-operation-input) function.
 
 ## [CLI](#cli)
 

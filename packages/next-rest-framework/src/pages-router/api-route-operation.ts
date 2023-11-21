@@ -66,19 +66,19 @@ type ApiRouteHandler<
   ResponseBody = unknown,
   Status extends BaseStatus = BaseStatus,
   ContentType extends BaseContentType = BaseContentType,
-  Output extends ReadonlyArray<
+  Outputs extends ReadonlyArray<
     OutputObject<ResponseBody, Status, ContentType>
   > = ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>
 > = (
   req: TypedNextApiRequest<Body, Query>,
   res: TypedNextApiResponse<
-    z.infer<Output[number]['schema']>,
-    Output[number]['status'],
-    Output[number]['contentType']
+    z.infer<Outputs[number]['schema']>,
+    Outputs[number]['status'],
+    Outputs[number]['contentType']
   >
 ) => Promise<void> | void;
 
-type ApiRouteOutput<
+type ApiRouteOutputs<
   Middleware extends boolean = false,
   Body = unknown,
   Query extends BaseQuery = BaseQuery
@@ -86,9 +86,9 @@ type ApiRouteOutput<
   ResponseBody,
   Status extends BaseStatus,
   ContentType extends BaseContentType,
-  Output extends ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>
+  Outputs extends ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>
 >(
-  params?: Output
+  params?: Outputs
 ) => {
   handler: (
     callback?: ApiRouteHandler<
@@ -97,7 +97,7 @@ type ApiRouteOutput<
       ResponseBody,
       Status,
       ContentType,
-      Output
+      Outputs
     >
   ) => ApiRouteOperationDefinition;
 } & (Middleware extends true
@@ -109,7 +109,7 @@ type ApiRouteOutput<
           ResponseBody,
           Status,
           ContentType,
-          Output
+          Outputs
         >
       ) => {
         handler: (
@@ -119,7 +119,7 @@ type ApiRouteOutput<
             ResponseBody,
             Status,
             ContentType,
-            Output
+            Outputs
           >
         ) => ApiRouteOperationDefinition;
       };
@@ -132,14 +132,14 @@ type ApiRouteInput<Middleware extends boolean = false> = <
 >(
   params?: InputObject<Body, Query>
 ) => {
-  output: ApiRouteOutput<Middleware, Body, Query>;
+  outputs: ApiRouteOutputs<Middleware, Body, Query>;
   handler: (
     callback?: ApiRouteHandler<Body, Query>
   ) => ApiRouteOperationDefinition;
 } & (Middleware extends true
   ? {
       middleware: (callback?: ApiRouteHandler) => {
-        output: ApiRouteOutput<false, Body, Query>;
+        outputs: ApiRouteOutputs<false, Body, Query>;
         handler: (
           callback?: ApiRouteHandler<Body, Query>
         ) => ApiRouteOperationDefinition;
@@ -151,7 +151,7 @@ export interface ApiRouteOperationDefinition {
   _meta: {
     openApiOperation?: OpenApiOperation;
     input?: InputObject;
-    output?: readonly OutputObject[];
+    outputs?: readonly OutputObject[];
     middleware?: NextApiHandler;
     handler?: NextApiHandler;
   };
@@ -159,7 +159,7 @@ export interface ApiRouteOperationDefinition {
 
 type ApiRouteOperation = (openApiOperation?: OpenApiOperation) => {
   input: ApiRouteInput<true>;
-  output: ApiRouteOutput<true>;
+  outputs: ApiRouteOutputs<true>;
   middleware: (middleware?: ApiRouteHandler) => {
     handler: (callback?: ApiRouteHandler) => ApiRouteOperationDefinition;
   };
@@ -169,14 +169,14 @@ type ApiRouteOperation = (openApiOperation?: OpenApiOperation) => {
 export const apiRouteOperation: ApiRouteOperation = (openApiOperation) => {
   const createConfig = <Middleware, Handler>(
     input: InputObject | undefined,
-    output: readonly OutputObject[] | undefined,
+    outputs: readonly OutputObject[] | undefined,
     middleware: Middleware | undefined,
     handler: Handler | undefined
   ): ApiRouteOperationDefinition => ({
     _meta: {
       openApiOperation,
       input,
-      output,
+      outputs,
       middleware: middleware as NextApiHandler,
       handler: handler as NextApiHandler
     }
@@ -184,27 +184,29 @@ export const apiRouteOperation: ApiRouteOperation = (openApiOperation) => {
 
   return {
     input: (input) => ({
-      output: (output) => ({
+      outputs: (outputs) => ({
         middleware: (middleware) => ({
-          handler: (handler) => createConfig(input, output, middleware, handler)
+          handler: (handler) =>
+            createConfig(input, outputs, middleware, handler)
         }),
-        handler: (handler) => createConfig(input, output, undefined, handler)
+        handler: (handler) => createConfig(input, outputs, undefined, handler)
       }),
       middleware: (middleware) => ({
-        output: (output) => ({
-          handler: (handler) => createConfig(input, output, middleware, handler)
+        outputs: (outputs) => ({
+          handler: (handler) =>
+            createConfig(input, outputs, middleware, handler)
         }),
         handler: (handler) =>
           createConfig(input, undefined, middleware, handler)
       }),
       handler: (handler) => createConfig(input, undefined, undefined, handler)
     }),
-    output: (output) => ({
+    outputs: (outputs) => ({
       middleware: (middleware) => ({
         handler: (handler) =>
-          createConfig(undefined, output, middleware, handler)
+          createConfig(undefined, outputs, middleware, handler)
       }),
-      handler: (handler) => createConfig(undefined, output, undefined, handler)
+      handler: (handler) => createConfig(undefined, outputs, undefined, handler)
     }),
     middleware: (middleware) => ({
       handler: (handler) =>

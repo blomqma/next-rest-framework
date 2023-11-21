@@ -19,7 +19,7 @@ export const GET = routeHandler({
     operationId: 'getTodoById',
     tags: ['example-api', 'todos', 'app-router']
   })
-    .output([
+    .outputs([
       {
         schema: z.object({
           id: z.number(),
@@ -53,7 +53,7 @@ export const GET = routeHandler({
     operationId: 'deleteTodo',
     tags: ['example-api', 'todos', 'app-router']
   })
-    .output([
+    .outputs([
       {
         schema: z.string(),
         status: 204,
