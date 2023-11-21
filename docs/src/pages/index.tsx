@@ -12,7 +12,7 @@ export default function Home(): JSX.Element {
   return (
     <Layout
       title={siteConfig.title}
-      description="Type-safe, self-documenting REST APIs for Next.js"
+      description="Type-safe, self-documenting APIs for Next.js"
     >
       <header className="hero hero--dark">
         <div className="container">
