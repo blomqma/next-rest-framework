@@ -1,14 +1,15 @@
 export {
-  docsApiRouteHandler,
-  apiRouteHandler,
+  docsApiRoute,
+  apiRoute,
   apiRouteOperation,
-  rpcApiRouteHandler
+  rpcApiRoute
 } from './pages-router';
 export {
-  docsRouteHandler,
-  routeHandler,
+  docsRoute,
+  route,
   routeOperation,
-  rpcRouteHandler,
+  rpcRoute,
   TypedNextResponse
 } from './app-router';
 export { rpcOperation } from './shared';
+export * from './deprecated';

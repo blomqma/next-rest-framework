@@ -45,6 +45,7 @@ export const getJsonSchema = ({
 }): OpenAPIV3_1.SchemaObject => {
   if (isZodSchema(schema)) {
     return zodToJsonSchema(schema, {
+      $refStrategy: 'none',
       target: 'openApi3'
     });
   }

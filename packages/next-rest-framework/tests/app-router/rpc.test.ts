@@ -2,12 +2,12 @@ import { validateSchema } from '../../src/shared';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import { createMockRpcRouteRequest } from '../utils';
 import { z } from 'zod';
-import { rpcOperation, rpcRouteHandler } from '../../src';
+import { rpcOperation, rpcRoute } from '../../src';
 
 it.each(Object.values(ValidMethod))(
   'only works with HTTP method POST: %p',
   async (method) => {
-    const { req } = createMockRpcRouteRequest({
+    const { req, context } = createMockRpcRouteRequest({
       method
     });
 
@@ -17,9 +17,9 @@ it.each(Object.values(ValidMethod))(
       .outputs([{ schema: z.array(z.string()) }])
       .handler(() => data);
 
-    const res = await rpcRouteHandler({
+    const res = await rpcRoute({
       test: operation
-    })(req);
+    }).POST(req, context);
 
     if (method === ValidMethod.POST) {
       const json = await res?.json();
@@ -33,12 +33,14 @@ it.each(Object.values(ValidMethod))(
 );
 
 it('returns error for missing operation', async () => {
-  const { req } = createMockRpcRouteRequest({ operation: 'does-not-exist' });
+  const { req, context } = createMockRpcRouteRequest({
+    operation: 'does-not-exist'
+  });
 
-  const res = await rpcRouteHandler({
+  const res = await rpcRoute({
     // @ts-expect-error: Intentionally invalid.
     test: rpcOperation().handler()
-  })(req);
+  }).POST(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(400);
@@ -53,7 +55,7 @@ it('returns error for invalid request body', async () => {
     foo: 'bar'
   };
 
-  const { req } = createMockRpcRouteRequest({
+  const { req, context } = createMockRpcRouteRequest({
     body
   });
 
@@ -61,11 +63,11 @@ it('returns error for invalid request body', async () => {
     foo: z.number()
   });
 
-  const res = await rpcRouteHandler({
+  const res = await rpcRoute({
     test: rpcOperation()
       .input(schema)
       .handler(() => {})
-  })(req);
+  }).POST(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(400);
@@ -79,15 +81,15 @@ it('returns error for invalid request body', async () => {
 });
 
 it('returns a default error response', async () => {
-  const { req } = createMockRpcRouteRequest();
+  const { req, context } = createMockRpcRouteRequest();
 
   console.error = jest.fn();
 
-  const res = await rpcRouteHandler({
+  const res = await rpcRoute({
     test: rpcOperation().handler(() => {
       throw Error('Something went wrong');
     })
-  })(req);
+  }).POST(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(500);
@@ -102,7 +104,7 @@ it('executes middleware before validating input', async () => {
     foo: 'bar'
   };
 
-  const { req } = createMockRpcRouteRequest({ body });
+  const { req, context } = createMockRpcRouteRequest({ body });
 
   const schema = z.object({
     foo: z.number()
@@ -110,14 +112,14 @@ it('executes middleware before validating input', async () => {
 
   console.log = jest.fn();
 
-  const res = await rpcRouteHandler({
+  const res = await rpcRoute({
     test: rpcOperation()
       .input(schema)
       .middleware(() => {
         console.log('foo');
       })
       .handler(() => {})
-  })(req);
+  }).POST(req, context);
 
   expect(console.log).toHaveBeenCalledWith('foo');
 
@@ -133,11 +135,11 @@ it('executes middleware before validating input', async () => {
 });
 
 it('does not execute handler if middleware returns a response', async () => {
-  const { req } = createMockRpcRouteRequest();
+  const { req, context } = createMockRpcRouteRequest();
 
   console.log = jest.fn();
 
-  const res = await rpcRouteHandler({
+  const res = await rpcRoute({
     test: rpcOperation()
       .middleware(() => {
         return { foo: 'bar' };
@@ -145,7 +147,7 @@ it('does not execute handler if middleware returns a response', async () => {
       .handler(() => {
         console.log('foo');
       })
-  })(req);
+  }).POST(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(200);

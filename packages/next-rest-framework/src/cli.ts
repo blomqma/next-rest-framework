@@ -15,7 +15,6 @@ import {
   isValidMethod,
   isWildcardMatch,
   logIgnoredPaths,
-  sortObjectByKeys,
   syncOpenApiSpec
 } from './shared';
 import { existsSync, readFileSync } from 'fs';
@@ -64,6 +63,9 @@ const generatePathsFromBuild = async ({
       .filter((file) => !file.includes('[...'))
       .filter((file) => isAllowedRoute(getRouteName(file)));
 
+  const getCleanedRpcRoutes = (files: string[]) =>
+    files.filter((file) => file.endsWith('rpc/[operationId]/route.ts'));
+
   /*
    * Clean and filter the API routes to paths:
    * - Remove catch-all routes.
@@ -75,6 +77,9 @@ const generatePathsFromBuild = async ({
     files
       .filter((file) => !file.includes('[...'))
       .filter((file) => isAllowedRoute(getApiRouteName(file)));
+
+  const getCleanedRpcApiRoutes = (files: string[]) =>
+    files.filter((file) => file.endsWith('rpc/[operationId].ts'));
 
   const isPathItem = (
     obj: unknown
@@ -88,10 +93,12 @@ const generatePathsFromBuild = async ({
     const path = join(process.cwd(), distDir, 'server/app');
 
     if (existsSync(path)) {
-      const routes = getCleanedRoutes(getNestedFiles(path, ''));
+      const files = getNestedFiles(path, '');
+      const routes = getCleanedRoutes(files);
+      const rpcRoutes = getCleanedRpcRoutes(files);
 
       await Promise.all(
-        routes.map(async (route) => {
+        [...routes, ...rpcRoutes].map(async (route) => {
           const res = await import(
             join(process.cwd(), distDir, 'server/app', route)
           );
@@ -99,7 +106,7 @@ const generatePathsFromBuild = async ({
           Object.entries(res.routeModule.userland)
             .filter(([key]) => isValidMethod(key))
             .forEach(([_key, handler]: [string, any]) => {
-              const data = handler.getPaths(getRouteName(route));
+              const data = handler._getPaths(getRouteName(route));
 
               if (isPathItem(data)) {
                 paths = { ...paths, ...data };
@@ -117,15 +124,17 @@ const generatePathsFromBuild = async ({
     const path = join(process.cwd(), distDir, 'server/pages/api');
 
     if (existsSync(path)) {
-      const apiRoutes = getCleanedApiRoutes(getNestedFiles(path, ''));
+      const files = getNestedFiles(path, '');
+      const apiRoutes = getCleanedApiRoutes(files);
+      const rpcApiRoutes = getCleanedRpcApiRoutes(files);
 
       await Promise.all(
-        apiRoutes.map(async (apiRoute) => {
+        [...apiRoutes, ...rpcApiRoutes].map(async (apiRoute) => {
           const res = await import(
             join(process.cwd(), distDir, 'server/pages/api', apiRoute)
           );
 
-          const data = res.default.getPaths(getApiRouteName(apiRoute));
+          const data = res.default._getPaths(getApiRouteName(apiRoute));
 
           if (isPathItem(data)) {
             paths = { ...paths, ...data };
@@ -141,7 +150,7 @@ const generatePathsFromBuild = async ({
     logIgnoredPaths(ignoredPaths);
   }
 
-  return { paths: sortObjectByKeys(paths) };
+  return { paths };
 };
 
 const findConfig = async ({
@@ -175,7 +184,7 @@ const findConfig = async ({
           Object.entries(res.routeModule.userland)
             .filter(([key]) => isValidMethod(key))
             .forEach(([_key, handler]: [string, any]) => {
-              const _config = handler.nextRestFrameworkConfig;
+              const _config = handler._nextRestFrameworkConfig;
 
               if (_config) {
                 config = _config;
@@ -212,7 +221,7 @@ const findConfig = async ({
             join(process.cwd(), distDir, 'server/pages/api', file)
           );
 
-          const _config = res.default.nextRestFrameworkConfig;
+          const _config = res.default._nextRestFrameworkConfig;
 
           if (_config) {
             config = _config;
@@ -262,6 +271,17 @@ const syncOpenApiSpecFromBuild = async ({
   await syncOpenApiSpec({ config, nrfOasData });
 };
 
+const sortObjectByKeys = <T extends Record<string, unknown>>(obj: T): T => {
+  const unordered = { ...obj };
+
+  return Object.keys(unordered)
+    .sort()
+    .reduce<Record<string, unknown>>((_obj, key) => {
+      _obj[key] = unordered[key];
+      return _obj;
+    }, {}) as T;
+};
+
 // Sync the `openapi.json` file from generated paths from the build output.
 const validateOpenApiSpecFromBuild = async ({
   distDir,
@@ -294,15 +314,24 @@ const validateOpenApiSpecFromBuild = async ({
 
   console.log(chalk.yellowBright('Next REST Framework config found!'));
 
-  const paths = await generatePathsFromBuild({ config, distDir });
+  const { paths = {}, schemas = {} } = await generatePathsFromBuild({
+    config,
+    distDir
+  });
+
   const path = join(process.cwd(), 'public', config.openApiJsonPath);
 
-  const newSpec = merge(
+  const components = Object.keys(schemas).length
+    ? { components: { schemas: sortObjectByKeys(schemas) } }
+    : {};
+
+  const newSpec: OpenAPIV3_1.Document = merge(
     {
-      openapi: OPEN_API_VERSION
+      openapi: OPEN_API_VERSION,
+      paths: sortObjectByKeys(paths)
     },
-    config.openApiObject,
-    { paths }
+    components,
+    config.openApiObject as OpenAPIV3_1.Document
   );
 
   try {

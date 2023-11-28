@@ -1,7 +1,7 @@
 import { validateSchema } from '../../src/shared';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import { z } from 'zod';
-import { rpcApiRouteHandler, rpcOperation } from '../../src';
+import { rpcApiRoute, rpcOperation } from '../../src';
 import { createMockRpcApiRouteRequest } from '../utils';
 
 it.each(Object.values(ValidMethod))(
@@ -17,7 +17,7 @@ it.each(Object.values(ValidMethod))(
       .outputs([{ schema: z.array(z.string()) }])
       .handler(() => data);
 
-    await rpcApiRouteHandler({
+    await rpcApiRoute({
       test: operation
     })(req, res);
 
@@ -37,7 +37,7 @@ it('returns error for missing operation', async () => {
     operation: 'does-not-exist'
   });
 
-  await rpcApiRouteHandler({
+  await rpcApiRoute({
     // @ts-expect-error: Intentionally invalid.
     test: rpcOperation().handler()
   })(req, res);
@@ -63,7 +63,7 @@ it('returns error for invalid request body', async () => {
     foo: z.number()
   });
 
-  await rpcApiRouteHandler({
+  await rpcApiRoute({
     test: rpcOperation()
       .input(schema)
       .handler(() => {})
@@ -85,7 +85,7 @@ it('returns a default error response', async () => {
 
   console.error = jest.fn();
 
-  await rpcApiRouteHandler({
+  await rpcApiRoute({
     test: rpcOperation().handler(() => {
       throw Error('Something went wrong');
     })
@@ -112,7 +112,7 @@ it('executes middleware before validating input', async () => {
 
   console.log = jest.fn();
 
-  await rpcApiRouteHandler({
+  await rpcApiRoute({
     test: rpcOperation()
       .input(schema)
       .middleware(() => {
@@ -138,7 +138,7 @@ it('does not execute handler if middleware returns a response', async () => {
 
   console.log = jest.fn();
 
-  await rpcApiRouteHandler({
+  await rpcApiRoute({
     test: rpcOperation()
       .middleware(() => {
         return { foo: 'bar' };

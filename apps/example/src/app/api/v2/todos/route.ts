@@ -1,50 +1,37 @@
-import {
-  TypedNextResponse,
-  routeHandler,
-  routeOperation
-} from 'next-rest-framework';
+import { TypedNextResponse, route, routeOperation } from 'next-rest-framework';
+import { MOCK_TODOS, todoSchema } from 'utils';
 import { z } from 'zod';
 
-const TODOS = [
-  {
-    id: 1,
-    name: 'TODO 1',
-    completed: false
-  }
-];
-
 // Example App Router route handler with GET/POST handlers.
-const handler = routeHandler({
-  GET: routeOperation({
+const { GET, POST } = route({
+  getTodos: routeOperation({
+    method: 'GET',
     // Optional OpenAPI operation documentation.
-    operationId: 'getTodos',
-    tags: ['example-api', 'todos', 'app-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'app-router']
+    }
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
     .outputs([
       {
         status: 200,
         contentType: 'application/json',
-        schema: z.array(
-          z.object({
-            id: z.number(),
-            name: z.string(),
-            completed: z.boolean()
-          })
-        )
+        schema: z.array(todoSchema)
       }
     ])
     .handler(() => {
       // Type-checked response.
-      return TypedNextResponse.json(TODOS, {
+      return TypedNextResponse.json(MOCK_TODOS, {
         status: 200
       });
     }),
 
-  POST: routeOperation({
+  createTodo: routeOperation({
+    method: 'POST',
     // Optional OpenAPI operation documentation.
-    operationId: 'createTodo',
-    tags: ['example-api', 'todos', 'app-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'app-router']
+    }
   })
     // Input schema for strictly-typed request, request validation and OpenAPI documentation.
     .input({
@@ -66,15 +53,17 @@ const handler = routeHandler({
         schema: z.string()
       }
     ])
-    // Optional middleware logic executed before request validation.
-    .middleware((req) => {
-      if (!req.headers.get('authorization')) {
-        // Type-checked response.
-        return TypedNextResponse.json('Unauthorized', {
-          status: 401
-        });
+    .middleware(
+      // Optional middleware logic executed before request validation.
+      (req) => {
+        if (!req.headers.get('authorization')) {
+          // Type-checked response.
+          return TypedNextResponse.json('Unauthorized', {
+            status: 401
+          });
+        }
       }
-    })
+    )
     .handler(async (req) => {
       const { name } = await req.json(); // Strictly-typed request.
 
@@ -85,4 +74,4 @@ const handler = routeHandler({
     })
 });
 
-export { handler as GET, handler as POST };
+export { GET, POST };

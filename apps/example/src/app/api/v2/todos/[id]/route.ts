@@ -1,8 +1,4 @@
-import {
-  TypedNextResponse,
-  routeHandler,
-  routeOperation
-} from 'next-rest-framework';
+import { TypedNextResponse, route, routeOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -14,10 +10,13 @@ const TODOS = [
 ];
 
 // Example dynamic App Router route handler with GET/DELETE handlers.
-export const GET = routeHandler({
-  GET: routeOperation({
-    operationId: 'getTodoById',
-    tags: ['example-api', 'todos', 'app-router']
+export const { GET, DELETE } = route({
+  getTodoById: routeOperation({
+    method: 'GET',
+    // Optional OpenAPI operation documentation.
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'app-router']
+    }
   })
     .outputs([
       {
@@ -49,9 +48,12 @@ export const GET = routeHandler({
       });
     }),
 
-  DELETE: routeOperation({
-    operationId: 'deleteTodo',
-    tags: ['example-api', 'todos', 'app-router']
+  deleteTodo: routeOperation({
+    method: 'DELETE',
+    // Optional OpenAPI operation documentation.
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'app-router']
+    }
   })
     .outputs([
       {

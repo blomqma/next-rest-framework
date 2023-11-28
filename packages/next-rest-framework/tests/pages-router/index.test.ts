@@ -12,11 +12,7 @@ import {
   type DocsProvider,
   type NextRestFrameworkConfig
 } from '../../src/types';
-import {
-  apiRouteHandler,
-  apiRouteOperation,
-  docsApiRouteHandler
-} from '../../src';
+import { apiRoute, apiRouteOperation, docsApiRoute } from '../../src';
 import fs from 'fs';
 
 jest.mock('fs', () => ({
@@ -42,9 +38,9 @@ it('uses the default config by default', async () => {
     path: '/api'
   });
 
-  expect(global.nextRestFrameworkConfig).toEqual(undefined);
-  await docsApiRouteHandler()(req, res);
-  expect(global.nextRestFrameworkConfig).toEqual(DEFAULT_CONFIG);
+  expect(global._nextRestFrameworkConfig).toEqual(undefined);
+  await docsApiRoute()(req, res);
+  expect(global._nextRestFrameworkConfig).toEqual(DEFAULT_CONFIG);
 });
 
 it('sets the global config', async () => {
@@ -63,8 +59,8 @@ it('sets the global config', async () => {
     openApiJsonPath: '/foo/bar'
   };
 
-  await docsApiRouteHandler(customConfig)(req, res);
-  expect(global.nextRestFrameworkConfig).toEqual(getConfig(customConfig));
+  await docsApiRoute(customConfig)(req, res);
+  expect(global._nextRestFrameworkConfig).toEqual(getConfig(customConfig));
 });
 
 it('logs init, reserved paths and config changed info', async () => {
@@ -75,7 +71,7 @@ it('logs init, reserved paths and config changed info', async () => {
     path: '/api'
   });
 
-  await docsApiRouteHandler()(req, res);
+  await docsApiRoute()(req, res);
 
   expect(console.info).toHaveBeenNthCalledWith(
     1,
@@ -106,7 +102,7 @@ OpenAPI JSON: http://localhost:3000/openapi.json`)
   }));
 
   jest.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from('{}')); // OpenAPI spec found.
-  await docsApiRouteHandler({ openApiJsonPath: '/api/bar/baz' })(req, res);
+  await docsApiRoute({ openApiJsonPath: '/api/bar/baz' })(req, res);
 
   expect(console.info).toHaveBeenNthCalledWith(
     5,
@@ -142,7 +138,7 @@ it('it does not log init info in prod', async () => {
     path: '/api'
   });
 
-  await docsApiRouteHandler()(req, res);
+  await docsApiRoute()(req, res);
   expect(console.info).not.toHaveBeenCalled();
   process.env.NODE_ENV = env;
 });
@@ -165,7 +161,7 @@ it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
       }
     };
 
-    await docsApiRouteHandler(_config)(req, res);
+    await docsApiRoute(_config)(req, res);
     const text = res._getData();
 
     const html = getHtmlForDocs({
@@ -189,26 +185,27 @@ it.each(Object.values(ValidMethod))(
 
     const data = ['All good!'];
 
-    const operation = apiRouteOperation()
-      .outputs([
-        {
-          status: 200,
-          contentType: 'application/json',
-          schema: z.array(z.string())
-        }
-      ])
-      .handler(() => {
-        res.json(data);
-      });
+    const getOperation = (method: keyof typeof ValidMethod) =>
+      apiRouteOperation({ method })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            schema: z.array(z.string())
+          }
+        ])
+        .handler(() => {
+          res.json(data);
+        });
 
-    await apiRouteHandler({
-      GET: operation,
-      PUT: operation,
-      POST: operation,
-      DELETE: operation,
-      OPTIONS: operation,
-      HEAD: operation,
-      PATCH: operation
+    await apiRoute({
+      testGet: getOperation('GET'),
+      testPut: getOperation('PUT'),
+      testPost: getOperation('POST'),
+      testDelete: getOperation('DELETE'),
+      testOptions: getOperation('OPTIONS'),
+      testHead: getOperation('HEAD'),
+      testPatch: getOperation('PATCH')
     })(req, res);
 
     expect(res._getJSONData()).toEqual(data);
@@ -220,8 +217,9 @@ it('returns error for missing handler', async () => {
     method: ValidMethod.GET
   });
 
-  await apiRouteHandler({
-    GET: apiRouteOperation().handler()
+  await apiRoute({
+    // @ts-expect-error: Intentionally invalid.
+    test: apiRouteOperation({ method: 'GET' }).handler()
   })(req, res);
 
   const json = res._getJSONData();
@@ -237,8 +235,8 @@ it('returns error for valid methods with no handlers', async () => {
     method: ValidMethod.POST
   });
 
-  await apiRouteHandler({
-    GET: apiRouteOperation().handler(() => {})
+  await apiRoute({
+    test: apiRouteOperation({ method: 'GET' }).handler(() => {})
   })(req, res);
 
   expect(res.statusCode).toEqual(405);
@@ -266,8 +264,8 @@ it('returns error for invalid request body', async () => {
     foo: z.number()
   });
 
-  await apiRouteHandler({
-    POST: apiRouteOperation()
+  await apiRoute({
+    test: apiRouteOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         body: schema
@@ -302,8 +300,8 @@ it('returns error for invalid query parameters', async () => {
     bar: z.string()
   });
 
-  await apiRouteHandler({
-    POST: apiRouteOperation()
+  await apiRoute({
+    test: apiRouteOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         query: schema
@@ -332,8 +330,8 @@ it('returns error for invalid content-type', async () => {
     }
   });
 
-  await apiRouteHandler({
-    POST: apiRouteOperation()
+  await apiRoute({
+    test: apiRouteOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         body: z.string()
@@ -374,8 +372,8 @@ it.each([
       }
     });
 
-    await apiRouteHandler({
-      POST: apiRouteOperation()
+    await apiRoute({
+      test: apiRouteOperation({ method: 'POST' })
         .input({
           contentType: definedContentType,
           body: z.object({
@@ -408,8 +406,8 @@ it('returns a default error response', async () => {
 
   console.error = jest.fn();
 
-  await apiRouteHandler({
-    GET: apiRouteOperation().handler(() => {
+  await apiRoute({
+    test: apiRouteOperation({ method: 'GET' }).handler(() => {
       throw Error('Something went wrong');
     })
   })(req, res);
@@ -438,8 +436,8 @@ it('executes middleware before validating input', async () => {
 
   console.log = jest.fn();
 
-  await apiRouteHandler({
-    POST: apiRouteOperation()
+  await apiRoute({
+    test: apiRouteOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         body: schema
@@ -469,8 +467,8 @@ it('does not execute handler if middleware returns a response', async () => {
 
   console.log = jest.fn();
 
-  await apiRouteHandler({
-    GET: apiRouteOperation()
+  await apiRoute({
+    test: apiRouteOperation({ method: 'GET' })
       .middleware((_req, res) => {
         res.status(200).json({ foo: 'bar' });
       })

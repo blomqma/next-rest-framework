@@ -14,13 +14,13 @@ import {
   type ResponseOptions
 } from 'node-mocks-http';
 import chalk from 'chalk';
-import zodToJsonSchema from 'zod-to-json-schema';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { type BaseQuery, type Modify } from '../src/types';
+import { type BaseParams, type Modify } from '../src/types';
 import { type OpenAPIV3_1 } from 'openapi-types';
+import { getJsonSchema } from '../src/shared';
 
 export const resetCustomGlobals = () => {
-  global.nextRestFrameworkConfig = undefined;
+  global._nextRestFrameworkConfig = undefined;
 };
 
 export const createMockRouteRequest = <Body, Query>({
@@ -35,7 +35,7 @@ export const createMockRouteRequest = <Body, Query>({
   path?: string;
   body?: Body;
   query?: Query;
-  params?: BaseQuery;
+  params?: BaseParams;
   headers?: Record<string, string>;
 }): {
   req: NextRequest;
@@ -72,19 +72,19 @@ export const createMockRpcRouteRequest = <Body>({
   headers?: Record<string, string>;
 } = {}): {
   req: NextRequest;
+  context: { params: { operationId: typeof operation } };
 } => {
   const { req } = createMockRouteRequest({
     path,
     body,
     method,
     headers: {
-      'X-RPC-Operation': operation,
       'Content-Type': 'application/json',
       ...headers
     }
   });
 
-  return { req };
+  return { req, context: { params: { operationId: operation } } };
 };
 
 export const createMockApiRouteRequest = <
@@ -121,11 +121,10 @@ export const createMockRpcApiRouteRequest = <Body>({
   headers?: Record<string, string>;
 } = {}) =>
   createMockApiRouteRequest({
-    path,
+    path: `${path}?operationId=${operation}`,
     body,
     method,
     headers: {
-      'X-RPC-Operation': operation,
       'Content-Type': 'application/json',
       ...headers
     }
@@ -140,7 +139,7 @@ export const getExpectedSpec = ({
   allowedPaths: string[];
   deniedPaths: string[];
 }) => {
-  const schema = zodToJsonSchema(zodSchema, { target: 'openApi3' });
+  const schema = getJsonSchema({ schema: zodSchema });
 
   const parameters: OpenAPIV3_1.ParameterObject[] = [
     {
@@ -153,7 +152,20 @@ export const getExpectedSpec = ({
     }
   ];
 
-  let paths: OpenAPIV3_1.PathsObject = {};
+  const paths: OpenAPIV3_1.PathsObject = {};
+
+  const defaultSchemas: Record<string, OpenAPIV3_1.SchemaObject> = {
+    UnexpectedError: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        message: {
+          type: 'string'
+        }
+      }
+    }
+  };
+
   let schemas: Record<string, OpenAPIV3_1.SchemaObject> = {};
 
   const defaultResponses: OpenAPIV3_1.ResponsesObject = {
@@ -169,55 +181,40 @@ export const getExpectedSpec = ({
     }
   };
 
-  const defaultSchemas: Record<string, OpenAPIV3_1.SchemaObject> = {
-    UnexpectedError: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        message: {
-          type: 'string'
-        }
-      }
-    }
-  };
-
   if (!deniedPaths.includes('/api/foo') && allowedPaths.includes('/api/foo')) {
-    paths = {
-      ...paths,
-      '/api/foo': {
-        post: {
-          requestBody: {
+    paths['/api/foo'] = {
+      post: {
+        operationId: 'foo',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/FooRequestBody'
+              }
+            }
+          }
+        },
+        responses: {
+          '201': {
+            description: 'Response for status 201',
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/PostFooRequestBody'
+                  $ref: '#/components/schemas/Foo201ResponseBody'
                 }
               }
             }
           },
-          responses: {
-            '201': {
-              description: 'Response for status 201',
-              content: {
-                'application/json': {
-                  schema: {
-                    $ref: '#/components/schemas/PostFooResponseBody'
-                  }
-                }
-              }
-            },
-            ...defaultResponses
-          },
-          parameters
-        }
+          ...defaultResponses
+        },
+        parameters
       }
     };
 
     schemas = {
-      ...schemas,
       ...defaultSchemas,
-      PostFooRequestBody: schema,
-      PostFooResponseBody: schema
+      FooRequestBody: schema,
+      Foo201ResponseBody: schema
     };
   }
 
@@ -225,42 +222,40 @@ export const getExpectedSpec = ({
     !deniedPaths.includes('/api/foo/bar') &&
     allowedPaths.includes('/api/foo/bar')
   ) {
-    paths = {
-      ...paths,
-      '/api/foo/bar': {
-        put: {
-          requestBody: {
+    paths['/api/foo/bar'] = {
+      put: {
+        operationId: 'fooBar',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                $ref: '#/components/schemas/FooBarRequestBody'
+              }
+            }
+          }
+        },
+        responses: {
+          '203': {
+            description: 'Response for status 203',
             content: {
               'application/json': {
                 schema: {
-                  $ref: '#/components/schemas/PutBarRequestBody'
+                  $ref: '#/components/schemas/FooBar203ResponseBody'
                 }
               }
             }
           },
-          responses: {
-            '203': {
-              description: 'Response for status 203',
-              content: {
-                'application/json': {
-                  schema: {
-                    $ref: '#/components/schemas/PutBarResponseBody'
-                  }
-                }
-              }
-            },
-            ...defaultResponses
-          },
-          parameters
-        }
+          ...defaultResponses
+        },
+        parameters
       }
     };
 
     schemas = {
       ...schemas,
       ...defaultSchemas,
-      PutBarRequestBody: schema,
-      PutBarResponseBody: schema
+      FooBarRequestBody: schema,
+      FooBar203ResponseBody: schema
     };
   }
 
@@ -268,23 +263,21 @@ export const getExpectedSpec = ({
     !deniedPaths.includes('/api/foo/bar/baz') &&
     allowedPaths.includes('/api/foo/bar/baz')
   ) {
-    paths = {
-      ...paths,
-      '/api/foo/bar/baz': {
-        get: {
-          responses: {
-            '200': {
-              description: 'Response for status 200',
-              content: {
-                'application/json': {
-                  schema: {
-                    $ref: '#/components/schemas/GetBazResponseBody'
-                  }
+    paths['/api/foo/bar/baz'] = {
+      get: {
+        operationId: 'fooBarBaz',
+        responses: {
+          '200': {
+            description: 'Response for status 200',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/FooBarBaz200ResponseBody'
                 }
               }
-            },
-            ...defaultResponses
-          }
+            }
+          },
+          ...defaultResponses
         }
       }
     };
@@ -292,39 +285,37 @@ export const getExpectedSpec = ({
     schemas = {
       ...schemas,
       ...defaultSchemas,
-      GetBazResponseBody: schema
+      FooBarBaz200ResponseBody: schema
     };
   }
 
   if (
-    !deniedPaths.includes('/api/foo/bar/{qux}') &&
-    allowedPaths.includes('/api/foo/bar/{qux}')
+    !deniedPaths.includes('/api/foo/bar/{baz}') &&
+    allowedPaths.includes('/api/foo/bar/{baz}')
   ) {
-    paths = {
-      ...paths,
-      '/api/foo/bar/{qux}': {
-        get: {
-          parameters: [
-            {
-              in: 'path',
-              name: 'qux',
-              required: true,
-              schema: { type: 'string' }
-            }
-          ],
-          responses: {
-            '200': {
-              description: 'Response for status 200',
-              content: {
-                'application/json': {
-                  schema: {
-                    $ref: '#/components/schemas/GetBarResponseBody'
-                  }
+    paths['/api/foo/bar/{baz}'] = {
+      get: {
+        operationId: 'fooBarBazQux',
+        parameters: [
+          {
+            in: 'path',
+            name: 'baz',
+            required: true,
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Response for status 200',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/FooBarBazQux200ResponseBody'
                 }
               }
-            },
-            ...defaultResponses
-          }
+            }
+          },
+          ...defaultResponses
         }
       }
     };
@@ -332,45 +323,43 @@ export const getExpectedSpec = ({
     schemas = {
       ...schemas,
       ...defaultSchemas,
-      GetBarResponseBody: schema
+      FooBarBazQux200ResponseBody: schema
     };
   }
 
   if (
-    !deniedPaths.includes('/api/foo/bar/{qux}/quux/{corge}') &&
-    allowedPaths.includes('/api/foo/bar/{qux}/quux/{corge}')
+    !deniedPaths.includes('/api/foo/bar/{baz}/qux/{fred}') &&
+    allowedPaths.includes('/api/foo/bar/{baz}/qux/{fred}')
   ) {
-    paths = {
-      ...paths,
-      '/api/foo/bar/{qux}/quux/{corge}': {
-        get: {
-          parameters: [
-            {
-              in: 'path',
-              name: 'qux',
-              required: true,
-              schema: { type: 'string' }
-            },
-            {
-              in: 'path',
-              name: 'corge',
-              required: true,
-              schema: { type: 'string' }
-            }
-          ],
-          responses: {
-            '200': {
-              description: 'Response for status 200',
-              content: {
-                'application/json': {
-                  schema: {
-                    $ref: '#/components/schemas/GetQuuxResponseBody'
-                  }
+    paths['/api/foo/bar/{baz}/qux/{fred}'] = {
+      get: {
+        operationId: 'fooBarBazQuxFred',
+        parameters: [
+          {
+            in: 'path',
+            name: 'baz',
+            required: true,
+            schema: { type: 'string' }
+          },
+          {
+            in: 'path',
+            name: 'fred',
+            required: true,
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Response for status 200',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/FooBarBazQuxFred200ResponseBody'
                 }
               }
-            },
-            ...defaultResponses
-          }
+            }
+          },
+          ...defaultResponses
         }
       }
     };
@@ -378,7 +367,7 @@ export const getExpectedSpec = ({
     schemas = {
       ...schemas,
       ...defaultSchemas,
-      GetQuuxResponseBody: schema
+      FooBarBazQuxFred200ResponseBody: schema
     };
   }
 
@@ -389,11 +378,14 @@ export const getExpectedSpec = ({
       description: DEFAULT_DESCRIPTION,
       version: `v${VERSION}`
     },
-    paths,
-    components: {
-      schemas
-    }
+    paths
   };
+
+  if (Object.keys(schemas).length) {
+    spec.components = {
+      schemas
+    };
+  }
 
   return spec;
 };
@@ -423,14 +415,14 @@ ${`Error: ${error}`}`)
   expect(console.error).toHaveBeenNthCalledWith(
     4,
     chalk.red(`Next REST Framework encountered an error:
-${'Error: OpenAPI spec generation failed for route: /api/foo/bar/{qux}'}
+${'Error: OpenAPI spec generation failed for route: /api/foo/bar/{baz}'}
 ${`Error: ${error}`}`)
   );
 
   expect(console.error).toHaveBeenNthCalledWith(
     5,
     chalk.red(`Next REST Framework encountered an error:
-${'Error: OpenAPI spec generation failed for route: /api/foo/bar/{qux}/quux/{corge}'}
+${'Error: OpenAPI spec generation failed for route: /api/foo/bar/{baz}/qux/{fred}'}
 ${`Error: ${error}`}`)
   );
 };

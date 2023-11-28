@@ -6,15 +6,16 @@
     "version": "v4.0.0"
   },
   "paths": {
-    "/api/api-routes/todos": {
+    "/api/v1/todos": {
       "get": {
+        "operationId": "getTodos",
         "responses": {
           "200": {
             "description": "Response for status 200",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTodosResponseBody"
+                  "$ref": "#/components/schemas/GetTodos200ResponseBody"
                 }
               }
             }
@@ -28,14 +29,14 @@
             }
           }
         },
-        "operationId": "getTodos",
         "tags": ["example-api", "todos", "pages-router"]
       },
       "post": {
+        "operationId": "createTodo",
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/PostTodosRequestBody" }
+              "schema": { "$ref": "#/components/schemas/CreateTodoRequestBody" }
             }
           }
         },
@@ -45,7 +46,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PostTodosResponseBody"
+                  "$ref": "#/components/schemas/CreateTodo201ResponseBody"
                 }
               }
             }
@@ -55,7 +56,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PostTodosErrorResponseBody"
+                  "$ref": "#/components/schemas/CreateTodo401ResponseBody"
                 }
               }
             }
@@ -69,19 +70,19 @@
             }
           }
         },
-        "operationId": "createTodo",
         "tags": ["example-api", "todos", "pages-router"]
       }
     },
-    "/api/api-routes/todos/{id}": {
+    "/api/v1/todos/{id}": {
       "get": {
+        "operationId": "getTodoById",
         "responses": {
           "200": {
             "description": "Response for status 200",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTodosResponseBody"
+                  "$ref": "#/components/schemas/GetTodoById200ResponseBody"
                 }
               }
             }
@@ -91,7 +92,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTodosErrorResponseBody"
+                  "$ref": "#/components/schemas/GetTodoById404ResponseBody"
                 }
               }
             }
@@ -113,17 +114,17 @@
             "schema": { "type": "string" }
           }
         ],
-        "operationId": "getTodoById",
         "tags": ["example-api", "todos", "pages-router"]
       },
       "delete": {
+        "operationId": "deleteTodo",
         "responses": {
           "204": {
             "description": "Response for status 204",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DeleteTodosResponseBody"
+                  "$ref": "#/components/schemas/DeleteTodo204ResponseBody"
                 }
               }
             }
@@ -133,7 +134,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DeleteTodosErrorResponseBody"
+                  "$ref": "#/components/schemas/DeleteTodo404ResponseBody"
                 }
               }
             }
@@ -155,67 +156,94 @@
             "schema": { "type": "string" }
           }
         ],
-        "operationId": "deleteTodo",
         "tags": ["example-api", "todos", "pages-router"]
       }
     },
-    "/api/routes/rpc": {
+    "/api/v2/rpc/createTodo": {
       "post": {
-        "description": "RPC endpoint",
-        "tags": ["RPC"],
-        "operationId": "rpcCall",
-        "parameters": [
-          {
-            "name": "X-RPC-Operation",
-            "in": "header",
-            "schema": { "type": "string" },
-            "required": true,
-            "description": "The RPC operation to call."
+        "operationId": "createTodo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTodoRequestBody" }
+            }
           }
-        ],
+        },
+        "responses": {
+          "200": {
+            "description": "CreateTodoResponseBody",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTodoResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "tags": ["RPC"]
+      }
+    },
+    "/api/v2/rpc/deleteTodo": {
+      "post": {
+        "operationId": "deleteTodo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DeleteTodoRequestBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DeleteTodoResponseBody2",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteTodoResponseBody2"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "tags": ["RPC"]
+      }
+    },
+    "/api/v2/rpc/getTodoById": {
+      "post": {
+        "operationId": "getTodoById",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "discriminator": {
-                  "propertyName": "X-RPC-Operation",
-                  "mapping": {
-                    "getTodoById": "#/components/schemas/GetTodoByIdBody",
-                    "createTodo": "#/components/schemas/CreateTodoBody",
-                    "deleteTodo": "#/components/schemas/DeleteTodoBody"
-                  }
-                },
-                "oneOf": [
-                  { "$ref": "#/components/schemas/GetTodoByIdBody" },
-                  { "$ref": "#/components/schemas/CreateTodoBody" },
-                  { "$ref": "#/components/schemas/DeleteTodoBody" }
-                ]
+                "$ref": "#/components/schemas/GetTodoByIdRequestBody"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "GetTodoByIdResponseBody2",
             "content": {
               "application/json": {
                 "schema": {
-                  "discriminator": {
-                    "propertyName": "X-RPC-Operation",
-                    "mapping": {
-                      "getTodoById": "#/components/schemas/GetTodoByIdBody",
-                      "createTodo": "#/components/schemas/CreateTodoBody",
-                      "deleteTodo": "#/components/schemas/DeleteTodoBody"
-                    }
-                  },
-                  "oneOf": [
-                    { "$ref": "#/components/schemas/GetTodosResponse" },
-                    { "$ref": "#/components/schemas/GetTodoByIdResponse" },
-                    { "$ref": "#/components/schemas/GetTodoByIdResponse2" },
-                    { "$ref": "#/components/schemas/CreateTodoResponse" },
-                    { "$ref": "#/components/schemas/DeleteTodoResponse" },
-                    { "$ref": "#/components/schemas/DeleteTodoResponse2" }
-                  ]
+                  "$ref": "#/components/schemas/GetTodoByIdResponseBody2"
                 }
               }
             }
@@ -228,14 +256,16 @@
               }
             }
           }
-        }
+        },
+        "tags": ["RPC"]
       }
     },
-    "/api/routes/todos": {
-      "get": {
+    "/api/v2/rpc/getTodos": {
+      "post": {
+        "operationId": "getTodos",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "GetTodosResponseBody",
             "content": {
               "application/json": {
                 "schema": {
@@ -253,14 +283,40 @@
             }
           }
         },
+        "tags": ["RPC"]
+      }
+    },
+    "/api/v2/todos": {
+      "get": {
         "operationId": "getTodos",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTodos200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
         "tags": ["example-api", "todos", "app-router"]
       },
       "post": {
+        "operationId": "createTodo",
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/PostTodosRequestBody" }
+              "schema": { "$ref": "#/components/schemas/CreateTodoRequestBody" }
             }
           }
         },
@@ -270,7 +326,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PostTodosResponseBody"
+                  "$ref": "#/components/schemas/CreateTodo201ResponseBody"
                 }
               }
             }
@@ -280,7 +336,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PostTodosErrorResponseBody"
+                  "$ref": "#/components/schemas/CreateTodo401ResponseBody"
                 }
               }
             }
@@ -294,19 +350,19 @@
             }
           }
         },
-        "operationId": "createTodo",
         "tags": ["example-api", "todos", "app-router"]
       }
     },
-    "/api/routes/todos/{id}": {
+    "/api/v2/todos/{id}": {
       "get": {
+        "operationId": "getTodoById",
         "responses": {
           "200": {
             "description": "Response for status 200",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTodosResponseBody"
+                  "$ref": "#/components/schemas/GetTodoById200ResponseBody"
                 }
               }
             }
@@ -316,7 +372,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetTodosErrorResponseBody"
+                  "$ref": "#/components/schemas/GetTodoById404ResponseBody"
                 }
               }
             }
@@ -338,17 +394,17 @@
             "schema": { "type": "string" }
           }
         ],
-        "operationId": "getTodoById",
         "tags": ["example-api", "todos", "app-router"]
       },
       "delete": {
+        "operationId": "deleteTodo",
         "responses": {
           "204": {
             "description": "Response for status 204",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DeleteTodosResponseBody"
+                  "$ref": "#/components/schemas/DeleteTodo204ResponseBody"
                 }
               }
             }
@@ -358,7 +414,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DeleteTodosErrorResponseBody"
+                  "$ref": "#/components/schemas/DeleteTodo404ResponseBody"
                 }
               }
             }
@@ -380,48 +436,21 @@
             "schema": { "type": "string" }
           }
         ],
-        "operationId": "deleteTodo",
         "tags": ["example-api", "todos", "app-router"]
       }
     }
   },
   "components": {
     "schemas": {
-      "CreateTodoBody": {
+      "CreateTodo201ResponseBody": { "type": "string" },
+      "CreateTodo401ResponseBody": { "type": "string" },
+      "CreateTodoRequestBody": {
         "type": "object",
         "properties": { "name": { "type": "string" } },
         "required": ["name"],
         "additionalProperties": false
       },
-      "CreateTodoResponse": {
-        "type": "object",
-        "properties": { "message": { "type": "string" } },
-        "required": ["message"],
-        "additionalProperties": false
-      },
-      "DeleteTodoBody": { "type": "string" },
-      "DeleteTodoResponse": {
-        "type": "object",
-        "properties": { "error": { "type": "string" } },
-        "required": ["error"],
-        "additionalProperties": false
-      },
-      "DeleteTodoResponse2": {
-        "type": "object",
-        "properties": { "message": { "type": "string" } },
-        "required": ["message"],
-        "additionalProperties": false
-      },
-      "DeleteTodosErrorResponseBody": { "type": "string" },
-      "DeleteTodosResponseBody": { "type": "string" },
-      "GetTodoByIdBody": { "type": "string" },
-      "GetTodoByIdResponse": {
-        "type": "object",
-        "properties": { "error": { "type": "string" } },
-        "required": ["error"],
-        "additionalProperties": false
-      },
-      "GetTodoByIdResponse2": {
+      "CreateTodoResponseBody": {
         "type": "object",
         "properties": {
           "id": { "type": "number" },
@@ -431,8 +460,50 @@
         "required": ["id", "name", "completed"],
         "additionalProperties": false
       },
-      "GetTodosErrorResponseBody": { "type": "string" },
-      "GetTodosResponse": {
+      "DeleteTodo204ResponseBody": { "type": "string" },
+      "DeleteTodo404ResponseBody": { "type": "string" },
+      "DeleteTodoRequestBody": { "type": "string" },
+      "DeleteTodoResponseBody": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } },
+        "required": ["error"],
+        "additionalProperties": false
+      },
+      "DeleteTodoResponseBody2": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"],
+        "additionalProperties": false
+      },
+      "GetTodoById200ResponseBody": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "name": { "type": "string" },
+          "completed": { "type": "boolean" }
+        },
+        "required": ["id", "name", "completed"],
+        "additionalProperties": false
+      },
+      "GetTodoById404ResponseBody": { "type": "string" },
+      "GetTodoByIdRequestBody": { "type": "string" },
+      "GetTodoByIdResponseBody": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } },
+        "required": ["error"],
+        "additionalProperties": false
+      },
+      "GetTodoByIdResponseBody2": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "number" },
+          "name": { "type": "string" },
+          "completed": { "type": "boolean" }
+        },
+        "required": ["id", "name", "completed"],
+        "additionalProperties": false
+      },
+      "GetTodos200ResponseBody": {
         "type": "array",
         "items": {
           "type": "object",
@@ -446,23 +517,18 @@
         }
       },
       "GetTodosResponseBody": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "number" },
-          "name": { "type": "string" },
-          "completed": { "type": "boolean" }
-        },
-        "required": ["id", "name", "completed"],
-        "additionalProperties": false
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "number" },
+            "name": { "type": "string" },
+            "completed": { "type": "boolean" }
+          },
+          "required": ["id", "name", "completed"],
+          "additionalProperties": false
+        }
       },
-      "PostTodosErrorResponseBody": { "type": "string" },
-      "PostTodosRequestBody": {
-        "type": "object",
-        "properties": { "name": { "type": "string" } },
-        "required": ["name"],
-        "additionalProperties": false
-      },
-      "PostTodosResponseBody": { "type": "string" },
       "UnexpectedError": {
         "type": "object",
         "properties": { "message": { "type": "string" } },

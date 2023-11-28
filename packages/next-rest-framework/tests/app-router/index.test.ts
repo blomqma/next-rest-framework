@@ -13,7 +13,7 @@ import {
   type DocsProvider,
   type NextRestFrameworkConfig
 } from '../../src/types';
-import { docsRouteHandler, routeHandler, routeOperation } from '../../src';
+import { docsRoute, route, routeOperation } from '../../src';
 import fs from 'fs';
 
 jest.mock('fs', () => ({
@@ -45,9 +45,9 @@ it('uses the default config by default', async () => {
     path: '/api'
   });
 
-  expect(global.nextRestFrameworkConfig).toEqual(undefined);
-  await docsRouteHandler()(req, context);
-  expect(global.nextRestFrameworkConfig).toEqual(DEFAULT_CONFIG);
+  expect(global._nextRestFrameworkConfig).toEqual(undefined);
+  await docsRoute().GET(req, context);
+  expect(global._nextRestFrameworkConfig).toEqual(DEFAULT_CONFIG);
 });
 
 it('sets the global config', async () => {
@@ -66,8 +66,8 @@ it('sets the global config', async () => {
     openApiJsonPath: '/foo/bar'
   };
 
-  await docsRouteHandler(customConfig)(req, context);
-  expect(global.nextRestFrameworkConfig).toEqual(getConfig(customConfig));
+  await docsRoute(customConfig).GET(req, context);
+  expect(global._nextRestFrameworkConfig).toEqual(getConfig(customConfig));
 });
 
 it('logs init, reserved paths and config changed info', async () => {
@@ -78,7 +78,7 @@ it('logs init, reserved paths and config changed info', async () => {
     path: '/api'
   });
 
-  await docsRouteHandler()(req, context);
+  await docsRoute().GET(req, context);
 
   expect(console.info).toHaveBeenNthCalledWith(
     1,
@@ -109,7 +109,7 @@ OpenAPI JSON: http://localhost:3000/openapi.json`)
   }));
 
   jest.spyOn(fs, 'readFileSync').mockImplementation(() => Buffer.from('{}')); // OpenAPI spec found.
-  await docsRouteHandler({ openApiJsonPath: '/api/bar/baz' })(req, context);
+  await docsRoute({ openApiJsonPath: '/api/bar/baz' }).GET(req, context);
 
   expect(console.info).toHaveBeenNthCalledWith(
     5,
@@ -145,7 +145,7 @@ it('it does not log init info in prod', async () => {
     path: '/api'
   });
 
-  await docsRouteHandler()(req, context);
+  await docsRoute().GET(req, context);
   expect(console.info).not.toHaveBeenCalled();
   process.env.NODE_ENV = env;
 });
@@ -168,7 +168,7 @@ it.each(['redoc', 'swagger-ui'] satisfies DocsProvider[])(
       }
     };
 
-    const res = await docsRouteHandler(_config)(req, context);
+    const res = await docsRoute(_config).GET(req, context);
     const text = await res.text();
 
     const html = getHtmlForDocs({
@@ -192,25 +192,26 @@ it.each(Object.values(ValidMethod))(
 
     const data = ['All good!'];
 
-    const operation = routeOperation()
-      .outputs([
-        {
-          status: 200,
-          contentType: 'application/json',
-          schema: z.array(z.string())
-        }
-      ])
-      .handler(() => NextResponse.json(data));
+    const getOperation = (method: keyof typeof ValidMethod) =>
+      routeOperation({ method })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            schema: z.array(z.string())
+          }
+        ])
+        .handler(() => NextResponse.json(data));
 
-    const res = await routeHandler({
-      GET: operation,
-      PUT: operation,
-      POST: operation,
-      DELETE: operation,
-      OPTIONS: operation,
-      HEAD: operation,
-      PATCH: operation
-    })(req, context);
+    const res = await route({
+      testGet: getOperation('GET'),
+      testPut: getOperation('PUT'),
+      testPost: getOperation('POST'),
+      testDelete: getOperation('DELETE'),
+      testOptions: getOperation('OPTIONS'),
+      testHead: getOperation('HEAD'),
+      testPatch: getOperation('PATCH')
+    })[method](req, context);
 
     const json = await res?.json();
     expect(json).toEqual(data);
@@ -222,9 +223,10 @@ it('returns error for missing handler', async () => {
     method: ValidMethod.GET
   });
 
-  const res = await routeHandler({
-    GET: routeOperation().handler()
-  })(req, context);
+  const res = await route({
+    // @ts-expect-error: Intentionally invalid.
+    test: routeOperation({ method: 'GET' }).handler()
+  }).GET(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(500);
@@ -239,9 +241,9 @@ it('returns error for valid methods with no handlers', async () => {
     method: ValidMethod.POST
   });
 
-  const res = await routeHandler({
-    GET: routeOperation().handler(() => {})
-  })(req, context);
+  const res = await route({
+    test: routeOperation({ method: 'GET' }).handler(() => {})
+  }).GET(req, context);
 
   const json = await res?.json();
 
@@ -270,14 +272,14 @@ it('returns error for invalid request body', async () => {
     foo: z.number()
   });
 
-  const res = await routeHandler({
-    POST: routeOperation()
+  const res = await route({
+    test: routeOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         body: schema
       })
       .handler(() => {})
-  })(req, context);
+  }).POST(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(400);
@@ -307,14 +309,14 @@ it('returns error for invalid query parameters', async () => {
     bar: z.string()
   });
 
-  const res = await routeHandler({
-    POST: routeOperation()
+  const res = await route({
+    test: routeOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         query: schema
       })
       .handler(() => {})
-  })(req, context);
+  }).POST(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(400);
@@ -338,14 +340,14 @@ it('returns error for invalid content-type', async () => {
     }
   });
 
-  const res = await routeHandler({
-    POST: routeOperation()
+  const res = await route({
+    test: routeOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         body: z.string()
       })
       .handler(() => {})
-  })(req, context);
+  }).POST(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(415);
@@ -381,8 +383,8 @@ it.each([
       }
     });
 
-    const res = await routeHandler({
-      POST: routeOperation()
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
         .input({
           contentType: definedContentType,
           body: z.object({
@@ -399,7 +401,7 @@ it.each([
           }
         ])
         .handler(() => NextResponse.json({ foo: 'bar' }))
-    })(req, context);
+    }).POST(req, context);
 
     const json = await res?.json();
     expect(res?.status).toEqual(200);
@@ -414,11 +416,11 @@ it('returns a default error response', async () => {
 
   console.error = jest.fn();
 
-  const res = await routeHandler({
-    GET: routeOperation().handler(() => {
+  const res = await route({
+    test: routeOperation({ method: 'GET' }).handler(() => {
       throw Error('Something went wrong');
     })
-  })(req, context);
+  }).GET(req, context);
 
   const json = await res?.json();
 
@@ -446,8 +448,8 @@ it('executes middleware before validating input', async () => {
 
   console.log = jest.fn();
 
-  const res = await routeHandler({
-    POST: routeOperation()
+  const res = await route({
+    test: routeOperation({ method: 'POST' })
       .input({
         contentType: 'application/json',
         body: schema
@@ -456,7 +458,7 @@ it('executes middleware before validating input', async () => {
         console.log('foo');
       })
       .handler(() => {})
-  })(req, context);
+  }).POST(req, context);
 
   expect(console.log).toHaveBeenCalledWith('foo');
 
@@ -478,15 +480,15 @@ it('does not execute handler if middleware returns a response', async () => {
 
   console.log = jest.fn();
 
-  const res = await routeHandler({
-    GET: routeOperation()
+  const res = await route({
+    test: routeOperation({ method: 'GET' })
       .middleware(() => {
         return NextResponse.json({ foo: 'bar' }, { status: 200 });
       })
       .handler(() => {
         console.log('foo');
       })
-  })(req, context);
+  }).GET(req, context);
 
   const json = await res?.json();
   expect(res?.status).toEqual(200);

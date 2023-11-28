@@ -1,5 +1,4 @@
-export * from './docs-route-handler';
-export * from './route-handler';
+export * from './docs-route';
+export * from './route';
 export * from './route-operation';
-export * from './rpc-route-handler';
-export { TypedNextResponse } from './typed-next-response';
+export * from './rpc-route';

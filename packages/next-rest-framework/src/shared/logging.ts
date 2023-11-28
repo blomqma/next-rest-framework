@@ -11,7 +11,7 @@ export const logInitInfo = ({
   baseUrl: string;
   url: string;
 }) => {
-  const configsEqual = isEqualWith(global.nextRestFrameworkConfig, config);
+  const configsEqual = isEqualWith(global._nextRestFrameworkConfig, config);
 
   const logReservedPaths = () => {
     console.info(
@@ -20,8 +20,8 @@ OpenAPI JSON: ${baseUrl}${config.openApiJsonPath}`)
     );
   };
 
-  if (!global.nextRestFrameworkConfig) {
-    global.nextRestFrameworkConfig = config;
+  if (!global._nextRestFrameworkConfig) {
+    global._nextRestFrameworkConfig = config;
     console.info(chalk.green('Next REST Framework initialized! 🚀'));
     logReservedPaths();
   } else if (!configsEqual) {
@@ -29,7 +29,7 @@ OpenAPI JSON: ${baseUrl}${config.openApiJsonPath}`)
       chalk.green('Next REST Framework config changed, re-initializing!')
     );
 
-    global.nextRestFrameworkConfig = config;
+    global._nextRestFrameworkConfig = config;
     logReservedPaths();
   }
 };
