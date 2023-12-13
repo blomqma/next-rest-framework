@@ -1,6 +1,19 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 4.1.0 - 2023-12-13
+
+### Changed
+
+- Improve typings, OpenAPI generation, RPC logic and documentation. Rename several public APIs and deprecate the old ones:
+
+* `docsRouteHandler` -> `docsRoute`
+* `routeHandler` -> `route`
+* `rpcRouteHandler` -> `rpcRoute`
+* `apiRouteHandler` -> `apiRoute`
+* `docsApiRouteHandler` -> `docsApiRoute`
+* `rpcApiRouteHandler` -> `rpcApiRoute`
+
 ### 4.0.0 - 2023-11-21
 
 ### Added
