@@ -1,4 +1,4 @@
-import { apiRouteHandler, apiRouteOperation } from 'next-rest-framework';
+import { apiRoute, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -10,11 +10,13 @@ const TODOS = [
 ];
 
 // Example Pages Router API route with GET/POST handlers.
-export default apiRouteHandler({
-  GET: apiRouteOperation({
+export default apiRoute({
+  getTodos: apiRouteOperation({
+    method: 'GET',
     // Optional OpenAPI operation documentation.
-    operationId: 'getTodos',
-    tags: ['example-api', 'todos', 'pages-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'pages-router']
+    }
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
     .outputs([
@@ -35,10 +37,12 @@ export default apiRouteHandler({
       res.status(200).json(TODOS);
     }),
 
-  POST: apiRouteOperation({
+  createTodo: apiRouteOperation({
+    method: 'POST',
     // Optional OpenAPI operation documentation.
-    operationId: 'createTodo',
-    tags: ['example-api', 'todos', 'pages-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'pages-router']
+    }
   })
     // Input schema for strictly-typed request, request validation and OpenAPI documentation.
     .input({

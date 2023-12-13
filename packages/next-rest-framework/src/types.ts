@@ -49,12 +49,7 @@ export interface NextRestFrameworkConfig {
 export type BaseStatus = number;
 export type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
 export type BaseQuery = Record<string, string | string[]>;
-
-export interface InputObject<Body = unknown, Query = BaseQuery> {
-  contentType?: BaseContentType;
-  body?: ZodSchema<Body>;
-  query?: ZodSchema<Query>;
-}
+export type BaseParams = Record<string, string>;
 
 export interface OutputObject<
   Body = unknown,
@@ -78,7 +73,6 @@ export type OpenApiOperation = Pick<
   | 'summary'
   | 'description'
   | 'externalDocs'
-  | 'operationId'
   | 'parameters'
   | 'callbacks'
   | 'deprecated'

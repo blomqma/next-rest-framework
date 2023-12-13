@@ -19,9 +19,9 @@ To get access to the auto-generated documentation, initialize the docs endpoint 
 ```typescript
 // src/app/api/route.ts
 
-import { docsRouteHandler } from 'next-rest-framework';
+import { docsRoute } from 'next-rest-framework';
 
-export const GET = docsRouteHandler();
+export const { GET } = docsRoute();
 ```
 
 #### Pages Router:
@@ -29,9 +29,9 @@ export const GET = docsRouteHandler();
 ```typescript
 // src/pages/api.ts
 
-import { docsApiRouteHandler } from 'next-rest-framework';
+import { docsApiRoute } from 'next-rest-framework';
 
-export default docsApiRouteHandler();
+export default docsApiRoute();
 ```
 
 This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the [CLI](#cli) command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
@@ -45,11 +45,7 @@ This is enough to get you started. Now you can access the API documentation in y
 ```typescript
 // src/app/api/todos/route.ts
 
-import {
-  TypedNextResponse,
-  routeHandler,
-  routeOperation
-} from 'next-rest-framework';
+import { TypedNextResponse, route, routeOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -61,11 +57,13 @@ const TODOS = [
 ];
 
 // Example App Router route handler with GET/POST handlers.
-const handler = routeHandler({
-  GET: routeOperation({
+export const { GET, POST } = route({
+  getTodos: routeOperation({
+    method: 'GET',
     // Optional OpenAPI operation documentation.
-    operationId: 'getTodos',
-    tags: ['example-api', 'todos', 'app-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'app-router']
+    }
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
     .outputs([
@@ -88,10 +86,12 @@ const handler = routeHandler({
       });
     }),
 
-  POST: routeOperation({
+  createTodo: routeOperation({
+    method: 'POST',
     // Optional OpenAPI operation documentation.
-    operationId: 'createTodo',
-    tags: ['example-api', 'todos', 'app-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'app-router']
+    }
   })
     // Input schema for strictly-typed request, request validation and OpenAPI documentation.
     .input({
@@ -113,15 +113,17 @@ const handler = routeHandler({
         schema: z.string()
       }
     ])
-    // Optional middleware logic executed before request validation.
-    .middleware((req) => {
-      if (!req.headers.get('authorization')) {
-        // Type-checked response.
-        return TypedNextResponse.json('Unauthorized', {
-          status: 401
-        });
+    .middleware(
+      // Optional middleware logic executed before request validation.
+      (req) => {
+        if (!req.headers.get('authorization')) {
+          // Type-checked response.
+          return TypedNextResponse.json('Unauthorized', {
+            status: 401
+          });
+        }
       }
-    })
+    )
     .handler(async (req) => {
       const { name } = await req.json(); // Strictly-typed request.
 
@@ -131,8 +133,6 @@ const handler = routeHandler({
       });
     })
 });
-
-export { handler as GET, handler as POST };
 ```
 
 The `TypedNextResponse` ensures that the response status codes and content-type headers are type-checked. You can still use the regular `NextResponse` if you prefer to have less type-safety.
@@ -142,7 +142,7 @@ The `TypedNextResponse` ensures that the response status codes and content-type 
 ```typescript
 // src/pages/api/todos.ts
 
-import { apiRouteHandler, apiRouteOperation } from 'next-rest-framework';
+import { apiRoute, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -154,11 +154,13 @@ const TODOS = [
 ];
 
 // Example Pages Router API route with GET/POST handlers.
-export default apiRouteHandler({
-  GET: apiRouteOperation({
+export default apiRoute({
+  getTodos: apiRouteOperation({
+    method: 'GET',
     // Optional OpenAPI operation documentation.
-    operationId: 'getTodos',
-    tags: ['example-api', 'todos', 'pages-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'pages-router']
+    }
   })
     // Output schema for strictly-typed responses and OpenAPI documentation.
     .outputs([
@@ -179,10 +181,12 @@ export default apiRouteHandler({
       res.status(200).json(TODOS);
     }),
 
-  POST: apiRouteOperation({
+  createTodo: apiRouteOperation({
+    method: 'POST',
     // Optional OpenAPI operation documentation.
-    operationId: 'createTodo',
-    tags: ['example-api', 'todos', 'pages-router']
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'pages-router']
+    }
   })
     // Input schema for strictly-typed request, request validation and OpenAPI documentation.
     .input({
@@ -217,6 +221,14 @@ export default apiRouteHandler({
 });
 ```
 
+All of above type-safe endpoints will be now auto-generated to your OpenAPI spec and exposed in the documentation:
+
+![Next REST Framework docs](@site/static/img/docs-screenshot.jpg)
+
+##### Client
+
+To achieve end-to-end type-safety, you can use any client implementation that relies on the generated OpenAPI specification, e.g. [openapi-client-axios](https://github.com/openapistack/openapi-client-axios).
+
 #### [RPC](#rpc)
 
 You can also define your APIs with RPC route handlers that also auto-generate the OpenAPI spec. The RPC endpoints can be consumed with the type-safe API client for end-to-end type safety.
@@ -226,7 +238,7 @@ You can also define your APIs with RPC route handlers that also auto-generate th
 ```typescript
 // src/app/api/rpc/route.ts
 
-import { rpcOperation, rpcRouteHandler } from 'next-rest-framework';
+import { rpcOperation, rpcRoute } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -237,19 +249,19 @@ const TODOS = [
   }
 ];
 
+const todoSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  completed: z.boolean()
+});
+
 // Example App Router RPC handler.
-export const POST = rpcRouteHandler({
+const { POST, client } = rpcRoute({
   getTodos: rpcOperation()
     // Output schema for strictly-typed responses and OpenAPI documentation.
     .outputs([
       {
-        schema: z.array(
-          z.object({
-            id: z.number(),
-            name: z.string(),
-            completed: z.boolean()
-          })
-        )
+        schema: z.array(todoSchema)
       }
     ])
     .handler(() => {
@@ -266,11 +278,7 @@ export const POST = rpcRouteHandler({
         })
       },
       {
-        schema: z.object({
-          id: z.number(),
-          name: z.string(),
-          completed: z.boolean()
-        })
+        schema: todoSchema
       }
     ])
     .handler((id) => {
@@ -293,10 +301,13 @@ export const POST = rpcRouteHandler({
       })
     )
     // Output schema for strictly-typed responses and OpenAPI documentation.
-    .outputs([{ schema: z.object({ message: z.string() }) }])
-    .handler(async ({ name }) => {
+    .outputs([{ schema: todoSchema }])
+    .handler(async ({ name: _name }) => {
+      // Create todo.
+      const todo = { id: 2, name: _name, completed: false };
+
       // Type-checked response.
-      return { message: `New TODO created: ${name}` };
+      return todo;
     }),
 
   deleteTodo: rpcOperation()
@@ -321,7 +332,9 @@ export const POST = rpcRouteHandler({
     })
 });
 
-export type AppRouterRpcClient = typeof POST.client;
+export { POST };
+
+export type AppRouterRpcClient = typeof client;
 ```
 
 ##### Pages Router:
@@ -329,39 +342,74 @@ export type AppRouterRpcClient = typeof POST.client;
 ```typescript
 // src/pages/api/rpc.ts
 
-import { rpcApiRouteHandler } from 'next-rest-framework';
+import { rpcApiRoute } from 'next-rest-framework';
 
 // Example Pages Router RPC handler.
-const handler = rpcApiRouteHandler({
+const handler = rpcApiRoute({
   // ...
   // Exactly the same as the App Router example.
 });
 
 export default handler;
 
-export type RpcApiRouteClient = typeof handler.client;
+export type RpcClient = typeof handler.client;
 ```
 
-You can also use the `rpcOperation` function outside the `rpcRouteHandler` function and call it server-side anywhere in your code, just like you would call a Next.js [Server Action](https://nextjs.org/docs/app/api-reference/functions/server-actions).
+The RPC routes will also be included in your OpenAPI spec now. Note that the `rpcOperation` definitions can be also be placed outside the `rpcRouteHandler` if you do not want to expose them as public APIs as long as they're called server-side.
 
 ##### Client
 
+The strongly-typed RPC operations can be called inside inside React server components and server actions like any functions:
+
 ```typescript
-import { rpcClient } from 'next-rest-framework/client';
-import { type AppRouterRpcClient } from 'app/api/routes/rpc/route';
+'use server';
 
-// Works both on server and client.
-const client = rpcClient<AppRouterRpcClient>({
-  url: 'http://localhost:3000/api/routes/rpc'
-});
+import { client } from 'app/api/rpc/route';
 
-// Simple example - the client can be easily integrated with any data fetching framework, like React Query or RTKQ.
 export default async function Page() {
-  const data = await client.getTodos();
+  const todos = await client.getTodos();
+
+  const createTodo = async (name: string) => {
+    'use server';
+    return client.createTodo({ name });
+  };
+
   // ...
 }
 ```
 
-All of above type-safe endpoints will be now auto-generated to your OpenAPI spec and exposed in the documentation:
+For client-rendered components you can use the strongly-typed `rpcClient` or use server actions from the above example:
 
-![Next REST Framework docs](@site/static/img/docs-screenshot.jpg)
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { rpcClient } from 'next-rest-framework/rpc-client';
+import { type RpcClient } from 'app/api/rpc/route';
+
+const client = rpcClient<RpcClient>({
+  url: 'http://localhost:3000/api/rpc'
+});
+
+export default function Page() {
+  // ...
+
+  useEffect(() => {
+    client
+      .getTodos()
+      .then(() => {
+        // ...
+      })
+      .catch(console.error);
+  }, []);
+
+  const createTodo = async (name: string) => {
+    'use server';
+    return client.createTodo({ name });
+  };
+
+  // ...
+}
+```
+
+The `rpcClient` calls can also be easily integrated with any data fetching framework, like React Query or RTKQ.

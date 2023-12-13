@@ -10,7 +10,7 @@ import {
   getHtmlForDocs
 } from '../shared';
 
-export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
+export const docsRoute = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
 
   const handler = async (req: NextRequest, _context: { params: BaseQuery }) => {
@@ -66,6 +66,6 @@ export const docsRouteHandler = (_config?: NextRestFrameworkConfig) => {
     }
   };
 
-  handler.nextRestFrameworkConfig = config;
-  return handler;
+  handler._nextRestFrameworkConfig = config;
+  return { GET: handler };
 };

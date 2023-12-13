@@ -1,30 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
-import { type OpenApiPathItem, type BaseQuery } from '../types';
+import { type OpenApiPathItem, type BaseParams } from '../types';
 import {
-  getOasDataFromMethodHandlers,
   isValidMethod,
   validateSchema,
-  logNextRestFrameworkError
+  logNextRestFrameworkError,
+  getOasDataFromOperations
 } from '../shared';
-
-import { type ValidMethod } from '../constants';
-
 import { type RouteOperationDefinition } from './route-operation';
 
-export interface RouteParams {
-  openApiPath?: OpenApiPathItem;
-  [ValidMethod.GET]?: RouteOperationDefinition;
-  [ValidMethod.PUT]?: RouteOperationDefinition;
-  [ValidMethod.POST]?: RouteOperationDefinition;
-  [ValidMethod.DELETE]?: RouteOperationDefinition;
-  [ValidMethod.OPTIONS]?: RouteOperationDefinition;
-  [ValidMethod.HEAD]?: RouteOperationDefinition;
-  [ValidMethod.PATCH]?: RouteOperationDefinition;
-}
-
-export const routeHandler = (methodHandlers: RouteParams) => {
-  const handler = async (req: NextRequest, context: { params: BaseQuery }) => {
+export const route = <T extends Record<string, RouteOperationDefinition>>(
+  operations: T,
+  options?: {
+    openApiPath?: OpenApiPathItem;
+  }
+) => {
+  const handler = async (req: NextRequest, context: { params: BaseParams }) => {
     try {
       const { method, headers, nextUrl } = req;
       const { pathname } = nextUrl;
@@ -35,7 +26,9 @@ export const routeHandler = (methodHandlers: RouteParams) => {
           {
             status: 405,
             headers: {
-              Allow: Object.keys(methodHandlers).join(', ')
+              Allow: Object.values(operations)
+                .map(({ method }) => method)
+                .join(', ')
             }
           }
         );
@@ -52,8 +45,9 @@ export const routeHandler = (methodHandlers: RouteParams) => {
         const route = decodeURIComponent(pathname ?? '');
 
         try {
-          const nrfOasData = getOasDataFromMethodHandlers({
-            methodHandlers,
+          const nrfOasData = getOasDataFromOperations({
+            operations,
+            options,
             route
           });
 
@@ -64,13 +58,15 @@ ${error}`);
         }
       }
 
-      const methodHandler = methodHandlers[method];
+      const operation = Object.entries(operations).find(
+        ([_operationId, operation]) => operation.method === method
+      )?.[1];
 
-      if (!methodHandler) {
+      if (!operation) {
         return handleMethodNotAllowed();
       }
 
-      const { input, handler, middleware } = methodHandler._meta;
+      const { input, handler, middleware } = operation;
 
       if (middleware) {
         const res = await middleware(new NextRequest(req.clone()), context);
@@ -125,6 +121,7 @@ ${error}`);
             );
           }
         }
+
         if (querySchema) {
           const { valid, errors } = await validateSchema({
             schema: querySchema,
@@ -160,11 +157,22 @@ ${error}`);
     }
   };
 
-  handler.getPaths = (route: string) =>
-    getOasDataFromMethodHandlers({
-      methodHandlers,
+  handler._getPaths = (route: string) =>
+    getOasDataFromOperations({
+      operations,
+      options,
       route
     });
 
-  return handler;
+  // Map all methods for App Router.
+  const api = Object.values(operations).reduce(
+    (acc, operation) => {
+      acc[operation.method as keyof typeof acc] = handler;
+      return acc;
+    },
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/prefer-reduce-type-parameter
+    {} as { [key in T[keyof T]['method']]: typeof handler }
+  ) as { [key in T[keyof T]['method']]: typeof handler };
+
+  return api;
 };

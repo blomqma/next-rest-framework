@@ -5,7 +5,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { getHtmlForDocs } from '../shared/docs';
 import { logInitInfo, logNextRestFrameworkError } from '../shared/logging';
 
-export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
+export const docsApiRoute = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
 
   const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -51,6 +51,6 @@ export const docsApiRouteHandler = (_config?: NextRestFrameworkConfig) => {
     }
   };
 
-  handler.nextRestFrameworkConfig = config;
+  handler._nextRestFrameworkConfig = config;
   return handler;
 };

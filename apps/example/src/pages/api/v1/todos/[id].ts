@@ -1,4 +1,4 @@
-import { apiRouteHandler, apiRouteOperation } from 'next-rest-framework';
+import { apiRoute, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -10,10 +10,12 @@ const TODOS = [
 ];
 
 // Example dynamic Pages Router API route with GET/DELETE handlers.
-export default apiRouteHandler({
-  GET: apiRouteOperation({
-    operationId: 'getTodoById',
-    tags: ['example-api', 'todos', 'pages-router']
+export default apiRoute({
+  getTodoById: apiRouteOperation({
+    method: 'GET',
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'pages-router']
+    }
   })
     .input({
       query: z.object({
@@ -47,9 +49,11 @@ export default apiRouteHandler({
       res.status(200).json(todo);
     }),
 
-  DELETE: apiRouteOperation({
-    operationId: 'deleteTodo',
-    tags: ['example-api', 'todos', 'pages-router']
+  deleteTodo: apiRouteOperation({
+    method: 'DELETE',
+    openApiOperation: {
+      tags: ['example-api', 'todos', 'pages-router']
+    }
   })
     .input({
       query: z.object({

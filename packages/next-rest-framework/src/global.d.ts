@@ -1,3 +1,3 @@
 declare module globalThis {
-  var nextRestFrameworkConfig;
+  var _nextRestFrameworkConfig;
 }

@@ -6,15 +6,15 @@ import {
 import {
   validateSchema,
   logNextRestFrameworkError,
-  getOasDataFromRpcOperations,
-  type OperationDefinition
+  type RpcOperationDefinition,
+  getOasDataFromRpcOperations
 } from '../shared';
-import { type Client } from '../client/rpc-client';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { type OpenApiOperation, type OpenApiPathItem } from '../types';
+import { type RpcClient } from '../client/rpc-client';
 
-export const rpcApiRouteHandler = <
-  T extends Record<string, OperationDefinition<any, any>>
+export const rpcApiRoute = <
+  T extends Record<string, RpcOperationDefinition<any, any, any>>
 >(
   operations: T,
   options?: {
@@ -36,7 +36,10 @@ export const rpcApiRouteHandler = <
         process.env.NODE_ENV !== 'production' &&
         headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT
       ) {
-        const route = decodeURIComponent(pathname ?? '');
+        const route = decodeURIComponent(pathname ?? '').replace(
+          '/{operationId}',
+          ''
+        );
 
         try {
           const nrfOasData = getOasDataFromRpcOperations({
@@ -53,10 +56,7 @@ ${error}`);
         }
       }
 
-      const operation =
-        operations[
-          (headers['x-rpc-operation'] as keyof typeof operations) ?? ''
-        ];
+      const operation = operations[req.query.operationId?.toString() ?? ''];
 
       if (!operation) {
         res.status(400).json({ message: DEFAULT_ERRORS.operationNotAllowed });
@@ -114,15 +114,14 @@ ${error}`);
     }
   };
 
-  handler.getPaths = (route: string) =>
+  handler._getPaths = (route: string) =>
     getOasDataFromRpcOperations({
       operations,
       options,
       route
     });
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  handler.client = {} as Client<T>;
+  handler.client = operations as RpcClient<T>;
 
   return handler;
 };

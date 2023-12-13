@@ -1,6 +1,5 @@
 import { type ValidMethod } from '../constants';
 import {
-  type InputObject,
   type OutputObject,
   type Modify,
   type AnyCase,
@@ -14,7 +13,7 @@ import {
   type NextApiHandler,
   type NextApiResponse
 } from 'next/types';
-import { type z } from 'zod';
+import { type ZodSchema, type z } from 'zod';
 
 type TypedNextApiRequest<Body, Query> = Modify<
   NextApiRequest,
@@ -60,7 +59,7 @@ type TypedNextApiResponse<Body, Status, ContentType> = Modify<
   }
 >;
 
-type ApiRouteHandler<
+type TypedApiRouteHandler<
   Body = unknown,
   Query extends BaseQuery = BaseQuery,
   ResponseBody = unknown,
@@ -78,42 +77,89 @@ type ApiRouteHandler<
   >
 ) => Promise<void> | void;
 
-type ApiRouteOutputs<
-  Middleware extends boolean = false,
-  Body = unknown,
-  Query extends BaseQuery = BaseQuery
-> = <
-  ResponseBody,
-  Status extends BaseStatus,
-  ContentType extends BaseContentType,
-  Outputs extends ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>
->(
-  params?: Outputs
-) => {
-  handler: (
-    callback?: ApiRouteHandler<
-      Body,
-      Query,
-      ResponseBody,
-      Status,
-      ContentType,
-      Outputs
-    >
-  ) => ApiRouteOperationDefinition;
-} & (Middleware extends true
-  ? {
-      middleware: (
-        callback?: ApiRouteHandler<
-          unknown,
-          BaseQuery,
-          ResponseBody,
-          Status,
-          ContentType,
-          Outputs
+interface InputObject<Body = unknown, Query = BaseQuery> {
+  contentType?: BaseContentType;
+  body?: ZodSchema<Body>;
+  query?: ZodSchema<Query>;
+}
+
+export interface ApiRouteOperationDefinition {
+  openApiOperation?: OpenApiOperation;
+  method: keyof typeof ValidMethod;
+  input?: InputObject;
+  outputs?: readonly OutputObject[];
+  middleware?: NextApiHandler;
+  handler?: NextApiHandler;
+}
+
+export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
+  openApiOperation,
+  method
+}: {
+  openApiOperation?: OpenApiOperation;
+  method: Method;
+}) => {
+  const createOperation = ({
+    input,
+    outputs,
+    middleware: _middleware,
+    handler: _handler
+  }: {
+    input?: InputObject;
+    outputs?: readonly OutputObject[];
+    middleware?: TypedApiRouteHandler<any, any, any>;
+    handler?: TypedApiRouteHandler<any, any, any>;
+  }): ApiRouteOperationDefinition => {
+    const middleware = _middleware as NextApiHandler;
+    const handler = _handler as NextApiHandler;
+
+    return {
+      openApiOperation,
+      method,
+      input,
+      outputs,
+      middleware,
+      handler
+    };
+  };
+
+  return {
+    input: <Body, Query extends BaseQuery>(
+      input: InputObject<Body, Query>
+    ) => ({
+      outputs: <
+        ResponseBody,
+        Status extends BaseStatus,
+        ContentType extends BaseContentType,
+        Outputs extends ReadonlyArray<
+          OutputObject<ResponseBody, Status, ContentType>
         >
-      ) => {
+      >(
+        outputs: Outputs
+      ) => ({
+        middleware: (
+          middleware: TypedApiRouteHandler<
+            unknown,
+            BaseQuery,
+            ResponseBody,
+            Status,
+            ContentType,
+            Outputs
+          >
+        ) => ({
+          handler: (
+            handler: TypedApiRouteHandler<
+              Body,
+              Query,
+              ResponseBody,
+              Status,
+              ContentType,
+              Outputs
+            >
+          ) => createOperation({ input, outputs, middleware, handler })
+        }),
         handler: (
-          callback?: ApiRouteHandler<
+          handler: TypedApiRouteHandler<
             Body,
             Query,
             ResponseBody,
@@ -121,97 +167,82 @@ type ApiRouteOutputs<
             ContentType,
             Outputs
           >
-        ) => ApiRouteOperationDefinition;
-      };
-    }
-  : Record<string, unknown>);
-
-type ApiRouteInput<Middleware extends boolean = false> = <
-  Body,
-  Query extends BaseQuery
->(
-  params?: InputObject<Body, Query>
-) => {
-  outputs: ApiRouteOutputs<Middleware, Body, Query>;
-  handler: (
-    callback?: ApiRouteHandler<Body, Query>
-  ) => ApiRouteOperationDefinition;
-} & (Middleware extends true
-  ? {
-      middleware: (callback?: ApiRouteHandler) => {
-        outputs: ApiRouteOutputs<false, Body, Query>;
+        ) => createOperation({ input, outputs, handler })
+      }),
+      middleware: (middleware: TypedApiRouteHandler) => ({
+        outputs: <
+          ResponseBody,
+          Status extends BaseStatus,
+          ContentType extends BaseContentType,
+          Outputs extends ReadonlyArray<
+            OutputObject<ResponseBody, Status, ContentType>
+          >
+        >(
+          outputs: Outputs
+        ) => ({
+          handler: (
+            handler: TypedApiRouteHandler<
+              Body,
+              Query,
+              ResponseBody,
+              Status,
+              ContentType,
+              Outputs
+            >
+          ) => createOperation({ input, outputs, middleware, handler })
+        }),
+        handler: (handler: TypedApiRouteHandler<Body, Query>) =>
+          createOperation({ input, middleware, handler })
+      }),
+      handler: (handler: TypedApiRouteHandler<Body, Query>) =>
+        createOperation({ input, handler })
+    }),
+    outputs: <
+      ResponseBody,
+      Status extends BaseStatus,
+      ContentType extends BaseContentType,
+      Outputs extends ReadonlyArray<
+        OutputObject<ResponseBody, Status, ContentType>
+      >
+    >(
+      outputs: Outputs
+    ) => ({
+      middleware: (
+        middleware: TypedApiRouteHandler<
+          unknown,
+          BaseQuery,
+          ResponseBody,
+          Status,
+          ContentType,
+          Outputs
+        >
+      ) => ({
         handler: (
-          callback?: ApiRouteHandler<Body, Query>
-        ) => ApiRouteOperationDefinition;
-      };
-    }
-  : Record<string, unknown>);
-
-export interface ApiRouteOperationDefinition {
-  _meta: {
-    openApiOperation?: OpenApiOperation;
-    input?: InputObject;
-    outputs?: readonly OutputObject[];
-    middleware?: NextApiHandler;
-    handler?: NextApiHandler;
-  };
-}
-
-type ApiRouteOperation = (openApiOperation?: OpenApiOperation) => {
-  input: ApiRouteInput<true>;
-  outputs: ApiRouteOutputs<true>;
-  middleware: (middleware?: ApiRouteHandler) => {
-    handler: (callback?: ApiRouteHandler) => ApiRouteOperationDefinition;
-  };
-  handler: (callback?: ApiRouteHandler) => ApiRouteOperationDefinition;
-};
-
-export const apiRouteOperation: ApiRouteOperation = (openApiOperation) => {
-  const createConfig = <Middleware, Handler>(
-    input: InputObject | undefined,
-    outputs: readonly OutputObject[] | undefined,
-    middleware: Middleware | undefined,
-    handler: Handler | undefined
-  ): ApiRouteOperationDefinition => ({
-    _meta: {
-      openApiOperation,
-      input,
-      outputs,
-      middleware: middleware as NextApiHandler,
-      handler: handler as NextApiHandler
-    }
-  });
-
-  return {
-    input: (input) => ({
-      outputs: (outputs) => ({
-        middleware: (middleware) => ({
-          handler: (handler) =>
-            createConfig(input, outputs, middleware, handler)
-        }),
-        handler: (handler) => createConfig(input, outputs, undefined, handler)
+          handler: TypedApiRouteHandler<
+            unknown,
+            BaseQuery,
+            ResponseBody,
+            Status,
+            ContentType,
+            Outputs
+          >
+        ) => createOperation({ outputs, middleware, handler })
       }),
-      middleware: (middleware) => ({
-        outputs: (outputs) => ({
-          handler: (handler) =>
-            createConfig(input, outputs, middleware, handler)
-        }),
-        handler: (handler) =>
-          createConfig(input, undefined, middleware, handler)
-      }),
-      handler: (handler) => createConfig(input, undefined, undefined, handler)
+      handler: (
+        handler: TypedApiRouteHandler<
+          unknown,
+          BaseQuery,
+          ResponseBody,
+          Status,
+          ContentType,
+          Outputs
+        >
+      ) => createOperation({ outputs, handler })
     }),
-    outputs: (outputs) => ({
-      middleware: (middleware) => ({
-        handler: (handler) =>
-          createConfig(undefined, outputs, middleware, handler)
-      }),
-      handler: (handler) => createConfig(undefined, outputs, undefined, handler)
+    middleware: (middleware: TypedApiRouteHandler) => ({
+      handler: (handler: TypedApiRouteHandler) =>
+        createOperation({ middleware, handler })
     }),
-    middleware: (middleware) => ({
-      handler: (handler) =>
-        createConfig(undefined, undefined, middleware, handler)
-    }),
-    handler: (handler) => createConfig(undefined, undefined, undefined, handler)
+    handler: (handler: TypedApiRouteHandler) => createOperation({ handler })
   };
 };

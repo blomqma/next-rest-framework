@@ -1,48 +1,62 @@
-import { type ZodSchema, type z } from 'zod';
-import { type OperationDefinition } from '../shared';
+import { type RpcOperationDefinition } from '../shared';
 
-export type Client<T extends Record<string, OperationDefinition<any, any>>> = {
-  [key in keyof T]: T[key];
+type RpcRequestInit = Omit<RequestInit, 'method' | 'body'>;
+
+export type RpcClient<
+  T extends Record<string, RpcOperationDefinition<any, any, any>>
+> = {
+  [key in keyof T]: T[key] & { _meta: never };
 };
 
-const fetcher = async <Input>(
-  body: z.infer<ZodSchema<Input>>,
-  options: { url: string; operationId: string }
-) => {
-  const opts = {
+const fetcher = async ({
+  url,
+  body,
+  init
+}: {
+  url: string;
+  body?: unknown;
+  init?: RpcRequestInit;
+}) => {
+  const opts: RequestInit = {
+    ...init,
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'X-RPC-Operation': options.operationId
+      ...init?.headers,
+      'Content-Type': 'application/json'
     }
   };
 
-  const res = await fetch(
-    options.url,
-    body ? { ...opts, body: JSON.stringify(body) } : opts
-  );
+  if (body) {
+    opts.body = JSON.stringify(body);
+  }
+
+  const res = await fetch(url, opts);
 
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(error.message);
+    throw new Error(error);
   }
 
   return await res.json();
 };
 
 export const rpcClient = <
-  T extends Record<string, OperationDefinition<any, any>>
+  T extends Record<string, RpcOperationDefinition<any, any, any>>
 >({
-  url
+  url: _url,
+  init
 }: {
   url: string;
+  init?: RpcRequestInit;
 }) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  return new Proxy({} as Client<T>, {
+  return new Proxy({} as RpcClient<T>, {
     get: (_, prop) => {
       if (typeof prop === 'string') {
-        return async (body?: z.infer<ZodSchema<any>>) => {
-          return await fetcher(body, { url, operationId: prop });
+        return async (body?: unknown) => {
+          const baseUrl = _url.endsWith('/') ? _url : `${_url}/`;
+          const url = `${baseUrl}${prop}`;
+          return await fetcher({ url, body, init });
         };
       }
     }

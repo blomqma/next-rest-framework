@@ -1,1 +1,1 @@
-export * from './rpc-client';
+export { rpcClient } from './rpc-client';

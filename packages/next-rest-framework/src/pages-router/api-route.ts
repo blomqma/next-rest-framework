@@ -1,36 +1,32 @@
+import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
 import {
-  DEFAULT_ERRORS,
-  NEXT_REST_FRAMEWORK_USER_AGENT,
-  type ValidMethod
-} from '../constants';
-import {
-  getOasDataFromMethodHandlers,
   isValidMethod,
   validateSchema,
-  logNextRestFrameworkError
+  logNextRestFrameworkError,
+  getOasDataFromOperations
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { type ApiRouteOperationDefinition } from './api-route-operation';
 import { type OpenApiPathItem } from '../types';
+import { type ApiRouteOperationDefinition } from './api-route-operation';
 
-export interface ApiRouteParams {
-  openApiPath?: OpenApiPathItem;
-  [ValidMethod.GET]?: ApiRouteOperationDefinition;
-  [ValidMethod.PUT]?: ApiRouteOperationDefinition;
-  [ValidMethod.POST]?: ApiRouteOperationDefinition;
-  [ValidMethod.DELETE]?: ApiRouteOperationDefinition;
-  [ValidMethod.OPTIONS]?: ApiRouteOperationDefinition;
-  [ValidMethod.HEAD]?: ApiRouteOperationDefinition;
-  [ValidMethod.PATCH]?: ApiRouteOperationDefinition;
-}
-
-export const apiRouteHandler = (methodHandlers: ApiRouteParams) => {
+export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
+  operations: T,
+  options?: {
+    openApiPath?: OpenApiPathItem;
+  }
+) => {
   const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     try {
       const { method, body, query, headers, url: pathname } = req;
 
       const handleMethodNotAllowed = () => {
-        res.setHeader('Allow', Object.keys(methodHandlers).join(', '));
+        res.setHeader(
+          'Allow',
+          Object.values(operations)
+            .map(({ method }) => method)
+            .join(', ')
+        );
+
         res.status(405).json({ message: DEFAULT_ERRORS.methodNotAllowed });
       };
 
@@ -46,8 +42,9 @@ export const apiRouteHandler = (methodHandlers: ApiRouteParams) => {
         const route = decodeURIComponent(pathname ?? '');
 
         try {
-          const nrfOasData = getOasDataFromMethodHandlers({
-            methodHandlers,
+          const nrfOasData = getOasDataFromOperations({
+            operations,
+            options,
             route
           });
 
@@ -59,14 +56,16 @@ ${error}`);
         }
       }
 
-      const methodHandler = methodHandlers[method];
+      const operation = Object.entries(operations).find(
+        ([_operationId, operation]) => operation.method === method
+      )?.[1];
 
-      if (!methodHandler) {
+      if (!operation) {
         handleMethodNotAllowed();
         return;
       }
 
-      const { input, handler, middleware } = methodHandler._meta;
+      const { input, handler, middleware } = operation;
 
       if (middleware) {
         await middleware(req, res);
@@ -131,9 +130,10 @@ ${error}`);
     }
   };
 
-  handler.getPaths = (route: string) =>
-    getOasDataFromMethodHandlers({
-      methodHandlers,
+  handler._getPaths = (route: string) =>
+    getOasDataFromOperations({
+      operations,
+      options,
       route
     });
 

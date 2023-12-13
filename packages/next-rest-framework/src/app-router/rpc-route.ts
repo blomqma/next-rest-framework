@@ -7,22 +7,24 @@ import {
 import {
   validateSchema,
   logNextRestFrameworkError,
+  type RpcOperationDefinition,
   getOasDataFromRpcOperations
 } from '../shared';
-import { type Client } from '../client/rpc-client';
-import { type OperationDefinition } from '../shared/rpc-operation';
-import { type OpenApiOperation, type OpenApiPathItem } from '../types';
+import { type BaseParams, type OpenApiPathItem } from '../types';
+import { type RpcClient } from '../client/rpc-client';
 
-export const rpcRouteHandler = <
-  T extends Record<string, OperationDefinition<any, any>>
+export const rpcRoute = <
+  T extends Record<string, RpcOperationDefinition<any, any, any>>
 >(
   operations: T,
   options?: {
     openApiPath?: OpenApiPathItem;
-    openApiOperation?: OpenApiOperation;
   }
 ) => {
-  const handler = async (req: NextRequest) => {
+  const handler = async (
+    req: NextRequest,
+    { params }: { params: BaseParams }
+  ) => {
     try {
       const { method, headers, nextUrl } = req;
       const { pathname } = nextUrl;
@@ -43,7 +45,10 @@ export const rpcRouteHandler = <
         process.env.NODE_ENV !== 'production' &&
         headers.get('user-agent') === NEXT_REST_FRAMEWORK_USER_AGENT
       ) {
-        const route = decodeURIComponent(pathname ?? '');
+        const route = decodeURIComponent(pathname ?? '').replace(
+          '/{operationId}',
+          ''
+        );
 
         try {
           const nrfOasData = getOasDataFromRpcOperations({
@@ -59,10 +64,7 @@ ${error}`);
         }
       }
 
-      const operation =
-        operations[
-          (headers.get('x-rpc-operation') as keyof typeof operations) ?? ''
-        ];
+      const operation = operations[params.operationId];
 
       if (!operation) {
         return NextResponse.json(
@@ -139,15 +141,12 @@ ${error}`);
     }
   };
 
-  handler.getPaths = (route: string) =>
+  handler._getPaths = (route: string) =>
     getOasDataFromRpcOperations({
       operations,
       options,
       route
     });
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  handler.client = {} as Client<T>;
-
-  return handler;
+  return { POST: handler, client: operations as RpcClient<T> };
 };

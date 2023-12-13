@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { NextResponse } from 'next/server';
 import chalk from 'chalk';
 import * as openApiUtils from '../../src/shared/open-api';
-import { docsRouteHandler, routeHandler, routeOperation } from '../../src';
+import { docsRoute, route, routeOperation } from '../../src';
 
 const createDirent = (name: string) => ({
   isDirectory: () => false,
@@ -28,8 +28,8 @@ jest.mock('fs', () => ({
           'api/foo/route.ts',
           'api/foo/bar/route.ts',
           'api/foo/bar/baz/route.ts',
-          'api/foo/bar/[qux]/route.ts',
-          'api/foo/bar/[qux]/quux/[corge]/route.ts'
+          'api/foo/bar/[baz]/route.ts',
+          'api/foo/bar/[baz]/qux/[fred]/route.ts'
         ];
 
     return paths.map(createDirent);
@@ -50,8 +50,8 @@ beforeEach(() => {
 
 const schema = z.object({ foo: z.string() });
 
-const fooMethodHandlers = routeHandler({
-  POST: routeOperation()
+const fooMethodHandlers = route({
+  foo: routeOperation({ method: 'POST' })
     .input({
       contentType: 'application/json',
       body: schema,
@@ -70,10 +70,10 @@ const fooMethodHandlers = routeHandler({
       const body = await req.json();
       return NextResponse.json(body, { status: 201 });
     })
-});
+}).POST;
 
-const fooBarMethodHandlers = routeHandler({
-  PUT: routeOperation()
+const fooBarMethodHandlers = route({
+  fooBar: routeOperation({ method: 'PUT' })
     .input({
       contentType: 'application/json',
       body: schema,
@@ -92,10 +92,10 @@ const fooBarMethodHandlers = routeHandler({
       const body = await req.json();
       return NextResponse.json(body, { status: 203 });
     })
-});
+}).PUT;
 
-const fooBarBazMethodHandlers = routeHandler({
-  GET: routeOperation()
+const fooBarBazMethodHandlers = route({
+  fooBarBaz: routeOperation({ method: 'GET' })
     .outputs([
       {
         status: 200,
@@ -106,10 +106,10 @@ const fooBarBazMethodHandlers = routeHandler({
     .handler(async () => {
       return NextResponse.json({ foo: 'bar' }, { status: 200 });
     })
-});
+}).GET;
 
-const fooBarBazQuxMethodHandlers = routeHandler({
-  GET: routeOperation()
+const fooBarBazQuxMethodHandlers = route({
+  fooBarBazQux: routeOperation({ method: 'GET' })
     .outputs([
       {
         status: 200,
@@ -120,10 +120,10 @@ const fooBarBazQuxMethodHandlers = routeHandler({
     .handler(async () => {
       return NextResponse.json({ foo: 'bar' }, { status: 200 });
     })
-});
+}).GET;
 
-const fooBarBazQuxQuuxCorgeMethodHandlers = routeHandler({
-  GET: routeOperation()
+const fooBarBazQuxFredMethodHandlers = route({
+  fooBarBazQuxFred: routeOperation({ method: 'GET' })
     .outputs([
       {
         status: 200,
@@ -132,9 +132,9 @@ const fooBarBazQuxQuuxCorgeMethodHandlers = routeHandler({
       }
     ])
     .handler(async () => {
-      return NextResponse.json({ foo: 'corge' }, { status: 200 });
+      return NextResponse.json({ foo: 'bar' }, { status: 200 });
     })
-});
+}).GET;
 
 jest.mock(
   '../../../apps/src/dev/app/api/foo/route.ts',
@@ -157,14 +157,14 @@ jest.mock(
 );
 
 jest.mock(
-  '../../../apps/src/dev/app/api/foo/bar/[qux]/route.ts',
+  '../../../apps/src/dev/app/api/foo/bar/[baz]/route.ts',
   () => fooBarBazQuxMethodHandlers,
   { virtual: true }
 );
 
 jest.mock(
-  '../../../apps/src/dev/app/api/foo/bar/[qux]/quux/[corge]/route.ts',
-  () => fooBarBazQuxQuuxCorgeMethodHandlers,
+  '../../../apps/src/dev/app/api/foo/bar/[baz]/qux/[fred]/route.ts',
+  () => fooBarBazQuxFredMethodHandlers,
   { virtual: true }
 );
 
@@ -187,14 +187,13 @@ global.fetch = async (url: string) => {
     '/api/foo': fooMethodHandlers,
     '/api/foo/bar': fooBarMethodHandlers,
     '/api/foo/bar/baz': fooBarBazMethodHandlers,
-    '/api/foo/bar/{qux}': fooBarBazQuxMethodHandlers,
-    '/api/foo/bar/{qux}/quux/{corge}': fooBarBazQuxQuuxCorgeMethodHandlers
+    '/api/foo/bar/{baz}': fooBarBazQuxMethodHandlers,
+    '/api/foo/bar/{baz}/qux/{fred}': fooBarBazQuxFredMethodHandlers
   };
 
-  const methodHandlers =
-    handlersForPaths[path as keyof typeof handlersForPaths];
+  const handler = handlersForPaths[path as keyof typeof handlersForPaths];
 
-  const res = await methodHandlers(req, context);
+  const res = await handler(req, context);
   const json = async () => await res?.json();
 
   return {
@@ -209,7 +208,7 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
     path: '/api'
   });
 
-  await docsRouteHandler()(req, context);
+  await docsRoute().GET(req, context);
 
   const spec = getExpectedSpec({
     zodSchema: schema,
@@ -217,8 +216,8 @@ it('auto-generates the paths from the internal endpoint responses', async () => 
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ],
     deniedPaths: []
   });
@@ -236,8 +235,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ]
   },
   {
@@ -246,8 +245,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ],
     expectedPathsToBeDenied: []
   },
@@ -257,8 +256,8 @@ it.each([
     expectedPathsToBeDenied: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ]
   },
   {
@@ -267,8 +266,8 @@ it.each([
     expectedPathsToBeDenied: [
       '/api/foo',
       '/api/foo/bar',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ]
   },
   {
@@ -276,8 +275,8 @@ it.each([
     expectedPathsToBeAllowed: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ],
     expectedPathsToBeDenied: ['/api/foo']
   }
@@ -295,9 +294,9 @@ it.each([
       path: '/api'
     });
 
-    await docsRouteHandler({
+    await docsRoute({
       allowedPaths
-    })(req, context);
+    }).GET(req, context);
 
     const spec = getExpectedSpec({
       zodSchema: schema,
@@ -331,7 +330,7 @@ it('does not generate paths in prod', async () => {
     path: '/api'
   });
 
-  await docsRouteHandler()(req, context);
+  await docsRoute().GET(req, context);
   expect(generateOpenApiSpecSpy).not.toHaveBeenCalled();
   process.env.NODE_ENV = env;
 });
@@ -343,8 +342,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ],
     expectedPathsToBeDenied: []
   },
@@ -355,8 +354,8 @@ it.each([
       '/api/foo',
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ]
   },
   {
@@ -364,8 +363,8 @@ it.each([
     expectedPathsToBeAllowed: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ],
     expectedPathsToBeDenied: ['/api/foo']
   },
@@ -374,8 +373,8 @@ it.each([
     expectedPathsToBeAllowed: [
       '/api/foo',
       '/api/foo/bar',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ],
     expectedPathsToBeDenied: ['/api/foo/bar/baz']
   },
@@ -385,8 +384,8 @@ it.each([
     expectedPathsToBeDenied: [
       '/api/foo/bar',
       '/api/foo/bar/baz',
-      '/api/foo/bar/{qux}',
-      '/api/foo/bar/{qux}/quux/{corge}'
+      '/api/foo/bar/{baz}',
+      '/api/foo/bar/{baz}/qux/{fred}'
     ]
   }
 ])(
@@ -403,9 +402,9 @@ it.each([
       path: '/api'
     });
 
-    await docsRouteHandler({
+    await docsRoute({
       deniedPaths
-    })(req, context);
+    }).GET(req, context);
 
     const spec = getExpectedSpec({
       zodSchema: schema,
@@ -443,7 +442,7 @@ it('handles error if the OpenAPI spec generation fails', async () => {
   const error = 'Something went wrong';
 
   jest
-    .spyOn(openApiUtils, 'getOasDataFromMethodHandlers')
+    .spyOn(openApiUtils, 'getOasDataFromOperations')
     .mockImplementation(() => {
       throw Error(error);
     });
@@ -453,7 +452,7 @@ it('handles error if the OpenAPI spec generation fails', async () => {
     path: '/api'
   });
 
-  await docsRouteHandler()(req, context);
+  await docsRoute().GET(req, context);
 
   const spec = getExpectedSpec({
     zodSchema: schema,
@@ -477,7 +476,7 @@ it('returns 403 if the docs handler is called internally by the framework', asyn
     }
   });
 
-  const res = await docsRouteHandler()(req, context);
+  const res = await docsRoute().GET(req, context);
   expect(res.status).toEqual(403);
   const json = await res.json();
 
