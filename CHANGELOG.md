@@ -1,6 +1,14 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 4.1.1 - 2023-12-18
+
+### Fixed
+
+- Fix RPC data structure to merge in CLI commands.
+
+Thanks to @roothybrid7 for the fix!
+
 ### 4.1.0 - 2023-12-13
 
 ### Changed
