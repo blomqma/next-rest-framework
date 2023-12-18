@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 4.1.2 - 2023-12-18
+
+### Fixed
+
+- Fix typings for optional additional OpenAPI properties that are merged with the generated document.
+
 ### 4.1.1 - 2023-12-18
 
 ### Fixed
