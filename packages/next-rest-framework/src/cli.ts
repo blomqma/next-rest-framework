@@ -81,12 +81,15 @@ const generatePathsFromBuild = async ({
   const getCleanedRpcApiRoutes = (files: string[]) =>
     files.filter((file) => file.endsWith('rpc/[operationId].ts'));
 
-  const isPathItem = (
-    obj: unknown
-  ): obj is Record<string, OpenAPIV3_1.PathItemObject> =>
-    typeof obj === 'object';
+  const isNrfOasData = (x: unknown): x is NrfOasData => {
+    if (typeof x !== 'object' || x === null) {
+      return false;
+    }
+    return 'paths' in x;
+  };
 
   let paths: OpenAPIV3_1.PathsObject = {};
+  let schemas: Record<string, OpenAPIV3_1.SchemaObject> = {};
 
   try {
     // Scan `app` folder.
@@ -108,8 +111,9 @@ const generatePathsFromBuild = async ({
             .forEach(([_key, handler]: [string, any]) => {
               const data = handler._getPaths(getRouteName(route));
 
-              if (isPathItem(data)) {
-                paths = { ...paths, ...data };
+              if (isNrfOasData(data)) {
+                paths = { ...paths, ...data.paths };
+                schemas = { ...schemas, ...data.schemas };
               }
             });
         })
@@ -136,8 +140,9 @@ const generatePathsFromBuild = async ({
 
           const data = res.default._getPaths(getApiRouteName(apiRoute));
 
-          if (isPathItem(data)) {
-            paths = { ...paths, ...data };
+          if (isNrfOasData(data)) {
+            paths = { ...paths, ...data.paths };
+            schemas = { ...schemas, ...data.schemas };
           }
         })
       );
@@ -150,7 +155,10 @@ const generatePathsFromBuild = async ({
     logIgnoredPaths(ignoredPaths);
   }
 
-  return { paths };
+  return {
+    paths,
+    schemas
+  };
 };
 
 const findConfig = async ({
