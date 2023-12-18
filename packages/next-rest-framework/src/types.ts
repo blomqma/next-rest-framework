@@ -3,6 +3,37 @@ import { type ZodSchema } from 'zod';
 
 export type DocsProvider = 'redoc' | 'swagger-ui';
 
+type OpenApiObject = Partial<
+  Modify<
+    Omit<OpenAPIV3_1.Document, 'openapi'>,
+    {
+      info: Partial<OpenAPIV3_1.InfoObject>;
+    }
+  >
+>;
+
+export type OpenApiPathItem = Partial<
+  Pick<
+    OpenAPIV3_1.PathItemObject,
+    'summary' | 'description' | 'servers' | 'parameters'
+  >
+>;
+
+export type OpenApiOperation = Partial<
+  Pick<
+    OpenAPIV3_1.OperationObject,
+    | 'tags'
+    | 'summary'
+    | 'description'
+    | 'externalDocs'
+    | 'parameters'
+    | 'callbacks'
+    | 'deprecated'
+    | 'security'
+    | 'servers'
+  >
+>;
+
 export interface NextRestFrameworkConfig {
   /*!
    * Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec.
@@ -19,12 +50,7 @@ export interface NextRestFrameworkConfig {
    */
   allowedPaths?: string[];
   /*! An OpenAPI Object that can be used to override and extend the auto-generated specification: https://swagger.io/specification/#openapi-object */
-  openApiObject?: Modify<
-    Omit<OpenAPIV3_1.Document, 'openapi'>,
-    {
-      info: Partial<OpenAPIV3_1.InfoObject>;
-    }
-  >;
+  openApiObject?: OpenApiObject;
   /*! Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder. */
   openApiJsonPath?: string;
   /*! Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`. */
@@ -61,24 +87,6 @@ export interface OutputObject<
   contentType: ContentType;
   name?: string;
 }
-
-export type OpenApiPathItem = Pick<
-  OpenAPIV3_1.PathItemObject,
-  'summary' | 'description' | 'servers' | 'parameters'
->;
-
-export type OpenApiOperation = Pick<
-  OpenAPIV3_1.OperationObject,
-  | 'tags'
-  | 'summary'
-  | 'description'
-  | 'externalDocs'
-  | 'parameters'
-  | 'callbacks'
-  | 'deprecated'
-  | 'security'
-  | 'servers'
->;
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
 
