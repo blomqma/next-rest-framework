@@ -53,12 +53,12 @@ export default function Page() {
         </div>
         <ul className="flex gap-4">
           <li>
-            <a className="link link-primary" href="/api">
+            <a className="link link-primary" href="/api/v2">
               Redoc
             </a>
           </li>
           <li>
-            <a className="link link-primary" href="/api/swagger-ui">
+            <a className="link link-primary" href="/api/v2">
               SwaggerUI
             </a>
           </li>
