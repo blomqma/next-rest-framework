@@ -12,8 +12,8 @@ export const getHtmlForDocs = ({
     openApiObject,
     docsConfig: {
       provider,
-      title = openApiObject?.info.title ?? DEFAULT_TITLE,
-      description = openApiObject?.info.description ?? DEFAULT_DESCRIPTION,
+      title = openApiObject?.info?.title ?? DEFAULT_TITLE,
+      description = openApiObject?.info?.description ?? DEFAULT_DESCRIPTION,
       faviconUrl = DEFAULT_FAVICON_URL,
       logoUrl = DEFAULT_LOGO_URL
     }
