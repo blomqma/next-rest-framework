@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 4.2.0 - 2024-01-09
+
+### Added
+
+- Add support for chaining up to three middlewares together and sharing data between the middlewares.
+
 ### 4.1.2 - 2023-12-18
 
 ### Fixed
