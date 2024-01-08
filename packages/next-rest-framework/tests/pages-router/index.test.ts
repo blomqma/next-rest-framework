@@ -460,7 +460,7 @@ it('executes middleware before validating input', async () => {
   expect(res.statusCode).toEqual(400);
 });
 
-it('does not execute handler if middleware returns a response', async () => {
+it('does not execute handler if middleware returns an HTTP response', async () => {
   const { req, res } = createMockApiRouteRequest({
     method: ValidMethod.GET
   });
@@ -483,4 +483,71 @@ it('does not execute handler if middleware returns a response', async () => {
 
   expect(res.statusCode).toEqual(200);
   expect(console.log).not.toHaveBeenCalled();
+});
+
+it('passes non-HTTP middleware response to handler', async () => {
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.GET
+  });
+
+  console.log = jest.fn();
+
+  await apiRoute({
+    test: apiRouteOperation({ method: 'GET' })
+      .middleware(() => {
+        return { foo: 'bar' };
+      })
+      .handler((_req, _res, options) => {
+        console.log('foo');
+        res.status(200).json(options);
+      })
+  })(req, res);
+
+  expect(res._getJSONData()).toEqual({
+    foo: 'bar'
+  });
+
+  expect(res.statusCode).toEqual(200);
+  expect(console.log).toHaveBeenCalledWith('foo');
+});
+
+it('allows chaining three middlewares', async () => {
+  const { req, res } = createMockApiRouteRequest({
+    method: ValidMethod.GET
+  });
+
+  console.log = jest.fn();
+
+  await apiRoute({
+    test: apiRouteOperation({ method: 'GET' })
+      .middleware(() => {
+        console.log('foo');
+        return { foo: 'bar' };
+      })
+      .middleware((_req, _res, options) => {
+        console.log('bar');
+        return { ...options, bar: 'baz' };
+      })
+      .middleware((_req, _res, options) => {
+        console.log('baz');
+        return { ...options, baz: 'qux' };
+      })
+      .handler((_req, _res, options) => {
+        console.log('handler');
+        res.status(200).json(options);
+      })
+  })(req, res);
+
+  expect(res._getJSONData()).toEqual({
+    foo: 'bar',
+    bar: 'baz',
+    baz: 'qux'
+  });
+
+  expect(res.statusCode).toEqual(200);
+
+  expect(console.log).toHaveBeenCalledWith('foo');
+  expect(console.log).toHaveBeenCalledWith('bar');
+  expect(console.log).toHaveBeenCalledWith('baz');
+  expect(console.log).toHaveBeenCalledWith('handler');
 });

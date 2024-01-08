@@ -76,6 +76,7 @@ export type BaseStatus = number;
 export type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
 export type BaseQuery = Record<string, string | string[]>;
 export type BaseParams = Record<string, string>;
+export type BaseOptions = Record<string, unknown>;
 
 export interface OutputObject<
   Body = unknown,

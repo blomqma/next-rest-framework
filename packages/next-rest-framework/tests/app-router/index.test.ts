@@ -473,7 +473,7 @@ it('executes middleware before validating input', async () => {
   });
 });
 
-it('does not execute handler if middleware returns a response', async () => {
+it('does not execute handler if middleware returns an HTTP response', async () => {
   const { req, context } = createMockRouteRequest({
     method: ValidMethod.GET
   });
@@ -498,4 +498,74 @@ it('does not execute handler if middleware returns a response', async () => {
   });
 
   expect(console.log).not.toHaveBeenCalled();
+});
+
+it('passes non-HTTP middleware response to handler', async () => {
+  const { req, context } = createMockRouteRequest({
+    method: ValidMethod.GET
+  });
+
+  console.log = jest.fn();
+
+  const res = await route({
+    test: routeOperation({ method: 'GET' })
+      .middleware(() => {
+        return { foo: 'bar' };
+      })
+      .handler((_req, _ctx, options) => {
+        console.log('foo');
+        return NextResponse.json(options);
+      })
+  }).GET(req, context);
+
+  const json = await res?.json();
+  expect(res?.status).toEqual(200);
+
+  expect(json).toEqual({
+    foo: 'bar'
+  });
+
+  expect(console.log).toHaveBeenCalledWith('foo');
+});
+
+it('allows chaining three middlewares', async () => {
+  const { req, context } = createMockRouteRequest({
+    method: ValidMethod.GET
+  });
+
+  console.log = jest.fn();
+
+  const res = await route({
+    test: routeOperation({ method: 'GET' })
+      .middleware(() => {
+        console.log('foo');
+        return { foo: 'bar' };
+      })
+      .middleware((_req, _ctx, options) => {
+        console.log('bar');
+        return { ...options, bar: 'baz' };
+      })
+      .middleware((_req, _ctx, options) => {
+        console.log('baz');
+        return { ...options, baz: 'qux' };
+      })
+      .handler((_req, _ctx, options) => {
+        console.log('handler');
+        return NextResponse.json(options);
+      })
+  }).GET(req, context);
+
+  const json = await res?.json();
+  expect(res?.status).toEqual(200);
+
+  expect(json).toEqual({
+    foo: 'bar',
+    bar: 'baz',
+    baz: 'qux'
+  });
+
+  expect(console.log).toHaveBeenCalledWith('foo');
+  expect(console.log).toHaveBeenCalledWith('bar');
+  expect(console.log).toHaveBeenCalledWith('baz');
+  expect(console.log).toHaveBeenCalledWith('handler');
 });
