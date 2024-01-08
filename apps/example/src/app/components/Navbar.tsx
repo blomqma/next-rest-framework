@@ -1,6 +1,7 @@
 'use client';
 
 import { VERSION } from 'next-rest-framework/dist/constants';
+import Image from 'next/image';
 
 export const Navbar: React.FC = () => {
   const onDarkModeChanged = (theme: 'dark' | 'light') => {
@@ -13,10 +14,11 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl flex justify-between grow gap-5 h-24">
         <div className="flex items-center gap-4">
           <a>
-            <img
+            <Image
               src="https://next-rest-framework.vercel.app/img/logo.svg"
               alt="Logo"
-              className="w-32"
+              width={75}
+              height={75}
             />
           </a>
           <p>v{VERSION}</p>

@@ -1,9 +1,9 @@
 'use client';
 
-import { type RpcClient } from 'app/api/v2/rpc/[operationId]/route';
+import { type RpcClient } from '@/app/api/v2/rpc/[operationId]/route';
 import { rpcClient } from 'next-rest-framework/dist/client/rpc-client';
 import { useEffect, useState } from 'react';
-import { type Todo } from 'utils';
+import { type Todo } from '@/utils';
 
 const client = rpcClient<RpcClient>({
   url: 'http://localhost:3000/api/v2/rpc'

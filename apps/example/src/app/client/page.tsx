@@ -1,7 +1,7 @@
-import { getTodos } from 'actions';
-import { Footer } from '../components/Footer';
-import { Navbar } from '../components/Navbar';
-import { ClientExample } from './ClientExample';
+import { getTodos } from '@/actions';
+import { Footer } from '@/app/components/Footer';
+import { Navbar } from '@/app/components/Navbar';
+import { ClientExample } from '@/app/client/ClientExample';
 
 export default async function Page() {
   const todos = await getTodos();

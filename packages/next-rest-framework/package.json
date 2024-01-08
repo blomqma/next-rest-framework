@@ -1,6 +1,6 @@
 {
   "name": "next-rest-framework",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "Next REST Framework - Type-safe, self-documenting APIs for Next.js",
   "keywords": [
     "nextjs",
@@ -19,16 +19,19 @@
     "dist"
   ],
   "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/blomqma/next-rest-framework.git",
     "directory": "packages/next-rest-framework"
   },
   "scripts": {
-    "type-check": "tsc --noEmit",
-    "build": "rm -rf dist && tsc --project tsconfig.build.json",
+    "lint": "tsc",
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "build": "tsup src/** --format cjs,esm --dts",
+    "release": "pnpm run build && changeset publish"
   },
   "bin": {
     "next-rest-framework": "./dist/cli.js"
@@ -42,7 +45,7 @@
     "zod-to-json-schema": "3.21.4"
   },
   "devDependencies": {
-    "@next-rest-framework/tsconfig": "workspace:*",
+    "@changesets/cli": "2.27.1",
     "@types/jest": "29.5.4",
     "@types/lodash": "4.14.197",
     "@types/wait-on": "5.3.1",
@@ -51,6 +54,7 @@
     "openapi-types": "12.1.3",
     "ts-jest": "29.1.1",
     "ts-node": "10.9.1",
+    "tsup": "8.0.1",
     "typescript": "*"
   }
 }

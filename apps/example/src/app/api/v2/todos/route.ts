@@ -1,5 +1,5 @@
 import { TypedNextResponse, route, routeOperation } from 'next-rest-framework';
-import { MOCK_TODOS, todoSchema } from 'utils';
+import { MOCK_TODOS, todoSchema } from '@/utils';
 import { z } from 'zod';
 
 // Example App Router route handler with GET/POST handlers.

@@ -1,7 +1,15 @@
 {
-  "extends": "@next-rest-framework/tsconfig/tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist"
-  },
-  "include": ["src/**/*", "tests/**/*", "jest.config.ts"]
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "noEmit": true
+  }
 }

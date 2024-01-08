@@ -1,6 +1,8 @@
+import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import './globals.css';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Next REST Framework Example',
   description: 'Example application for Next REST Framework'
 };
@@ -18,7 +20,6 @@ export default async function Layout({
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="https://cdn.tailwindcss.com"></script>
         <link
           href="https://cdn.jsdelivr.net/npm/daisyui@2.46.0/dist/full.css"
           rel="stylesheet"

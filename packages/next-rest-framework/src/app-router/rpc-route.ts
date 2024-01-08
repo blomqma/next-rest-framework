@@ -68,7 +68,7 @@ ${error}`);
         }
       }
 
-      const operation = operations[params.operationId];
+      const operation = operations[params.operationId ?? ''];
 
       if (!operation) {
         return NextResponse.json(
