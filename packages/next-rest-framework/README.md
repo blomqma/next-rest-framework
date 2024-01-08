@@ -543,12 +543,12 @@ The following options cam be passed to the `routeHandler` (App Router) and `apiR
 
 The route operation functions `routeOperation` (App Router) and `apiRouteOperation` (Pages Router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
 
-| Name         | Description                                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `input`      | A [Route operation input](#route-operation-input) function for defining the validation and documentation of the request.       |
-| `outputs`    | An [Route operation outputs](#route-operation-outputs) function for defining the validation and documentation of the response. |
-| `handler`    | A [Route operation-handler](#route-operation-handler) function for defining your business logic.                               |
-| `middleware` | A [Route operation middleware](#route-operation-middleware) function that gets executed before the request input is validated. |
+| Name         | Description                                                                                                                                                                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input`      | A [Route operation input](#route-operation-input) function for defining the validation and documentation of the request.                                                                                                                                             |
+| `outputs`    | An [Route operation outputs](#route-operation-outputs) function for defining the validation and documentation of the response.                                                                                                                                       |
+| `handler`    | A [Route operation-handler](#route-operation-handler) function for defining your business logic.                                                                                                                                                                     |
+| `middleware` | A [Route operation middleware](#route-operation-middleware) function that gets executed before the request input is validated. You may chain up to three middlewares together and share data between the middlewares by taking the input of the previous middleware. |
 
 ##### [Route operation input](#route-operation-input)
 
@@ -576,13 +576,47 @@ Calling the route operation outputs function allows you to chain your API handle
 
 ##### [Route operation middleware](#route-operation-middleware)
 
-The route operation middleware function is executed before validating the request input. The function takes in the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
+The route operation middleware function is executed before validating the request input. The function takes in the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. Additionally, as a second parameter this function takes the return value of your last middleware function, defaulting to an empty object. Throwing an error inside a middleware function will stop the execution of the handler and you can also return a custom response like you would do within the [Handler](#handler) function. Calling the route operation middleware function allows you to chain your API handler logic with the [Handler](#handler) function. Alternatively, you may chain up to three middleware functions together:
 
-Calling the route operation middleware function allows you to chain your API handler logic with the [Handler](#handler) function.
+```typescript
+// ...
+const handler = route({
+  getTodos: routeOperation()
+    .middleware(() => {
+      return { foo: 'bar' };
+    })
+    .middleware((_req, _ctx, { foo }) => {
+      // if (myCondition) {
+      //   return NextResponse.json({ error: 'My error.' });
+      // }
+
+      return {
+        foo,
+        bar: 'baz'
+      };
+    })
+    .handler((_req, _ctx, { foo, bar }) => {
+      // ...
+    })
+});
+```
 
 ##### [Route operation handler](#route-operation-handler)
 
-The route operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers.
+The route operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. Additionally, as a third parameter this function takes the return value of your last middleware function:
+
+```typescript
+// ...
+const handler = route({
+  getTodos: routeOperation()
+    .middleware(() => {
+      return { foo: "bar" };
+    })
+    .handler((_req, _ctx, { foo }) => {
+      // ...
+    });
+});
+```
 
 ### RPC
 
@@ -599,12 +633,12 @@ The `rpcRouteHandler` (App Router) and `rpcApiRouteHandler` (Pages Router) funct
 
 The `rpcOperation` function allows you to define your API handlers for your RPC endpoint. Calling this function allows you to chain your API handler logic with the following functions.
 
-| Name         | Description                                                                                                                   |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| `input`      | An [RPC operation input](#rpc-operation-input) function for defining the validation and documentation of the operation.       |
-| `outputs`    | An [RPC operation outputs](#rpc-operation-outputs) function for defining the validation and documentation of the response.    |
-| `handler`    | An [RPC operation handler](#rpc-operation-handler) function for defining your business logic.                                 |
-| `middleware` | An [RPC operation middleware](#rpc-operation-middleware) function that gets executed before the operation input is validated. |
+| Name         | Description                                                                                                                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `input`      | An [RPC operation input](#rpc-operation-input) function for defining the validation and documentation of the operation.                                                                                                                                             |
+| `outputs`    | An [RPC operation outputs](#rpc-operation-outputs) function for defining the validation and documentation of the response.                                                                                                                                          |
+| `handler`    | An [RPC operation handler](#rpc-operation-handler) function for defining your business logic.                                                                                                                                                                       |
+| `middleware` | An [RPC operation middleware](#rpc-operation-middleware) function that gets executed before the operation input is validated. You may chain up to three middlewares together and share data between the middlewares by taking the input of the previous middleware. |
 
 ##### [RPC operation input](#rpc-operation-input)
 
@@ -625,13 +659,47 @@ Calling the RPC operation outputs function allows you to chain your API handler 
 
 ##### [RPC operation middleware](#rpc-operation-middleware)
 
-The RPC operation middleware function is executed before validating RPC operation input. The function takes in strongly typed parameters typed by the [RPC operation input](#rpc-operation-input) function.
+The RPC operation middleware function is executed before validating RPC operation input. The function takes in strongly typed parameters typed by the [RPC operation input](#rpc-operation-input) function. Additionally, as a second parameter this function takes the return value of your last middleware function, defaulting to an empty object. Throwing an error inside a middleware function will stop the execution of the handler. Calling the RPC operation middleware function allows you to chain your RPC API handler logic with the [RPC operation handler](#rpc-operation-handler) function. Alternatively, you may chain up to three middleware functions together:
 
-Calling the RPC operation middleware function allows you to chain your RPC API handler logic with the [RPC operation handler](#rpc-operation-handler) function.
+```typescript
+// ...
+const handler = rpcRoute({
+  getTodos: rpcOperation()
+    .middleware(() => {
+      return { foo: 'bar' };
+    })
+    .middleware((_input, { foo }) => {
+      // if (myCondition) {
+      //   throw Error('My error.')
+      // }
+
+      return {
+        foo,
+        bar: 'baz'
+      };
+    })
+    .handler((_input, { foo, bar }) => {
+      // ...
+    })
+});
+```
 
 ##### [RPC operation handler](#rpc-operation-handler)
 
-The RPC operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly typed parameters typed by the [RPC operation input](#rpc-operation-input) function.
+The RPC operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly typed parameters typed by the [RPC operation input](#rpc-operation-input) function. Additionally, as a second parameter this function takes the return value of your last middleware function:
+
+```typescript
+// ...
+const handler = rpcApiRoute({
+  getTodos: rpcOperation()
+    .middleware(() => {
+      return { foo: "bar" };
+    })
+    .handler((_input, { foo }) => {
+      // ...
+    });
+});
+```
 
 ## [CLI](#cli)
 

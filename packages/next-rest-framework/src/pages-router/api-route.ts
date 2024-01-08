@@ -6,8 +6,11 @@ import {
   getOasDataFromOperations
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { type OpenApiPathItem } from '../types';
-import { type ApiRouteOperationDefinition } from './api-route-operation';
+import { type BaseOptions, type OpenApiPathItem } from '../types';
+import {
+  type TypedNextApiRequest,
+  type ApiRouteOperationDefinition
+} from './api-route-operation';
 
 export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
   operations: T,
@@ -65,13 +68,41 @@ ${error}`);
         return;
       }
 
-      const { input, handler, middleware } = operation;
+      const { input, handler, middleware1, middleware2, middleware3 } =
+        operation;
 
-      if (middleware) {
-        await middleware(req, res);
+      let middlewareOptions: BaseOptions = {};
+
+      if (middleware1) {
+        const res1 = await middleware1(req, res, middlewareOptions);
+
+        const isOptionsResponse = (res: unknown): res is BaseOptions =>
+          typeof res === 'object';
 
         if (res.writableEnded) {
           return;
+        } else if (isOptionsResponse(res1)) {
+          middlewareOptions = res1;
+
+          if (middleware2) {
+            const res2 = await middleware2(req, res, middlewareOptions);
+
+            if (res.writableEnded) {
+              return;
+            } else if (isOptionsResponse(res2)) {
+              middlewareOptions = res2;
+
+              if (middleware3) {
+                const res3 = await middleware3(req, res, middlewareOptions);
+
+                if (res.writableEnded) {
+                  return;
+                } else if (isOptionsResponse(res3)) {
+                  middlewareOptions = res3;
+                }
+              }
+            }
+          }
         }
       }
 
@@ -123,7 +154,7 @@ ${error}`);
         throw Error(DEFAULT_ERRORS.handlerNotFound);
       }
 
-      await handler(req, res);
+      await handler(req as TypedNextApiRequest, res, middlewareOptions);
     } catch (error) {
       logNextRestFrameworkError(error);
       res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });

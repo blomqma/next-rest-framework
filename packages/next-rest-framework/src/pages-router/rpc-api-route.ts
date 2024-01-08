@@ -10,7 +10,11 @@ import {
   getOasDataFromRpcOperations
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { type OpenApiOperation, type OpenApiPathItem } from '../types';
+import {
+  type BaseOptions,
+  type OpenApiOperation,
+  type OpenApiPathItem
+} from '../types';
 import { type RpcClient } from '../client/rpc-client';
 
 export const rpcApiRoute = <
@@ -63,14 +67,20 @@ ${error}`);
         return;
       }
 
-      const { input, handler, middleware } = operation._meta;
+      const { input, handler, middleware1, middleware2, middleware3 } =
+        operation._meta;
 
-      if (middleware) {
-        const _res = await middleware(body);
+      let middlewareOptions: BaseOptions = {};
 
-        if (_res) {
-          res.status(200).json(_res);
-          return;
+      if (middleware1) {
+        middlewareOptions = await middleware1(body, {});
+
+        if (middleware2) {
+          middlewareOptions = await middleware2(body, middlewareOptions);
+
+          if (middleware3) {
+            middlewareOptions = await middleware3(body, middlewareOptions);
+          }
         }
       }
 
@@ -106,7 +116,7 @@ ${error}`);
         throw Error(DEFAULT_ERRORS.handlerNotFound);
       }
 
-      const _res = await handler(body);
+      const _res = await handler(body, middlewareOptions);
       res.status(200).json(_res);
     } catch (error) {
       logNextRestFrameworkError(error);

@@ -8,7 +8,8 @@ import {
   type Modify,
   type AnyCase,
   type OpenApiOperation,
-  type BaseParams
+  type BaseParams,
+  type BaseOptions
 } from '../types';
 import { NextResponse, type NextRequest } from 'next/server';
 import { type ZodSchema, type z } from 'zod';
@@ -17,7 +18,7 @@ import { type I18NConfig } from 'next/dist/server/config-shared';
 import { type ResponseCookies } from 'next/dist/server/web/spec-extension/cookies';
 import { type NextURL } from 'next/dist/server/web/next-url';
 
-type TypedNextRequest<Body, Query extends BaseQuery> = Modify<
+export type TypedNextRequest<Body = unknown, Query = BaseQuery> = Modify<
   NextRequest,
   {
     json: () => Promise<Body>;
@@ -124,10 +125,34 @@ export declare class TypedNextResponseType<
 // @ts-expect-error - Keep the original NextResponse functionality with custom types.
 export const TypedNextResponse: typeof TypedNextResponseType = NextResponse;
 
+type RouteMiddleware<
+  InputOptions extends BaseOptions = BaseOptions,
+  OutputOptions extends BaseOptions = BaseOptions,
+  ResponseBody = unknown,
+  Status extends BaseStatus = BaseStatus,
+  ContentType extends BaseContentType = BaseContentType,
+  Outputs extends ReadonlyArray<
+    OutputObject<ResponseBody, Status, ContentType>
+  > = ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>,
+  TypedResponse =
+    | TypedNextResponseType<
+        z.infer<Outputs[number]['schema']>,
+        Outputs[number]['status'],
+        Outputs[number]['contentType']
+      >
+    | NextResponse<z.infer<Outputs[number]['schema']>>
+    | void
+> = (
+  req: NextRequest,
+  context: { params: BaseParams },
+  options: InputOptions
+) => Promise<TypedResponse> | TypedResponse | OutputOptions;
+
 type TypedRouteHandler<
   Body = unknown,
   Query extends BaseQuery = BaseQuery,
   Params extends BaseParams = BaseParams,
+  Options extends BaseOptions = BaseOptions,
   ResponseBody = unknown,
   Status extends BaseStatus = BaseStatus,
   ContentType extends BaseContentType = BaseContentType,
@@ -144,13 +169,9 @@ type TypedRouteHandler<
     | void
 > = (
   req: TypedNextRequest<Body, Query>,
-  context: { params: Params }
+  context: { params: Params },
+  options: Options
 ) => Promise<TypedResponse> | TypedResponse;
-
-type NextRouteHandler = (
-  req: NextRequest,
-  context: { params: BaseParams }
-) => Promise<NextResponse> | NextResponse | Promise<void> | void;
 
 interface InputObject<Body = unknown, Query = BaseQuery, Params = BaseParams> {
   contentType?: BaseContentType;
@@ -166,8 +187,10 @@ export interface RouteOperationDefinition<
   method: Method;
   input?: InputObject;
   outputs?: readonly OutputObject[];
-  middleware?: NextRouteHandler;
-  handler?: NextRouteHandler;
+  middleware1?: RouteMiddleware;
+  middleware2?: RouteMiddleware;
+  middleware3?: RouteMiddleware;
+  handler?: TypedRouteHandler;
 }
 
 export const routeOperation = <Method extends keyof typeof ValidMethod>({
@@ -180,26 +203,27 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
   const createOperation = ({
     input,
     outputs,
-    middleware: _middleware,
-    handler: _handler
+    middleware1,
+    middleware2,
+    middleware3,
+    handler
   }: {
     input?: InputObject;
     outputs?: readonly OutputObject[];
-    middleware?: TypedRouteHandler<any, any, any>;
-    handler?: TypedRouteHandler<any, any, any>;
-  }): RouteOperationDefinition<Method> => {
-    const middleware = _middleware as NextRouteHandler;
-    const handler = _handler as NextRouteHandler;
-
-    return {
-      openApiOperation,
-      method,
-      input,
-      outputs,
-      middleware,
-      handler
-    };
-  };
+    middleware1?: RouteMiddleware<any, any>;
+    middleware2?: RouteMiddleware<any, any>;
+    middleware3?: RouteMiddleware<any, any>;
+    handler?: TypedRouteHandler<any, any, any, any>;
+  }): RouteOperationDefinition<Method> => ({
+    openApiOperation,
+    method,
+    input,
+    outputs,
+    middleware1,
+    middleware2,
+    middleware3,
+    handler
+  });
 
   return {
     input: <Body, Query extends BaseQuery, Params extends BaseParams>(
@@ -215,34 +239,96 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
       >(
         outputs: Outputs
       ) => ({
-        middleware: (
-          middleware: TypedRouteHandler<
-            unknown,
-            BaseQuery,
-            BaseParams,
+        middleware: <Options1 extends BaseOptions>(
+          middleware1: RouteMiddleware<
+            BaseOptions,
+            Options1,
             ResponseBody,
             Status,
             ContentType,
             Outputs
           >
         ) => ({
-          handler: (
-            handler: TypedRouteHandler<
-              Body,
-              Query,
-              Params,
+          middleware: <Options2 extends BaseOptions>(
+            middleware2: RouteMiddleware<
+              Options1,
+              Options2,
               ResponseBody,
               Status,
               ContentType,
               Outputs
             >
-          ) => createOperation({ input, outputs, middleware, handler })
+          ) => ({
+            middleware: <Options3 extends BaseOptions>(
+              middleware3: RouteMiddleware<
+                Options2,
+                Options3,
+                ResponseBody,
+                Status,
+                ContentType,
+                Outputs
+              >
+            ) => ({
+              handler: (
+                handler: TypedRouteHandler<
+                  Body,
+                  Query,
+                  Params,
+                  Options3,
+                  ResponseBody,
+                  Status,
+                  ContentType,
+                  Outputs
+                >
+              ) =>
+                createOperation({
+                  input,
+                  outputs,
+                  middleware1,
+                  middleware2,
+                  middleware3,
+                  handler
+                })
+            }),
+            handler: (
+              handler: TypedRouteHandler<
+                Body,
+                Query,
+                Params,
+                Options2,
+                ResponseBody,
+                Status,
+                ContentType,
+                Outputs
+              >
+            ) =>
+              createOperation({
+                input,
+                outputs,
+                middleware1,
+                middleware2,
+                handler
+              })
+          }),
+          handler: (
+            handler: TypedRouteHandler<
+              Body,
+              Query,
+              Params,
+              Options1,
+              ResponseBody,
+              Status,
+              ContentType,
+              Outputs
+            >
+          ) => createOperation({ input, outputs, middleware1, handler })
         }),
         handler: (
           handler: TypedRouteHandler<
             Body,
             Query,
             Params,
+            BaseOptions,
             ResponseBody,
             Status,
             ContentType,
@@ -250,7 +336,84 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
           >
         ) => createOperation({ input, outputs, handler })
       }),
-      middleware: (middleware: TypedRouteHandler) => ({
+      middleware: <Options1 extends BaseOptions>(
+        middleware1: RouteMiddleware<BaseOptions, Options1>
+      ) => ({
+        middleware: <Options2 extends BaseOptions>(
+          middleware2: RouteMiddleware<Options1, Options2>
+        ) => ({
+          middleware: <Options3 extends BaseOptions>(
+            middleware3: RouteMiddleware<Options2, Options3>
+          ) => ({
+            outputs: <
+              ResponseBody,
+              Status extends BaseStatus,
+              ContentType extends BaseContentType,
+              Outputs extends ReadonlyArray<
+                OutputObject<ResponseBody, Status, ContentType>
+              >
+            >(
+              outputs: Outputs
+            ) => ({
+              handler: (
+                handler: TypedRouteHandler<
+                  Body,
+                  Query,
+                  Params,
+                  Options3,
+                  ResponseBody,
+                  Status,
+                  ContentType,
+                  Outputs
+                >
+              ) =>
+                createOperation({
+                  input,
+                  outputs,
+                  middleware1,
+                  middleware2,
+                  middleware3,
+                  handler
+                })
+            }),
+            handler: (
+              handler: TypedRouteHandler<Body, Query, Params, Options2>
+            ) => createOperation({ input, middleware1, middleware2, handler })
+          }),
+          outputs: <
+            ResponseBody,
+            Status extends BaseStatus,
+            ContentType extends BaseContentType,
+            Outputs extends ReadonlyArray<
+              OutputObject<ResponseBody, Status, ContentType>
+            >
+          >(
+            outputs: Outputs
+          ) => ({
+            handler: (
+              handler: TypedRouteHandler<
+                Body,
+                Query,
+                Params,
+                Options2,
+                ResponseBody,
+                Status,
+                ContentType,
+                Outputs
+              >
+            ) =>
+              createOperation({
+                input,
+                outputs,
+                middleware1,
+                middleware2,
+                handler
+              })
+          }),
+          handler: (
+            handler: TypedRouteHandler<Body, Query, Params, Options2>
+          ) => createOperation({ input, middleware1, middleware2, handler })
+        }),
         outputs: <
           ResponseBody,
           Status extends BaseStatus,
@@ -266,17 +429,18 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
               Body,
               Query,
               Params,
+              Options1,
               ResponseBody,
               Status,
               ContentType,
               Outputs
             >
-          ) => createOperation({ input, outputs, middleware, handler })
+          ) => createOperation({ input, outputs, middleware1, handler })
         }),
-        handler: (handler: TypedRouteHandler<Body, Query>) =>
-          createOperation({ input, middleware, handler })
+        handler: (handler: TypedRouteHandler<Body, Query, Params, Options1>) =>
+          createOperation({ input, middleware1, handler })
       }),
-      handler: (handler: TypedRouteHandler<Body, Query>) =>
+      handler: (handler: TypedRouteHandler<Body, Query, Params>) =>
         createOperation({ input, handler })
     }),
     outputs: <
@@ -289,34 +453,88 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
     >(
       outputs: Outputs
     ) => ({
-      middleware: (
-        middleware: TypedRouteHandler<
-          unknown,
-          BaseQuery,
-          BaseParams,
+      middleware: <Options1 extends BaseOptions>(
+        middleware1: RouteMiddleware<
+          BaseOptions,
+          Options1,
           ResponseBody,
           Status,
           ContentType,
           Outputs
         >
       ) => ({
-        handler: (
-          handler: TypedRouteHandler<
-            unknown,
-            BaseQuery,
-            BaseParams,
+        middleware: <Options2 extends BaseOptions>(
+          middleware2: RouteMiddleware<
+            Options1,
+            Options2,
             ResponseBody,
             Status,
             ContentType,
             Outputs
           >
-        ) => createOperation({ outputs, middleware, handler })
+        ) => ({
+          middleware: <Options3 extends BaseOptions>(
+            middleware3: RouteMiddleware<
+              Options2,
+              Options3,
+              ResponseBody,
+              Status,
+              ContentType,
+              Outputs
+            >
+          ) => ({
+            handler: (
+              handler: TypedRouteHandler<
+                unknown,
+                BaseQuery,
+                BaseParams,
+                Options3,
+                ResponseBody,
+                Status,
+                ContentType,
+                Outputs
+              >
+            ) =>
+              createOperation({
+                outputs,
+                middleware1,
+                middleware2,
+                middleware3,
+                handler
+              })
+          }),
+          handler: (
+            handler: TypedRouteHandler<
+              unknown,
+              BaseQuery,
+              BaseParams,
+              Options2,
+              ResponseBody,
+              Status,
+              ContentType,
+              Outputs
+            >
+          ) => createOperation({ outputs, middleware1, middleware2, handler })
+        }),
+        handler: (
+          handler: TypedRouteHandler<
+            unknown,
+            BaseQuery,
+            BaseParams,
+            Options1,
+            ResponseBody,
+            Status,
+            ContentType,
+            Outputs
+          >
+        ) => createOperation({ outputs, middleware1, handler })
       }),
       handler: (
         handler: TypedRouteHandler<
           unknown,
           BaseQuery,
           BaseParams,
+          BaseOptions,
           ResponseBody,
           Status,
           ContentType,
@@ -324,9 +542,27 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
         >
       ) => createOperation({ outputs, handler })
     }),
-    middleware: (middleware: TypedRouteHandler) => ({
-      handler: (handler: TypedRouteHandler) =>
-        createOperation({ middleware, handler })
+    middleware: <Options1 extends BaseOptions>(
+      middleware1: RouteMiddleware<BaseOptions, Options1>
+    ) => ({
+      middleware: <Options2 extends BaseOptions>(
+        middleware2: RouteMiddleware<Options1, Options2>
+      ) => ({
+        middleware: <Options3 extends BaseOptions>(
+          middleware3: RouteMiddleware<Options2, Options3>
+        ) => ({
+          handler: (
+            handler: TypedRouteHandler<unknown, BaseQuery, BaseParams, Options3>
+          ) =>
+            createOperation({ middleware1, middleware2, middleware3, handler })
+        }),
+        handler: (
+          handler: TypedRouteHandler<unknown, BaseQuery, BaseParams, Options2>
+        ) => createOperation({ middleware1, middleware2, handler })
+      }),
+      handler: (
+        handler: TypedRouteHandler<unknown, BaseQuery, BaseParams, Options1>
+      ) => createOperation({ middleware1, handler })
     }),
     handler: (handler: TypedRouteHandler) => createOperation({ handler })
   };

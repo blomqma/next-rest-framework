@@ -133,7 +133,32 @@ it('executes middleware before validating input', async () => {
   expect(res.statusCode).toEqual(400);
 });
 
-it('does not execute handler if middleware returns a response', async () => {
+it('does not execute handler if middleware throws an error', async () => {
+  const { req, res } = createMockRpcApiRouteRequest();
+
+  console.log = jest.fn();
+
+  await rpcApiRoute({
+    test: rpcOperation()
+      .middleware(() => {
+        throw Error("I'm an error!");
+      })
+      .handler(() => {
+        console.log('foo');
+      })
+  })(req, res);
+
+  const json = res._getJSONData();
+  expect(res.statusCode).toEqual(500);
+
+  expect(json).toEqual({
+    message: DEFAULT_ERRORS.unexpectedError
+  });
+
+  expect(console.log).not.toHaveBeenCalled();
+});
+
+it('passes middleware response to the handler', async () => {
   const { req, res } = createMockRpcApiRouteRequest();
 
   console.log = jest.fn();
@@ -143,8 +168,9 @@ it('does not execute handler if middleware returns a response', async () => {
       .middleware(() => {
         return { foo: 'bar' };
       })
-      .handler(() => {
+      .handler((_input, options) => {
         console.log('foo');
+        return options;
       })
   })(req, res);
 
@@ -155,5 +181,45 @@ it('does not execute handler if middleware returns a response', async () => {
     foo: 'bar'
   });
 
-  expect(console.log).not.toHaveBeenCalled();
+  expect(console.log).toHaveBeenCalledWith('foo');
+});
+
+it('allows chaining three middlewares', async () => {
+  const { req, res } = createMockRpcApiRouteRequest();
+
+  console.log = jest.fn();
+
+  await rpcApiRoute({
+    test: rpcOperation()
+      .middleware(() => {
+        console.log('foo');
+        return { foo: 'bar' };
+      })
+      .middleware((_input, options) => {
+        console.log('bar');
+        return { ...options, bar: 'baz' };
+      })
+      .middleware((_input, options) => {
+        console.log('baz');
+        return { ...options, baz: 'qux' };
+      })
+      .handler((_input, options) => {
+        console.log('handler');
+        return options;
+      })
+  })(req, res);
+
+  const json = res._getJSONData();
+  expect(res.statusCode).toEqual(200);
+
+  expect(json).toEqual({
+    foo: 'bar',
+    bar: 'baz',
+    baz: 'qux'
+  });
+
+  expect(console.log).toHaveBeenCalledWith('foo');
+  expect(console.log).toHaveBeenCalledWith('bar');
+  expect(console.log).toHaveBeenCalledWith('baz');
+  expect(console.log).toHaveBeenCalledWith('handler');
 });

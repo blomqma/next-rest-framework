@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
-import { type OpenApiPathItem, type BaseParams } from '../types';
+import {
+  type OpenApiPathItem,
+  type BaseParams,
+  type BaseOptions
+} from '../types';
 import {
   isValidMethod,
   validateSchema,
   logNextRestFrameworkError,
   getOasDataFromOperations
 } from '../shared';
-import { type RouteOperationDefinition } from './route-operation';
+import {
+  type TypedNextRequest,
+  type RouteOperationDefinition
+} from './route-operation';
 
 export const route = <T extends Record<string, RouteOperationDefinition>>(
   operations: T,
@@ -66,13 +73,53 @@ ${error}`);
         return handleMethodNotAllowed();
       }
 
-      const { input, handler, middleware } = operation;
+      const { input, handler, middleware1, middleware2, middleware3 } =
+        operation;
 
-      if (middleware) {
-        const res = await middleware(new NextRequest(req.clone()), context);
+      let middlewareOptions: BaseOptions = {};
 
-        if (res) {
+      if (middleware1) {
+        const res = await middleware1(
+          new NextRequest(req.clone()),
+          context,
+          middlewareOptions
+        );
+
+        const isOptionsResponse = (res: unknown): res is BaseOptions =>
+          typeof res === 'object';
+
+        if (res instanceof NextResponse) {
           return res;
+        } else if (isOptionsResponse(res)) {
+          middlewareOptions = res;
+        }
+
+        if (middleware2) {
+          const res2 = await middleware2(
+            new NextRequest(req.clone()),
+            context,
+            middlewareOptions
+          );
+
+          if (res2 instanceof NextResponse) {
+            return res2;
+          } else if (isOptionsResponse(res2)) {
+            middlewareOptions = res2;
+          }
+
+          if (middleware3) {
+            const res3 = await middleware3(
+              new NextRequest(req.clone()),
+              context,
+              middlewareOptions
+            );
+
+            if (res3 instanceof NextResponse) {
+              return res3;
+            } else if (isOptionsResponse(res3)) {
+              middlewareOptions = res3;
+            }
+          }
         }
       }
 
@@ -146,7 +193,11 @@ ${error}`);
         throw Error(DEFAULT_ERRORS.handlerNotFound);
       }
 
-      const res = await handler(req, context);
+      const res = await handler(
+        req as TypedNextRequest,
+        context,
+        middlewareOptions
+      );
       return res;
     } catch (error) {
       logNextRestFrameworkError(error);
