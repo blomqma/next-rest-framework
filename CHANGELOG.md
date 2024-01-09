@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 4.3.0 - 2024-01-10
+
+### Changed
+
+- Build the code for both ESM and CJS outputs using `tsup`.
+
 ### 4.2.0 - 2024-01-09
 
 ### Added
