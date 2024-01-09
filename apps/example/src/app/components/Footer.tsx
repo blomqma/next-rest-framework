@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export const Footer: React.FC = () => (
   <footer className="footer bg-base-200 flex justify-center">
     <div className="container max-w-5xl flex flex-col items-center text-md gap-5 px-5 py-2">
@@ -9,10 +11,11 @@ export const Footer: React.FC = () => (
         >
           Next REST Framework
         </a>
-        <img
+        <Image
           src="https://next-rest-framework.vercel.app/img/logo.svg"
           alt="Next REST Framework logo"
-          className="w-10"
+          width={30}
+          height={30}
         />
       </p>
     </div>

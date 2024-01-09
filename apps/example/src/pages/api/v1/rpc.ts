@@ -1,4 +1,4 @@
-import { createTodo, deleteTodo, getTodoById, getTodos } from 'actions';
+import { createTodo, deleteTodo, getTodoById, getTodos } from '@/actions';
 import { rpcApiRoute } from 'next-rest-framework';
 
 const handler = rpcApiRoute({

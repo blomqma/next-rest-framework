@@ -1,7 +1,7 @@
 'use server';
 
 import { rpcOperation } from 'next-rest-framework';
-import { MOCK_TODOS, todoSchema } from 'utils';
+import { MOCK_TODOS, todoSchema } from '@/utils';
 import { z } from 'zod';
 
 // The RPC operations can be used as server-actions and imported in the RPC route handlers.

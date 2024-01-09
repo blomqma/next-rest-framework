@@ -5,12 +5,18 @@
     "prebuild": "cd ../.. && pnpm build && cd apps/example",
     "dev": "pnpm prebuild && next dev",
     "build": "pnpm prebuild && next build",
+    "start": "next start",
     "generate": "pnpm prebuild && next-rest-framework generate --debug=true",
     "validate": "pnpm prebuild && next-rest-framework validate --debug=true",
-    "start": "next start",
-    "type-check": "tsc --noEmit"
+    "lint": "tsc && next lint"
   },
   "dependencies": {
     "next-rest-framework": "workspace:*"
+  },
+  "devDependencies": {
+    "autoprefixer": "10.0.1",
+    "postcss": "8.4.33",
+    "tailwindcss": "3.3.0",
+    "eslint-config-next": "14.0.4"
   }
 }

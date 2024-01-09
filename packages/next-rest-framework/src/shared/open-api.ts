@@ -239,8 +239,8 @@ export const fetchOasDataFromDev = async ({
               headers: {
                 'User-Agent': NEXT_REST_FRAMEWORK_USER_AGENT,
                 'Content-Type': 'application/json',
-                'x-forwarded-proto': baseUrl.split('://')[0],
-                host: baseUrl.split('://')[1]
+                'x-forwarded-proto': baseUrl.split('://')[0] ?? '',
+                host: baseUrl.split('://')[1] ?? ''
               },
               signal: controller.signal,
               method
@@ -392,7 +392,7 @@ export const getOasDataFromOperations = ({
     Array<{ key: string; ref: string; schema: OpenAPIV3_1.SchemaObject }>
   > = {};
 
-  const capitalize = (str: string) => str[0].toUpperCase() + str.slice(1);
+  const capitalize = (str: string) => str[0]?.toUpperCase() + str.slice(1);
 
   Object.entries(operations).forEach(
     ([operationId, { openApiOperation, method: _method, input, outputs }]: [
@@ -505,8 +505,9 @@ export const getOasDataFromOperations = ({
             // Filter out query parameters that have already been added to the path parameters automatically.
             .filter((key) => !pathParameters?.includes(key))
             .map((key) => {
-              const schema: ZodSchema = (input.query as ZodObject<ZodRawShape>)
-                .shape[key];
+              const schema = (input.query as ZodObject<ZodRawShape>).shape[
+                key
+              ] as ZodSchema;
 
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
               return {
@@ -591,7 +592,7 @@ export const getOasDataFromRpcOperations = ({
     }>
   > = {};
 
-  const capitalize = (str: string) => str[0].toUpperCase() + str.slice(1);
+  const capitalize = (str: string) => str[0]?.toUpperCase() + str.slice(1);
 
   Object.entries(operations).forEach(
     ([

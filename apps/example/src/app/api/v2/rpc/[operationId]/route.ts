@@ -1,4 +1,4 @@
-import { createTodo, deleteTodo, getTodoById, getTodos } from 'actions';
+import { createTodo, deleteTodo, getTodoById, getTodos } from '@/actions';
 import { rpcRoute } from 'next-rest-framework';
 
 const { POST, client } = rpcRoute({
