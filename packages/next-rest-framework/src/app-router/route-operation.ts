@@ -193,6 +193,7 @@ export interface RouteOperationDefinition<
   handler?: TypedRouteHandler;
 }
 
+// Build function chain for a route operation.
 export const routeOperation = <Method extends keyof typeof ValidMethod>({
   openApiOperation,
   method

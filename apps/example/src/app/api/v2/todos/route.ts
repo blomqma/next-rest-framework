@@ -2,8 +2,10 @@ import { TypedNextResponse, route, routeOperation } from 'next-rest-framework';
 import { MOCK_TODOS, todoSchema } from '@/utils';
 import { z } from 'zod';
 
-// Example App Router route handler with GET/POST handlers.
-const { GET, POST } = route({
+export const runtime = 'edge';
+
+// Example app router route handler with GET/POST handlers.
+export const { GET, POST } = route({
   getTodos: routeOperation({
     method: 'GET',
     // Optional OpenAPI operation documentation.
@@ -73,5 +75,3 @@ const { GET, POST } = route({
       });
     })
 });
-
-export { GET, POST };

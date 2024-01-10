@@ -6,6 +6,7 @@ import {
 } from '../constants';
 import { type NextRestFrameworkConfig } from '../types';
 
+// Return HTML for Redoc or Swagger UI.
 export const getHtmlForDocs = ({
   config: {
     openApiJsonPath,

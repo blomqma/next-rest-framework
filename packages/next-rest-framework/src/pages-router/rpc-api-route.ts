@@ -1,13 +1,9 @@
-import {
-  DEFAULT_ERRORS,
-  NEXT_REST_FRAMEWORK_USER_AGENT,
-  ValidMethod
-} from '../constants';
+import { DEFAULT_ERRORS, ValidMethod } from '../constants';
 import {
   validateSchema,
   logNextRestFrameworkError,
   type RpcOperationDefinition,
-  getOasDataFromRpcOperations
+  logPagesEdgeRuntimeErrorForRoute
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import {
@@ -16,6 +12,8 @@ import {
   type OpenApiPathItem
 } from '../types';
 import { type RpcClient } from '../client/rpc-client';
+import { type NextRequest } from 'next/server';
+import { getPathsFromRpcRoute } from '../shared/paths';
 
 export const rpcApiRoute = <
   T extends Record<string, RpcOperationDefinition<any, any, any>>
@@ -27,37 +25,24 @@ export const rpcApiRoute = <
   }
 ) => {
   const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-    try {
-      const { method, body, headers, url: pathname } = req;
+    if (typeof EdgeRuntime === 'string') {
+      const edgeRequest = req as unknown as NextRequest;
+      const route = decodeURIComponent(edgeRequest.nextUrl.pathname ?? '');
+      logPagesEdgeRuntimeErrorForRoute(route);
 
-      if (method !== ValidMethod.POST) {
+      return Response.json(
+        { message: DEFAULT_ERRORS.unexpectedError },
+        {
+          status: 400
+        }
+      );
+    }
+
+    try {
+      if (req.method !== ValidMethod.POST) {
         res.setHeader('Allow', 'POST');
         res.status(405).json({ message: DEFAULT_ERRORS.methodNotAllowed });
         return;
-      }
-
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT
-      ) {
-        const route = decodeURIComponent(pathname ?? '').replace(
-          '/{operationId}',
-          ''
-        );
-
-        try {
-          const nrfOasData = getOasDataFromRpcOperations({
-            operations,
-            options,
-            route
-          });
-
-          res.status(200).json({ nrfOasData });
-          return;
-        } catch (error) {
-          throw Error(`OpenAPI spec generation failed for route: ${route}
-${error}`);
-        }
       }
 
       const operation = operations[req.query.operationId?.toString() ?? ''];
@@ -73,26 +58,26 @@ ${error}`);
       let middlewareOptions: BaseOptions = {};
 
       if (middleware1) {
-        middlewareOptions = await middleware1(body, {});
+        middlewareOptions = await middleware1(req.body, {});
 
         if (middleware2) {
-          middlewareOptions = await middleware2(body, middlewareOptions);
+          middlewareOptions = await middleware2(req.body, middlewareOptions);
 
           if (middleware3) {
-            middlewareOptions = await middleware3(body, middlewareOptions);
+            middlewareOptions = await middleware3(req.body, middlewareOptions);
           }
         }
       }
 
       if (input) {
-        if (headers['content-type']?.split(';')[0] !== 'application/json') {
-          res.status(415).json({ message: DEFAULT_ERRORS.invalidMediaType });
+        if (req.headers['content-type']?.split(';')[0] !== 'application/json') {
+          res.status(400).json({ message: DEFAULT_ERRORS.invalidMediaType });
         }
 
         try {
           const { valid, errors } = await validateSchema({
             schema: input,
-            obj: body
+            obj: req.body
           });
 
           if (!valid) {
@@ -112,24 +97,27 @@ ${error}`);
         }
       }
 
-      if (!handler) {
-        throw Error(DEFAULT_ERRORS.handlerNotFound);
+      const _res = await handler?.(req.body, middlewareOptions);
+
+      if (!_res) {
+        res.status(400).json({ message: DEFAULT_ERRORS.notImplemented });
+        return;
       }
 
-      const _res = await handler(body, middlewareOptions);
       res.status(200).json(_res);
     } catch (error) {
       logNextRestFrameworkError(error);
-      res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
+      res.status(400).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
   };
 
-  handler._getPaths = (route: string) =>
-    getOasDataFromRpcOperations({
+  handler._getPathsForRoute = async (route: string) => {
+    return getPathsFromRpcRoute({
       operations,
       options,
-      route
+      route: route.replace('/{operationId}', '')
     });
+  };
 
   handler.client = operations as RpcClient<T>;
 

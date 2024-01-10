@@ -141,8 +141,8 @@ The docs route handlers and route handler functions
 are renamed, followed up with new utility function
 used in conjunction with the new `routeHandler` and
 `apiRouteHandler` functions. The new additional
-`routeOperation` (App Router) and `apiRouteOperation`
-(Pages Router) functions expose the same old API
+`routeOperation` (app router) and `apiRouteOperation`
+(pages router) functions expose the same old API
 including the input, output and handler definitions
 in a slightly new format by chaining the oprations
 after each other.
@@ -164,7 +164,7 @@ in the OpenAPI spec when using dynamic routes.
 
 There are also some typings improvements for response
 status codes, that we're not working previously.
-Unfortunately, for App Router the status codes are
+Unfortunately, for app router the status codes are
 still not limited to the user-defined response statuses,
 because the `NextResponse` API makes this impossible.
 
@@ -238,7 +238,7 @@ by the developer.
 
 ### Fixed
 
-- Fix query parameter validation on app router - now the search parameters are validated similarly to when using Pages Router.
+- Fix query parameter validation on app router - now the search parameters are validated similarly to when using pages router.
 - Fix content type validation when no user-defined content type validation is set.
 
 ### 1.2.3 - 2023-10-07
@@ -257,7 +257,7 @@ by the developer.
 
 ### Fixed
 
-- Fix request body validation with App Router. The new validation clones the request object before validating it, allowing the request body to be further parsed by the API handler.
+- Fix request body validation with app router. The new validation clones the request object before validating it, allowing the request body to be further parsed by the API handler.
 
 ### 1.2.0 - 2023-09-27
 
@@ -271,14 +271,14 @@ by the developer.
 
 ### Fixed
 
-- Fix Pages Route example code snippets in readme and docs pages.
+- Fix pages router example code snippets in readme and docs pages.
 
 ### 1.1.0 - 2023-09-26
 
 ### Fixed
 
-- Fix an error of the pages directory not being found when only using Pages Router.
-- Fix App Router catch-all route documentation in the readme.
+- Fix an error of the pages directory not being found when only using pages router.
+- Fix app router catch-all route documentation in the readme.
 
 ### Added
 
@@ -300,7 +300,7 @@ Full details available in this PR: https://github.com/blomqma/next-rest-framewor
 
 ### Added
 
-- Add support for Next.js App Router
+- Add support for Next.js app router
 
 ### Removed
 

@@ -6,8 +6,8 @@
     "dev": "pnpm prebuild && next dev",
     "build": "pnpm prebuild && next build",
     "start": "next start",
-    "generate": "pnpm prebuild && next-rest-framework generate --debug=true",
-    "validate": "pnpm prebuild && next-rest-framework validate --debug=true",
+    "generate": "pnpm prebuild && next-rest-framework generate",
+    "validate": "pnpm prebuild && next-rest-framework validate",
     "lint": "tsc && next lint"
   },
   "dependencies": {

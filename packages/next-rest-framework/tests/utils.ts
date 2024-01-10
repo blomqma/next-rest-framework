@@ -4,7 +4,6 @@ import {
   DEFAULT_DESCRIPTION,
   DEFAULT_ERRORS,
   DEFAULT_TITLE,
-  OPEN_API_VERSION,
   VERSION,
   ValidMethod
 } from '../src/constants';
@@ -18,10 +17,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { type BaseParams, type Modify } from '../src/types';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import { getJsonSchema } from '../src/shared';
-
-export const resetCustomGlobals = () => {
-  global._nextRestFrameworkConfig = undefined;
-};
+import { OPEN_API_VERSION } from '../src/cli/constants';
 
 export const createMockRouteRequest = <Body, Query>({
   path = '/',

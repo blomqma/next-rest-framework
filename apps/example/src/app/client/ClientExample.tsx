@@ -1,7 +1,7 @@
 'use client';
 
 import { type RpcClient } from '@/app/api/v2/rpc/[operationId]/route';
-import { rpcClient } from 'next-rest-framework/dist/client/rpc-client';
+import { rpcClient } from 'next-rest-framework/dist/client';
 import { useEffect, useState } from 'react';
 import { type Todo } from '@/utils';
 
