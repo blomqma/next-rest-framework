@@ -14,7 +14,7 @@ npm install next-rest-framework
 
 To get access to the auto-generated documentation, initialize the docs endpoint somewhere in your codebase. You can also skip this step if you don't want to expose a public API documentation.
 
-#### App Router:
+#### App router:
 
 ```typescript
 // src/app/api/route.ts
@@ -24,7 +24,7 @@ import { docsRoute } from 'next-rest-framework';
 export const { GET } = docsRoute();
 ```
 
-#### Pages Router:
+#### Pages router:
 
 ```typescript
 // src/pages/api.ts
@@ -34,13 +34,13 @@ import { docsApiRoute } from 'next-rest-framework';
 export default docsApiRoute();
 ```
 
-This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the [CLI](#cli) command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
+This is enough to get you started. Now you can access the API documentation in your browser. Running `npx next-rest-framework generate` in the project root will generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can create multiple docs endpoints if needed and specify which config to use for the [CLI](#cli). See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
 
 ### [Create endpoint](#create-endpoint)
 
 #### REST
 
-##### App Router:
+##### App router:
 
 ```typescript
 // src/app/api/todos/route.ts
@@ -56,7 +56,7 @@ const TODOS = [
   }
 ];
 
-// Example App Router route handler with GET/POST handlers.
+// Example app router route handler with GET/POST handlers.
 export const { GET, POST } = route({
   getTodos: routeOperation({
     method: 'GET',
@@ -137,7 +137,7 @@ export const { GET, POST } = route({
 
 The `TypedNextResponse` ensures that the response status codes and content-type headers are type-checked. You can still use the regular `NextResponse` if you prefer to have less type-safety.
 
-##### Pages Router:
+##### Pages router:
 
 ```typescript
 // src/pages/api/todos.ts
@@ -153,7 +153,7 @@ const TODOS = [
   }
 ];
 
-// Example Pages Router API route with GET/POST handlers.
+// Example pages router API route with GET/POST handlers.
 export default apiRoute({
   getTodos: apiRouteOperation({
     method: 'GET',
@@ -233,7 +233,7 @@ To achieve end-to-end type-safety, you can use any client implementation that re
 
 You can also define your APIs with RPC route handlers that also auto-generate the OpenAPI spec. The RPC endpoints can be consumed with the type-safe API client for end-to-end type safety.
 
-##### App Router:
+##### App router:
 
 ```typescript
 // src/app/api/rpc/route.ts
@@ -255,7 +255,7 @@ const todoSchema = z.object({
   completed: z.boolean()
 });
 
-// Example App Router RPC handler.
+// Example app router RPC handler.
 const { POST, client } = rpcRoute({
   getTodos: rpcOperation()
     // Output schema for strictly-typed responses and OpenAPI documentation.
@@ -337,17 +337,17 @@ export { POST };
 export type AppRouterRpcClient = typeof client;
 ```
 
-##### Pages Router:
+##### Pages router:
 
 ```typescript
 // src/pages/api/rpc.ts
 
 import { rpcApiRoute } from 'next-rest-framework';
 
-// Example Pages Router RPC handler.
+// Example pages router RPC handler.
 const handler = rpcApiRoute({
   // ...
-  // Exactly the same as the App Router example.
+  // Exactly the same as the app router example.
 });
 
 export default handler;

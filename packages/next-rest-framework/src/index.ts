@@ -12,4 +12,3 @@ export {
   TypedNextResponse
 } from './app-router';
 export { rpcOperation } from './shared';
-export * from './deprecated';

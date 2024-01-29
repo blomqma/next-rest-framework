@@ -9,7 +9,7 @@ const TODOS = [
   }
 ];
 
-// Example Pages Router API route with GET/POST handlers.
+// Example pages router API route with GET/POST handlers.
 export default apiRoute({
   getTodos: apiRouteOperation({
     method: 'GET',

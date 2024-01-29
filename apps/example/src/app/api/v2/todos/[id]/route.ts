@@ -9,7 +9,9 @@ const TODOS = [
   }
 ];
 
-// Example dynamic App Router route handler with GET/DELETE handlers.
+export const runtime = 'edge';
+
+// Example dynamic app router route handler with GET/DELETE handlers.
 export const { GET, DELETE } = route({
   getTodoById: routeOperation({
     method: 'GET',

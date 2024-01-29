@@ -19,7 +19,6 @@ export const DEFAULT_CONFIG: Required<NextRestFrameworkConfig> = {
     }
   },
   openApiJsonPath: '/openapi.json',
-  autoGenerateOpenApiSpec: true,
   docsConfig: {
     provider: 'redoc',
     title: DEFAULT_TITLE,

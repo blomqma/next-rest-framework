@@ -9,7 +9,7 @@ const TODOS = [
   }
 ];
 
-// Example dynamic Pages Router API route with GET/DELETE handlers.
+// Example dynamic pages router API route with GET/DELETE handlers.
 export default apiRoute({
   getTodoById: apiRouteOperation({
     method: 'GET',

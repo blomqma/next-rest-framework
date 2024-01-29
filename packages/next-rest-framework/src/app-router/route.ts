@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
+import { DEFAULT_ERRORS } from '../constants';
 import {
   type OpenApiPathItem,
   type BaseParams,
   type BaseOptions
 } from '../types';
-import {
-  isValidMethod,
-  validateSchema,
-  logNextRestFrameworkError,
-  getOasDataFromOperations
-} from '../shared';
+import { validateSchema } from '../shared';
 import {
   type TypedNextRequest,
   type RouteOperationDefinition
 } from './route-operation';
+import { logNextRestFrameworkError } from '../shared/logging';
+import { getPathsFromRoute } from '../shared/paths';
 
 export const route = <T extends Record<string, RouteOperationDefinition>>(
   operations: T,
@@ -24,10 +21,11 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
 ) => {
   const handler = async (req: NextRequest, context: { params: BaseParams }) => {
     try {
-      const { method, headers, nextUrl } = req;
-      const { pathname } = nextUrl;
+      const operation = Object.entries(operations).find(
+        ([_operationId, operation]) => operation.method === req.method
+      )?.[1];
 
-      const handleMethodNotAllowed = () => {
+      if (!operation) {
         return NextResponse.json(
           { message: DEFAULT_ERRORS.methodNotAllowed },
           {
@@ -39,38 +37,6 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
             }
           }
         );
-      };
-
-      if (!isValidMethod(method)) {
-        return handleMethodNotAllowed();
-      }
-
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        headers.get('user-agent') === NEXT_REST_FRAMEWORK_USER_AGENT
-      ) {
-        const route = decodeURIComponent(pathname ?? '');
-
-        try {
-          const nrfOasData = getOasDataFromOperations({
-            operations,
-            options,
-            route
-          });
-
-          return NextResponse.json({ nrfOasData }, { status: 200 });
-        } catch (error) {
-          throw Error(`OpenAPI spec generation failed for route: ${route}
-${error}`);
-        }
-      }
-
-      const operation = Object.entries(operations).find(
-        ([_operationId, operation]) => operation.method === method
-      )?.[1];
-
-      if (!operation) {
-        return handleMethodNotAllowed();
       }
 
       const { input, handler, middleware1, middleware2, middleware3 } =
@@ -128,7 +94,7 @@ ${error}`);
 
         if (
           contentType &&
-          headers.get('content-type')?.split(';')[0] !== contentType
+          req.headers.get('content-type')?.split(';')[0] !== contentType
         ) {
           return NextResponse.json(
             { message: DEFAULT_ERRORS.invalidMediaType },
@@ -189,15 +155,19 @@ ${error}`);
         }
       }
 
-      if (!handler) {
-        throw Error(DEFAULT_ERRORS.handlerNotFound);
-      }
-
-      const res = await handler(
+      const res = await handler?.(
         req as TypedNextRequest,
         context,
         middlewareOptions
       );
+
+      if (!res) {
+        return NextResponse.json(
+          { message: DEFAULT_ERRORS.notImplemented },
+          { status: 501 }
+        );
+      }
+
       return res;
     } catch (error) {
       logNextRestFrameworkError(error);
@@ -208,14 +178,15 @@ ${error}`);
     }
   };
 
-  handler._getPaths = (route: string) =>
-    getOasDataFromOperations({
+  handler._getPathsForRoute = async (route: string) => {
+    return getPathsFromRoute({
       operations,
       options,
       route
     });
+  };
 
-  // Map all methods for App Router.
+  // Map all methods for app router.
   const api = Object.values(operations).reduce(
     (acc, operation) => {
       acc[operation.method as keyof typeof acc] = handler;

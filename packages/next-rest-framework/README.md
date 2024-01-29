@@ -30,16 +30,16 @@
 - [Installation](#installation)
 - [Getting started](#getting-started)
   - [Create docs handler](#create-docs-handler)
-    - [App Router:](#app-router)
-    - [Pages Router:](#pages-router)
+    - [App router:](#app-router)
+    - [Pages router:](#pages-router)
   - [Create endpoint](#create-endpoint)
     - [REST](#rest)
-      - [App Router:](#app-router-1)
-      - [Pages Router:](#pages-router-1)
+      - [App router:](#app-router-1)
+      - [Pages router:](#pages-router-1)
       - [Client](#client)
     - [RPC](#rpc)
-      - [App Router:](#app-router-2)
-      - [Pages Router:](#pages-router-2)
+      - [App router:](#app-router-2)
+      - [Pages router:](#pages-router-2)
       - [Client](#client-1)
 - [API reference](#api-reference)
   - [Docs handler options](#docs-handler-options)
@@ -85,7 +85,7 @@ This is a monorepo containing the following packages / projects:
 - Auto-generated and extensible `openapi.json` spec file from your business logic.
 - Auto-generated [Redoc](https://github.com/Redocly/redoc) and/or [SwaggerUI](https://swagger.io/tools/swagger-ui/) documentation frontend.
 - Works with Next.js [Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware) and other server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
-- Supports both Next.js [App Router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [Pages Router](https://nextjs.org/docs/pages/building-your-application/routing), even at the same time.
+- Supports both Next.js [app router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [pages router](https://nextjs.org/docs/pages/building-your-application/routing), even at the same time.
 - Fully customizable and compatible with any existing Next.js project.
 
 ## [Installation](#installation)
@@ -100,7 +100,7 @@ npm install next-rest-framework
 
 To get access to the auto-generated documentation, initialize the docs endpoint somewhere in your codebase. You can also skip this step if you don't want to expose a public API documentation.
 
-#### App Router:
+#### App router:
 
 ```typescript
 // src/app/api/route.ts
@@ -110,7 +110,7 @@ import { docsRoute } from 'next-rest-framework';
 export const { GET } = docsRoute();
 ```
 
-#### Pages Router:
+#### Pages router:
 
 ```typescript
 // src/pages/api.ts
@@ -120,13 +120,13 @@ import { docsApiRoute } from 'next-rest-framework';
 export default docsApiRoute();
 ```
 
-This is enough to get you started. Now you can access the API documentation in your browser. Calling this endpoint will automatically generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can also configure this endpoint to disable the automatic generation of the OpenAPI spec file or use the [CLI](#cli) command `npx next-rest-framework generate` to generate it. You can also create multiple docs endpoints for various use cases. See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
+This is enough to get you started. Now you can access the API documentation in your browser. Running `npx next-rest-framework generate` in the project root will generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can create multiple docs endpoints if needed and specify which config to use for the [CLI](#cli). See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
 
 ### [Create endpoint](#create-endpoint)
 
 #### REST
 
-##### App Router:
+##### App router:
 
 ```typescript
 // src/app/api/todos/route.ts
@@ -142,7 +142,7 @@ const TODOS = [
   }
 ];
 
-// Example App Router route handler with GET/POST handlers.
+// Example app router route handler with GET/POST handlers.
 export const { GET, POST } = route({
   getTodos: routeOperation({
     method: 'GET',
@@ -223,7 +223,7 @@ export const { GET, POST } = route({
 
 The `TypedNextResponse` ensures that the response status codes and content-type headers are type-checked. You can still use the regular `NextResponse` if you prefer to have less type-safety.
 
-##### Pages Router:
+##### Pages router:
 
 ```typescript
 // src/pages/api/todos.ts
@@ -239,7 +239,7 @@ const TODOS = [
   }
 ];
 
-// Example Pages Router API route with GET/POST handlers.
+// Example pages router API route with GET/POST handlers.
 export default apiRoute({
   getTodos: apiRouteOperation({
     method: 'GET',
@@ -319,7 +319,7 @@ To achieve end-to-end type-safety, you can use any client implementation that re
 
 You can also define your APIs with RPC route handlers that also auto-generate the OpenAPI spec. The RPC endpoints can be consumed with the type-safe API client for end-to-end type safety.
 
-##### App Router:
+##### App router:
 
 ```typescript
 // src/app/api/rpc/route.ts
@@ -341,7 +341,7 @@ const todoSchema = z.object({
   completed: z.boolean()
 });
 
-// Example App Router RPC handler.
+// Example app router RPC handler.
 const { POST, client } = rpcRoute({
   getTodos: rpcOperation()
     // Output schema for strictly-typed responses and OpenAPI documentation.
@@ -423,17 +423,17 @@ export { POST };
 export type AppRouterRpcClient = typeof client;
 ```
 
-##### Pages Router:
+##### Pages router:
 
 ```typescript
 // src/pages/api/rpc.ts
 
 import { rpcApiRoute } from 'next-rest-framework';
 
-// Example Pages Router RPC handler.
+// Example pages router RPC handler.
 const handler = rpcApiRoute({
   // ...
-  // Exactly the same as the App Router example.
+  // Exactly the same as the app router example.
 });
 
 export default handler;
@@ -504,17 +504,16 @@ The `rpcClient` calls can also be easily integrated with any data fetching frame
 
 ### [Docs handler options](#docs-handler-options)
 
-The following options can be passed to the `docsRouteHandler` (App Router) and `docsApiRouteHandler` (Pages Router) functions for customizing Next REST Framework:
+The following options can be passed to the `docsRouteHandler` (app router) and `docsApiRouteHandler` (pages router) functions for customizing Next REST Framework:
 
-| Name                      | Description                                                                                                                                                                                                                                                                                                            |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `deniedPaths`             | Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/disallowed-path', '/api/disallowed-path-2/*', '/api/disallowed-path-3/**']` Defaults to no paths being disallowed. |
-| `allowedPaths`            | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.               |
-| `openApiObject`           | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.                                                                                                                                                                        |
-| `openApiJsonPath`         | Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder.                                                                                                                                   |
-| `autoGenerateOpenApiSpec` | Setting this to `false` will not automatically update the generated OpenAPI spec when calling the docs handler endpoints. Defaults to `true`.                                                                                                                                                                          |
-| `docsConfig`              | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
-| `suppressInfo`            | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                             |
+| Name              | Description                                                                                                                                                                                                                                                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deniedPaths`     | Array of paths that are denied by Next REST Framework and not included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/disallowed-path', '/api/disallowed-path-2/*', '/api/disallowed-path-3/**']` Defaults to no paths being disallowed. |
+| `allowedPaths`    | Array of paths that are allowed by Next REST Framework and included in the OpenAPI spec. Supports wildcards using asterisk `*` and double asterisk `**` for recursive matching. Example: `['/api/allowed-path', '/api/allowed-path-2/*', '/api/allowed-path-3/**']` Defaults to all paths being allowed.               |
+| `openApiObject`   | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.                                                                                                                                                                        |
+| `openApiJsonPath` | Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder.                                                                                                                                   |
+| `docsConfig`      | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
+| `suppressInfo`    | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                             |
 
 ### [Docs config](#docs-config)
 
@@ -532,7 +531,7 @@ The docs config options can be used to customize the generated docs:
 
 #### [Route handler options](#route-handler-options)
 
-The following options cam be passed to the `routeHandler` (App Router) and `apiRouteHandler` (Pages Router) functions to create new API endpoints:
+The following options can be passed to the `routeHandler` (app router) and `apiRouteHandler` (pages router) functions to create new API endpoints:
 
 | Name                                                       | Description                                                                                                                                                 | Required |
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -541,7 +540,7 @@ The following options cam be passed to the `routeHandler` (App Router) and `apiR
 
 #### [Route operations](#route-operations)
 
-The route operation functions `routeOperation` (App Router) and `apiRouteOperation` (Pages Router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
+The route operation functions `routeOperation` (app router) and `apiRouteOperation` (pages router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
 
 | Name         | Description                                                                                                                                                                                                                                                          |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -576,7 +575,7 @@ Calling the route operation outputs function allows you to chain your API handle
 
 ##### [Route operation middleware](#route-operation-middleware)
 
-The route operation middleware function is executed before validating the request input. The function takes in the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. Additionally, as a second parameter this function takes the return value of your last middleware function, defaulting to an empty object. Throwing an error inside a middleware function will stop the execution of the handler and you can also return a custom response like you would do within the [Handler](#handler) function. Calling the route operation middleware function allows you to chain your API handler logic with the [Handler](#handler) function. Alternatively, you may chain up to three middleware functions together:
+The route operation middleware function is executed before validating the request input. The function takes in the same parameters as the Next.js [router handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. Additionally, as a second parameter this function takes the return value of your last middleware function, defaulting to an empty object. Throwing an error inside a middleware function will stop the execution of the handler and you can also return a custom response like you would do within the [Handler](#handler) function. Calling the route operation middleware function allows you to chain your API handler logic with the [Handler](#handler) function. Alternatively, you may chain up to three middleware functions together:
 
 ```typescript
 // ...
@@ -603,7 +602,7 @@ const handler = route({
 
 ##### [Route operation handler](#route-operation-handler)
 
-The route operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API Routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. Additionally, as a third parameter this function takes the return value of your last middleware function:
+The route operation handler function is a strongly-typed function to implement the business logic for your API. The function takes in strongly-typed versions of the same parameters as the Next.js [router handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) and [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) handlers. Additionally, as a third parameter this function takes the return value of your last middleware function:
 
 ```typescript
 // ...
@@ -622,7 +621,7 @@ const handler = route({
 
 #### [RPC route handler options](#rpc-route-handler-options)
 
-The `rpcRouteHandler` (App Router) and `rpcApiRouteHandler` (Pages Router) functions allow the following options as the second parameter after passing your RPC operations.
+The `rpcRouteHandler` (app router) and `rpcApiRouteHandler` (pages router) functions allow the following options as the second parameter after passing your RPC operations.
 
 | Name               | Description                                                                                                                                                 | Required |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
@@ -710,13 +709,22 @@ The Next REST Framework CLI supports generating and validating the `openapi.json
 
 The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
 
-| Name                    | Description                                                                                                                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--skipBuild <boolean>` | By default, `next build` is used to build your routes. If you have already created the build, you can skip this step by setting this to `true`.                                                |
-| `--distDir <string>`    | Path to your production build directory. Defaults to `.next`.                                                                                                                                  |
-| `--timeout <string>`    | The timeout for generating the OpenAPI spec. Defaults to 60 seconds.                                                                                                                           |
-| `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |
-| `--debug <boolean>`     | Inherit and display logs from the `next build` command. Defaults to `false`.                                                                                                                   |
+| Name                      | Description                                                                                                                                                                                                             |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--configPath <string>`   | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`.                          |
+| `--tsConfigPath <string>` | The CLI will use your projects' `tsconfig.json` to compile the routes temporarily. Defaults to `tsconfig.json`, so if your TS config is named or located differently from the project root, you should set this option. |
+
+A good practice is to set these in your `package.json` as both commands are needed:
+
+```json
+// package.json
+...
+"scripts": {
+  ...
+  "generate": "next-rest-framework generate",
+  "validate": "next-rest-framework validate",
+}
+```
 
 ## [Changelog](#changelog)
 

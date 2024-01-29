@@ -50,6 +50,7 @@ export type RpcOperationDefinition<
   _meta: OperationDefinitionMeta;
 };
 
+// Build function chain for creating an RPC operation.
 export const rpcOperation = (openApiOperation?: OpenApiOperation) => {
   function createOperation<
     Input,

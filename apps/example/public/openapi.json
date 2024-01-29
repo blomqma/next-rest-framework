@@ -6,6 +6,133 @@
     "version": "v4.3.0"
   },
   "paths": {
+    "/api/v1/rpc/createTodo": {
+      "post": {
+        "operationId": "createTodo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTodoRequestBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "CreateTodoResponseBody",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTodoResponseBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "tags": ["RPC"]
+      }
+    },
+    "/api/v1/rpc/deleteTodo": {
+      "post": {
+        "operationId": "deleteTodo",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DeleteTodoRequestBody" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DeleteTodoResponseBody2",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteTodoResponseBody2"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "tags": ["RPC"]
+      }
+    },
+    "/api/v1/rpc/getTodoById": {
+      "post": {
+        "operationId": "getTodoById",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetTodoByIdRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "GetTodoByIdResponseBody2",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTodoByIdResponseBody2"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "tags": ["RPC"]
+      }
+    },
+    "/api/v1/rpc/getTodos": {
+      "post": {
+        "operationId": "getTodos",
+        "responses": {
+          "200": {
+            "description": "GetTodosResponseBody",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTodosResponseBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "tags": ["RPC"]
+      }
+    },
     "/api/v1/todos": {
       "get": {
         "operationId": "getTodos",
@@ -180,7 +307,7 @@
               }
             }
           },
-          "500": {
+          "400": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
@@ -213,7 +340,7 @@
               }
             }
           },
-          "500": {
+          "400": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
@@ -248,7 +375,7 @@
               }
             }
           },
-          "500": {
+          "400": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
@@ -274,7 +401,7 @@
               }
             }
           },
-          "500": {
+          "400": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {

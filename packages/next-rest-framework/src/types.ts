@@ -53,8 +53,6 @@ export interface NextRestFrameworkConfig {
   openApiObject?: OpenApiObject;
   /*! Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder. */
   openApiJsonPath?: string;
-  /*! Setting this to `false` will not automatically update the generated OpenAPI spec when calling the Next REST Framework endpoint. Defaults to `true`. */
-  autoGenerateOpenApiSpec?: boolean;
   /*! Customization options for the generated docs. */
   docsConfig?: {
     /*! Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. */

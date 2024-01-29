@@ -1,14 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import {
-  DEFAULT_ERRORS,
-  NEXT_REST_FRAMEWORK_USER_AGENT,
-  ValidMethod
-} from '../constants';
+import { DEFAULT_ERRORS, ValidMethod } from '../constants';
 import {
   validateSchema,
   logNextRestFrameworkError,
-  type RpcOperationDefinition,
-  getOasDataFromRpcOperations
+  type RpcOperationDefinition
 } from '../shared';
 import {
   type BaseOptions,
@@ -16,6 +11,7 @@ import {
   type OpenApiPathItem
 } from '../types';
 import { type RpcClient } from '../client/rpc-client';
+import { getPathsFromRpcRoute } from '../shared/paths';
 
 export const rpcRoute = <
   T extends Record<string, RpcOperationDefinition<any, any, any>>
@@ -30,10 +26,7 @@ export const rpcRoute = <
     { params }: { params: BaseParams }
   ) => {
     try {
-      const { method, headers, nextUrl } = req;
-      const { pathname } = nextUrl;
-
-      if (method !== ValidMethod.POST) {
+      if (req.method !== ValidMethod.POST) {
         return NextResponse.json(
           { message: DEFAULT_ERRORS.methodNotAllowed },
           {
@@ -43,29 +36,6 @@ export const rpcRoute = <
             }
           }
         );
-      }
-
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        headers.get('user-agent') === NEXT_REST_FRAMEWORK_USER_AGENT
-      ) {
-        const route = decodeURIComponent(pathname ?? '').replace(
-          '/{operationId}',
-          ''
-        );
-
-        try {
-          const nrfOasData = getOasDataFromRpcOperations({
-            operations,
-            route,
-            options
-          });
-
-          return NextResponse.json({ nrfOasData }, { status: 200 });
-        } catch (error) {
-          throw Error(`OpenAPI spec generation failed for route: ${route}
-${error}`);
-        }
       }
 
       const operation = operations[params.operationId ?? ''];
@@ -99,10 +69,12 @@ ${error}`);
       }
 
       if (input) {
-        if (headers.get('content-type')?.split(';')[0] !== 'application/json') {
+        if (
+          req.headers.get('content-type')?.split(';')[0] !== 'application/json'
+        ) {
           return NextResponse.json(
             { message: DEFAULT_ERRORS.invalidMediaType },
-            { status: 415 }
+            { status: 400 }
           );
         }
 
@@ -138,28 +110,37 @@ ${error}`);
         }
       }
 
-      if (!handler) {
-        throw Error(DEFAULT_ERRORS.handlerNotFound);
+      const res = await handler?.(req.clone().body, middlewareOptions);
+
+      if (!res) {
+        return NextResponse.json(
+          { message: DEFAULT_ERRORS.notImplemented },
+          { status: 400 }
+        );
       }
 
-      const res = await handler(req.clone().body, middlewareOptions);
       return NextResponse.json(res, { status: 200 });
     } catch (error) {
       logNextRestFrameworkError(error);
 
       return NextResponse.json(
         { message: DEFAULT_ERRORS.unexpectedError },
-        { status: 500 }
+        { status: 400 }
       );
     }
   };
 
-  handler._getPaths = (route: string) =>
-    getOasDataFromRpcOperations({
+  handler._getPathsForRoute = async (route: string) => {
+    return getPathsFromRpcRoute({
       operations,
       options,
-      route
+      route: route.replace('/{operationId}', '')
     });
+  };
 
-  return { POST: handler, client: operations as RpcClient<T> };
+  handler.client = operations as RpcClient<T>;
+
+  return {
+    POST: handler
+  };
 };

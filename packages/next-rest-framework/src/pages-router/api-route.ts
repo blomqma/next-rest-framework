@@ -1,9 +1,8 @@
-import { DEFAULT_ERRORS, NEXT_REST_FRAMEWORK_USER_AGENT } from '../constants';
+import { DEFAULT_ERRORS } from '../constants';
 import {
-  isValidMethod,
   validateSchema,
   logNextRestFrameworkError,
-  getOasDataFromOperations
+  logPagesEdgeRuntimeErrorForRoute
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { type BaseOptions, type OpenApiPathItem } from '../types';
@@ -11,6 +10,8 @@ import {
   type TypedNextApiRequest,
   type ApiRouteOperationDefinition
 } from './api-route-operation';
+import { type NextRequest } from 'next/server';
+import { getPathsFromRoute } from '../shared/paths';
 
 export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
   operations: T,
@@ -19,10 +20,25 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
   }
 ) => {
   const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-    try {
-      const { method, body, query, headers, url: pathname } = req;
+    if (typeof EdgeRuntime === 'string') {
+      const edgeRequest = req as unknown as NextRequest;
+      const route = decodeURIComponent(edgeRequest.nextUrl.pathname ?? '');
+      logPagesEdgeRuntimeErrorForRoute(route);
 
-      const handleMethodNotAllowed = () => {
+      return Response.json(
+        { message: DEFAULT_ERRORS.unexpectedError },
+        {
+          status: 500
+        }
+      );
+    }
+
+    try {
+      const operation = Object.entries(operations).find(
+        ([_operationId, operation]) => operation.method === req.method
+      )?.[1];
+
+      if (!operation) {
         res.setHeader(
           'Allow',
           Object.values(operations)
@@ -31,40 +47,6 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
         );
 
         res.status(405).json({ message: DEFAULT_ERRORS.methodNotAllowed });
-      };
-
-      if (!isValidMethod(method)) {
-        handleMethodNotAllowed();
-        return;
-      }
-
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        headers['user-agent'] === NEXT_REST_FRAMEWORK_USER_AGENT
-      ) {
-        const route = decodeURIComponent(pathname ?? '');
-
-        try {
-          const nrfOasData = getOasDataFromOperations({
-            operations,
-            options,
-            route
-          });
-
-          res.status(200).json({ nrfOasData });
-          return;
-        } catch (error) {
-          throw Error(`OpenAPI spec generation failed for route: ${route}
-${error}`);
-        }
-      }
-
-      const operation = Object.entries(operations).find(
-        ([_operationId, operation]) => operation.method === method
-      )?.[1];
-
-      if (!operation) {
-        handleMethodNotAllowed();
         return;
       }
 
@@ -111,7 +93,7 @@ ${error}`);
 
         if (
           contentType &&
-          headers['content-type']?.split(';')[0] !== contentType
+          req.headers['content-type']?.split(';')[0] !== contentType
         ) {
           res.status(415).json({ message: DEFAULT_ERRORS.invalidMediaType });
           return;
@@ -120,7 +102,7 @@ ${error}`);
         if (bodySchema) {
           const { valid, errors } = await validateSchema({
             schema: bodySchema,
-            obj: body
+            obj: req.body
           });
 
           if (!valid) {
@@ -136,7 +118,7 @@ ${error}`);
         if (querySchema) {
           const { valid, errors } = await validateSchema({
             schema: querySchema,
-            obj: query
+            obj: req.query
           });
 
           if (!valid) {
@@ -150,23 +132,24 @@ ${error}`);
         }
       }
 
-      if (!handler) {
-        throw Error(DEFAULT_ERRORS.handlerNotFound);
-      }
+      await handler?.(req as TypedNextApiRequest, res, middlewareOptions);
 
-      await handler(req as TypedNextApiRequest, res, middlewareOptions);
+      if (!res.writableEnded) {
+        res.status(501).json({ message: DEFAULT_ERRORS.notImplemented });
+      }
     } catch (error) {
       logNextRestFrameworkError(error);
       res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
   };
 
-  handler._getPaths = (route: string) =>
-    getOasDataFromOperations({
+  handler._getPathsForRoute = async (route: string) => {
+    return getPathsFromRoute({
       operations,
       options,
       route
     });
+  };
 
   return handler;
 };
