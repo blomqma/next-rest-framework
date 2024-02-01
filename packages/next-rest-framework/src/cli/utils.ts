@@ -2,7 +2,6 @@ import { rm } from 'fs/promises';
 import chalk from 'chalk';
 import glob from 'tiny-glob';
 import { build } from 'esbuild';
-import TsconfigPathsPlugin from '@esbuild-plugins/tsconfig-paths';
 import { type NrfOasData } from '../shared/paths';
 import { type NextRestFrameworkConfig } from '../types';
 import { existsSync, readdirSync } from 'fs';
@@ -25,22 +24,18 @@ export const clearTmpFolder = async () => {
 };
 
 // Compile the Next.js routes and API routes to CJS modules with esbuild.
-export const compileEndpoints = async ({
-  tsConfigPath
-}: {
-  tsConfigPath: string;
-}) => {
+export const compileEndpoints = async () => {
   await clearTmpFolder();
   console.info(chalk.yellowBright('Compiling endpoints...'));
   const entryPoints = await glob('./**/*.ts');
 
   await build({
-    bundle: true,
     entryPoints,
+    bundle: true,
     format: 'cjs',
+    platform: 'node',
     outdir: NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-    plugins: [TsconfigPathsPlugin({ tsconfig: tsConfigPath })],
-    platform: 'node'
+    outExtension: { '.js': '.cjs' }
   });
 };
 
@@ -59,7 +54,7 @@ const getNestedFiles = (basePath: string, dir: string): string[] => {
 // Convert file path of a route to a route name.
 const getRouteName = (file: string) =>
   `/${file}`
-    .replace('/route.js', '')
+    .replace('/route.cjs', '')
     .replace(/\\/g, '/')
     .replaceAll('[', '{')
     .replaceAll(']', '}');
@@ -71,12 +66,12 @@ const getApiRouteName = (file: string) =>
     .replace(/\\/g, '/')
     .replaceAll('[', '{')
     .replaceAll(']', '}')
-    .replace('.js', '');
+    .replace('.cjs', '');
 
 // Find the Next REST Framework config from one of the docs route handlers.
 export const findConfig = async ({ configPath }: { configPath?: string }) => {
   const configs: Array<{
-    route: string;
+    routeName: string;
     config: Required<NextRestFrameworkConfig>;
   }> = [];
 
@@ -119,10 +114,13 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
               const _config = handler._nextRestFrameworkConfig;
 
               if (_config) {
-                configs.push({ route, config: _config });
+                configs.push({
+                  routeName: getRouteName(route),
+                  config: _config
+                });
               }
             }
-          } catch {
+          } catch (e) {
             // Route was not a docs handler.
           }
         })
@@ -170,7 +168,10 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
             const _config = res.default._nextRestFrameworkConfig;
 
             if (_config) {
-              configs.push({ route, config: _config });
+              configs.push({
+                routeName: getApiRouteName(route),
+                config: _config
+              });
             }
           } catch {
             // API route was not a docs handler.
@@ -186,7 +187,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
   // Scan `src/pages/api` folder.
   await findPagesRouterConfig('src/pages/api');
 
-  const { route, config } = configs[0] ?? { route: '', config: null };
+  const { routeName, config } = configs[0] ?? { route: '', config: null };
 
   if (!config && configPath) {
     console.error(
@@ -217,7 +218,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
   }
 
   console.info(
-    chalk.yellowBright(`Using Next REST Framework config: /${route}`)
+    chalk.yellowBright(`Using Next REST Framework config: ${routeName}`)
   );
 
   return config;
@@ -278,9 +279,9 @@ export const generatePathsFromBuild = async ({
    */
   const getCleanedRoutes = (files: string[]) =>
     files
-      .filter((file) => file.endsWith('route.js'))
+      .filter((file) => file.endsWith('route.cjs'))
       .filter((file) => !file.includes('[...'))
-      .filter((file) => !file.endsWith('rpc/[operationId]/route.js'))
+      .filter((file) => !file.endsWith('rpc/[operationId]/route.cjs'))
       .filter((file) => isAllowedRoute(getRouteName(file)));
 
   /*
@@ -290,7 +291,7 @@ export const generatePathsFromBuild = async ({
    */
   const getCleanedRpcRoutes = (files: string[]) =>
     files
-      .filter((file) => file.endsWith('rpc/[operationId]/route.js'))
+      .filter((file) => file.endsWith('rpc/[operationId]/route.cjs'))
       .filter((file) => isAllowedRoute(getRouteName(file)));
 
   /*
@@ -302,7 +303,7 @@ export const generatePathsFromBuild = async ({
   const getCleanedApiRoutes = (files: string[]) =>
     files
       .filter((file) => !file.includes('[...'))
-      .filter((file) => !file.endsWith('rpc/[operationId].js'))
+      .filter((file) => !file.endsWith('rpc/[operationId].cjs'))
       .filter((file) => isAllowedRoute(getApiRouteName(file)));
 
   /*
@@ -312,7 +313,7 @@ export const generatePathsFromBuild = async ({
    */
   const getCleanedRpcApiRoutes = (files: string[]) =>
     files
-      .filter((file) => file.endsWith('rpc/[operationId].js'))
+      .filter((file) => file.endsWith('rpc/[operationId].cjs'))
       .filter((file) => isAllowedRoute(getApiRouteName(file)));
 
   const isNrfOasData = (x: unknown): x is NrfOasData => {

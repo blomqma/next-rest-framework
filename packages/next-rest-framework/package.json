@@ -36,7 +36,6 @@
     "next-rest-framework": "./dist/cli/index.js"
   },
   "dependencies": {
-    "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "chalk": "4.1.2",
     "commander": "10.0.1",
     "esbuild": "0.19.11",

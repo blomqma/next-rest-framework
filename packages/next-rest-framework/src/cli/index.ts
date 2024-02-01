@@ -14,17 +14,12 @@ program
     '--configPath <string>',
     'In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`.'
   )
-  .option(
-    '--tsConfigPath <string>',
-    'Relative path to your applications `tsconfig.json` file. Defaults to `tsconfig.json`.'
-  )
   .description('Generate an OpenAPI spec with Next REST Framework.')
   .action(async (options) => {
     const configPath: string = options.configPath ?? '';
-    const tsConfigPath: string = options.tsConfigPath ?? 'tsconfig.json';
 
     try {
-      await compileEndpoints({ tsConfigPath });
+      await compileEndpoints();
       console.info(chalk.yellowBright('Generating OpenAPI spec...'));
 
       await syncOpenApiSpecFromBuild({
@@ -44,17 +39,12 @@ program
     '--configPath <string>',
     'In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`.'
   )
-  .option(
-    '--tsConfigPath <string>',
-    'Relative path to your applications `tsconfig.json` file. Defaults to `tsconfig.json`.'
-  )
   .description('Validate an OpenAPI spec with Next REST Framework.')
   .action(async (options) => {
     const configPath: string = options.configPath ?? '';
-    const tsConfigPath: string = options.tsConfigPath ?? 'tsconfig.json';
 
     try {
-      await compileEndpoints({ tsConfigPath });
+      await compileEndpoints();
       console.info(chalk.yellowBright('Validating OpenAPI spec...'));
 
       const valid = await validateOpenApiSpecFromBuild({

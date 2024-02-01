@@ -211,10 +211,9 @@ The Next REST Framework CLI supports generating and validating the `openapi.json
 
 The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
 
-| Name                      | Description                                                                                                                                                                                                             |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--configPath <string>`   | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`.                          |
-| `--tsConfigPath <string>` | The CLI will use your projects' `tsconfig.json` to compile the routes temporarily. Defaults to `tsconfig.json`, so if your TS config is named or located differently from the project root, you should set this option. |
+| Name                    | Description                                                                                                                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--configPath <string>` | In case you have multiple docs handlers with different configurations, you can specify which configuration you want to use by providing the path to the API. Example: `/api/my-configuration`. |
 
 A good practice is to set these in your `package.json` as both commands are needed:
 
