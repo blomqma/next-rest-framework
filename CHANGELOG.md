@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.0.1 - 2024-02-01
+
+#### Fixed
+
+- Fix bug of CLI not working when explicit ESM is set in `package.json`.
+
+#### Removed
+
+- Remove unneeded `tsConfigPath` option from CLI commands that is no longer needed.
+
 ### 5.0.0 - 2024-01-29
 
 TLDR: All Node.js API specific code is split
