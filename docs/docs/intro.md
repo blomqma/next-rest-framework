@@ -21,6 +21,15 @@ Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set
 - Works with Next.js [Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware) and other server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
 - Supports both Next.js [app router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [pages router](https://nextjs.org/docs/pages/building-your-application/routing), even at the same time.
 - Fully customizable and compatible with any existing Next.js project.
+- Supports [Edge runtime](https://nextjs.org/docs/app/building-your-application/rendering/edge-and-nodejs-runtimes).
+
+## [Requirements](#requirements)
+
+In order to use Next REST Framework you need to have a Next.js project with the following dependencies installed:
+
+- [Next.js](https://github.com/vercel/next.js) >= v12
+- [Zod](https://github.com/colinhacks/zod) >= v3
+- [TypeScript](https://www.typescriptlang.org/) >= v3
 
 ### [Installation](#installation)
 

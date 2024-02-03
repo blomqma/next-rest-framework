@@ -27,6 +27,7 @@
 - [Overview](#overview)
 - [Features](#features)
   - [Lightweight, type-safe, easy to use](#lightweight-type-safe-easy-to-use)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Getting started](#getting-started)
   - [Create docs handler](#create-docs-handler)
@@ -86,7 +87,16 @@ This is a monorepo containing the following packages / projects:
 - Auto-generated [Redoc](https://github.com/Redocly/redoc) and/or [SwaggerUI](https://swagger.io/tools/swagger-ui/) documentation frontend.
 - Works with Next.js [Middleware](https://nextjs.org/docs/app/building-your-application/routing/middleware) and other server-side libraries, like [NextAuth.js](#https://github.com/nextauthjs/next-auth).
 - Supports both Next.js [app router](https://nextjs.org/docs/app/building-your-application/routing#the-app-router) and [pages router](https://nextjs.org/docs/pages/building-your-application/routing), even at the same time.
+- Supports [Edge runtime](https://nextjs.org/docs/app/building-your-application/rendering/edge-and-nodejs-runtimes).
 - Fully customizable and compatible with any existing Next.js project.
+
+## Requirements
+
+In order to use Next REST Framework you need to have a Next.js project with the following dependencies installed:
+
+- [Next.js](https://github.com/vercel/next.js) >= v12
+- [Zod](https://github.com/colinhacks/zod) >= v3
+- [TypeScript](https://www.typescriptlang.org/) >= v3
 
 ## [Installation](#installation)
 
