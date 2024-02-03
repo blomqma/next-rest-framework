@@ -30,29 +30,30 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Getting started](#getting-started)
-  - [Create docs handler](#create-docs-handler)
-    - [App router:](#app-router)
-    - [Pages router:](#pages-router)
+  - [Create docs endpoint](#create-docs-endpoint)
+    - [App router docs route:](#app-router-docs-route)
+    - [Pages router docs API route:](#pages-router-docs-api-route)
   - [Create endpoint](#create-endpoint)
-    - [REST](#rest)
-      - [App router:](#app-router-1)
-      - [Pages router:](#pages-router-1)
-      - [Client](#client)
-    - [RPC](#rpc)
-      - [App router:](#app-router-2)
-      - [Pages router:](#pages-router-2)
-      - [Client](#client-1)
+    - [REST endpoints](#rest-endpoints)
+      - [App router route:](#app-router-route)
+      - [Pages router API route:](#pages-router-api-route)
+    - [RPC endpoints](#rpc-endpoints)
+      - [App router RPC route:](#app-router-rpc-route)
+      - [Pages router RPC route:](#pages-router-rpc-route)
+  - [Client](#client)
+    - [REST client](#rest-client)
+    - [RPC client](#rpc-client)
 - [API reference](#api-reference)
   - [Docs handler options](#docs-handler-options)
   - [Docs config](#docs-config)
-  - [REST](#rest-1)
+  - [REST](#rest)
     - [Route handler options](#route-handler-options)
     - [Route operations](#route-operations)
       - [Route operation input](#route-operation-input)
       - [Route operation outputs](#route-operation-outputs)
       - [Route operation middleware](#route-operation-middleware)
       - [Route operation handler](#route-operation-handler)
-  - [RPC](#rpc-1)
+  - [RPC](#rpc)
     - [RPC route handler options](#rpc-route-handler-options)
     - [RPC operations](#rpc-operations)
       - [RPC operation input](#rpc-operation-input)
@@ -106,11 +107,11 @@ npm install next-rest-framework
 
 ## [Getting started](#getting-started)
 
-### [Create docs handler](#create-docs-handler)
+### [Create docs endpoint](#create-docs-endpoint)
 
 To get access to the auto-generated documentation, initialize the docs endpoint somewhere in your codebase. You can also skip this step if you don't want to expose a public API documentation.
 
-#### App router:
+#### [App router docs route](#app-router-docs-route):
 
 ```typescript
 // src/app/api/route.ts
@@ -120,7 +121,7 @@ import { docsRoute } from 'next-rest-framework';
 export const { GET } = docsRoute();
 ```
 
-#### Pages router:
+#### [Pages router docs API route](#pages-router-docs-api-route):
 
 ```typescript
 // src/pages/api.ts
@@ -130,13 +131,13 @@ import { docsApiRoute } from 'next-rest-framework';
 export default docsApiRoute();
 ```
 
-This is enough to get you started. Now you can access the API documentation in your browser. Running `npx next-rest-framework generate` in the project root will generate the `openapi.json` OpenAPI specification file, located in the `public` folder by default. You can create multiple docs endpoints if needed and specify which config to use for the [CLI](#cli). See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
+This is enough to get you started. Now you can access the API documentation in your browser. Running `npx next-rest-framework generate` in the project root will generate the `openapi.json` OpenAPI specification file, located in the `public` folder. You can create multiple docs endpoints if needed and specify which config to use for the [CLI](#cli). See the full configuration options of this endpoint in the [Docs handler options](#docs-handler-options) section.
 
 ### [Create endpoint](#create-endpoint)
 
-#### REST
+#### [REST endpoints](#rest-endpoints)
 
-##### App router:
+##### [App router route](#app-router-route):
 
 ```typescript
 // src/app/api/todos/route.ts
@@ -233,7 +234,7 @@ export const { GET, POST } = route({
 
 The `TypedNextResponse` ensures that the response status codes and content-type headers are type-checked. You can still use the regular `NextResponse` if you prefer to have less type-safety.
 
-##### Pages router:
+##### [Pages router API route](#pages-router-api-route):
 
 ```typescript
 // src/pages/api/todos.ts
@@ -317,24 +318,22 @@ export default apiRoute({
 });
 ```
 
-All of above type-safe endpoints will be now auto-generated to your OpenAPI spec and exposed in the documentation:
+After running `next-rest-framework generate`, all of above type-safe endpoints will be auto-generated to your OpenAPI spec and exposed in the documentation:
 
 ![Next REST Framework docs](./docs/static/img/docs-screenshot.jpg)
 
-##### Client
+#### [RPC endpoints](#rpc-endpoints)
 
-To achieve end-to-end type-safety, you can use any client implementation that relies on the generated OpenAPI specification, e.g. [openapi-client-axios](https://github.com/openapistack/openapi-client-axios).
+##### [App router RPC route](#app-router-rpc-route):
 
-#### [RPC](#rpc)
-
-You can also define your APIs with RPC route handlers that also auto-generate the OpenAPI spec. The RPC endpoints can be consumed with the type-safe API client for end-to-end type safety.
-
-##### App router:
+A recommended way is to write your RPC operation in a separate server-side module where they can be consumed both by the RPC endpoints and directly as server-side functions (server actions):
 
 ```typescript
-// src/app/api/rpc/route.ts
+// src/app/actions.ts
 
-import { rpcOperation, rpcRoute } from 'next-rest-framework';
+'use server';
+
+import { rpcOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
 const TODOS = [
@@ -351,99 +350,133 @@ const todoSchema = z.object({
   completed: z.boolean()
 });
 
-// Example app router RPC handler.
-const { POST, client } = rpcRoute({
-  getTodos: rpcOperation()
-    // Output schema for strictly-typed responses and OpenAPI documentation.
-    .outputs([
-      {
-        schema: z.array(todoSchema)
-      }
-    ])
-    .handler(() => {
-      // Type-checked response.
-      return TODOS;
-    }),
+export const getTodos = rpcOperation({
+  tags: ['RPC']
+})
+  .outputs([
+    {
+      schema: z.array(todoSchema)
+    }
+  ])
+  .handler(() => {
+    return TODOS; // Type-checked output.
+  });
 
-  getTodoById: rpcOperation()
-    .input(z.string())
-    .outputs([
-      {
-        schema: z.object({
-          error: z.string()
-        })
-      },
-      {
-        schema: todoSchema
-      }
-    ])
-    .handler((id) => {
-      const todo = TODOS.find((t) => t.id === Number(id));
-
-      if (!todo) {
-        // Type-checked response.
-        return { error: 'TODO not found.' };
-      }
-
-      // Type-checked response.
-      return todo;
-    }),
-
-  createTodo: rpcOperation()
-    // Input schema for strictly-typed request, request validation and OpenAPI documentation.
-    .input(
-      z.object({
-        name: z.string()
+export const getTodoById = rpcOperation({
+  tags: ['RPC']
+})
+  .input(z.string())
+  .outputs([
+    {
+      schema: z.object({
+        error: z.string()
       })
-    )
-    // Output schema for strictly-typed responses and OpenAPI documentation.
-    .outputs([{ schema: todoSchema }])
-    .handler(async ({ name: _name }) => {
-      // Create todo.
-      const todo = { id: 2, name: _name, completed: false };
+    },
+    {
+      schema: todoSchema
+    }
+  ])
+  .handler((id) => {
+    const todo = TODOS.find((t) => t.id === Number(id));
 
-      // Type-checked response.
-      return todo;
-    }),
+    if (!todo) {
+      return { error: 'TODO not found.' }; // Type-checked output.
+    }
 
-  deleteTodo: rpcOperation()
-    .input(z.string())
-    .outputs([
-      { schema: z.object({ error: z.string() }) },
-      { schema: z.object({ message: z.string() }) }
-    ])
-    .handler((id) => {
-      // Delete todo.
-      const todo = TODOS.find((t) => t.id === Number(id));
+    return todo; // Type-checked output.
+  });
 
-      if (!todo) {
-        // Type-checked response.
-        return {
-          error: 'TODO not found.'
-        };
-      }
-
-      // Type-checked response.
-      return { message: 'TODO deleted.' };
+export const createTodo = rpcOperation({
+  tags: ['RPC']
+})
+  .input(
+    z.object({
+      name: z.string()
     })
-});
+  )
+  .outputs([{ schema: todoSchema }])
+  .handler(
+    async ({
+      name // Strictly-typed input.
+    }) => {
+      // Create todo.
+      const todo = { id: 2, name, completed: false };
+      return todo; // Type-checked output.
+    }
+  );
 
-export { POST };
+export const deleteTodo = rpcOperation({
+  tags: ['RPC']
+})
+  .input(z.string())
+  .outputs([
+    { schema: z.object({ error: z.string() }) },
+    { schema: z.object({ message: z.string() }) }
+  ])
+  .handler((id) => {
+    // Delete todo.
+    const todo = TODOS.find((t) => t.id === Number(id));
 
-export type AppRouterRpcClient = typeof client;
+    if (!todo) {
+      return {
+        error: 'TODO not found.' // Type-checked output.
+      };
+    }
+
+    return { message: 'TODO deleted.' }; // Type-checked output.
+  });
 ```
 
-##### Pages router:
+The file path to and RPC route must end with `/[operationId]/route.ts`. Import the RPC operations in to your RPC route handler:
 
 ```typescript
-// src/pages/api/rpc.ts
+// src/app/api/rpc/[operationId]/route.ts
+
+import { createTodo, deleteTodo, getTodoById, getTodos } from 'src/app/actions';
+import { rpcRoute } from 'next-rest-framework';
+
+export const { POST } = rpcRoute({
+  getTodos,
+  getTodoById,
+  createTodo,
+  deleteTodo
+});
+
+export type RpcClient = typeof POST.client;
+```
+
+Consume the RPC operations directly in your server-side components:
+
+```typescript
+'use server';
+
+import { getTodos, createTodo } from 'src/app/actions';
+
+export default async function Page() {
+  const todos = await getTodos();
+
+  const createTodo = async (name: string) => {
+    'use server';
+    return createTodo({ name });
+  };
+
+  // ...
+}
+```
+
+##### [Pages router RPC route](#pages-router-rpc-api-route):
+
+The filename of an RPC API route must be `[operationId].ts`.
+
+```typescript
+// src/pages/api/rpc/[operationId].ts
 
 import { rpcApiRoute } from 'next-rest-framework';
 
 // Example pages router RPC handler.
 const handler = rpcApiRoute({
   // ...
-  // Exactly the same as the app router example.
+  // Exactly the same as the app router example. You can also inline the RPC operations in this object.
 });
 
 export default handler;
@@ -451,37 +484,23 @@ export default handler;
 export type RpcClient = typeof handler.client;
 ```
 
-The RPC routes will also be included in your OpenAPI spec now. Note that the `rpcOperation` definitions can be also be placed outside the `rpcRouteHandler` if you do not want to expose them as public APIs as long as they're called server-side.
+The RPC routes will also be included in your OpenAPI spec after running `next-rest-framework generate`.
 
-##### Client
+### [Client](#client)
 
-The strongly-typed RPC operations can be called inside inside React server components and server actions like any functions:
+#### [REST client](#rest-client)
 
-```typescript
-'use server';
+To achieve end-to-end type-safety, you can use any client implementation that relies on the generated OpenAPI specification, e.g. [openapi-client-axios](https://github.com/openapistack/openapi-client-axios).
 
-import { client } from 'app/api/rpc/route';
+#### [RPC client](#rpc-client)
 
-export default async function Page() {
-  const todos = await client.getTodos();
-
-  const createTodo = async (name: string) => {
-    'use server';
-    return client.createTodo({ name });
-  };
-
-  // ...
-}
-```
-
-For client-rendered components you can use the strongly-typed `rpcClient` or use server actions from the above example:
+For client-rendered components you can use the strongly-typed `rpcClient`:
 
 ```typescript
 'use client';
 
-import { useState } from 'react';
 import { rpcClient } from 'next-rest-framework/rpc-client';
-import { type RpcClient } from 'app/api/rpc/route';
+import { type RpcClient } from 'app/api/rpc/[operationId]';
 
 const client = rpcClient<RpcClient>({
   url: 'http://localhost:3000/api/rpc'
@@ -500,8 +519,8 @@ export default function Page() {
   }, []);
 
   const createTodo = async (name: string) => {
-    'use server';
-    return client.createTodo({ name });
+    const todo = client.createTodo({ name });
+    // ...
   };
 
   // ...
