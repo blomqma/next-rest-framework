@@ -53,6 +53,12 @@
     "ts-jest": "29.1.1",
     "ts-node": "10.9.1",
     "tsup": "8.0.1",
-    "typescript": "*"
+    "typescript": "*",
+    "next": "*",
+    "zod": "*"
+  },
+  "peerDependencies": {
+    "next": "^12.2.0",
+    "zod": "^3.0.0"
   }
 }

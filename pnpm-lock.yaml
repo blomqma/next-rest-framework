@@ -50,7 +50,7 @@ importers:
         version: 6.1.1(eslint@8.47.0)
       next:
         specifier: 14.0.3
-        version: 14.0.3(react-dom@18.2.0)(react@18.2.0)
+        version: 14.0.3(@babel/core@7.22.11)(react-dom@18.2.0)(react@18.2.0)
       prettier:
         specifier: 3.0.2
         version: 3.0.2
@@ -144,6 +144,9 @@ importers:
       jest:
         specifier: 29.6.4
         version: 29.6.4(@types/node@20.5.4)(ts-node@10.9.1)
+      next:
+        specifier: '*'
+        version: 14.0.3(@babel/core@7.22.11)(react-dom@18.2.0)(react@18.2.0)
       node-mocks-http:
         specifier: 1.13.0
         version: 1.13.0
@@ -162,6 +165,9 @@ importers:
       typescript:
         specifier: '*'
         version: 5.2.2
+      zod:
+        specifier: '*'
+        version: 3.22.2
 
 packages:
 
@@ -8588,7 +8594,7 @@ packages:
   /neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  /next@14.0.3(react-dom@18.2.0)(react@18.2.0):
+  /next@14.0.3(@babel/core@7.22.11)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-AbYdRNfImBr3XGtvnwOxq8ekVCwbFTv/UJoLwmaX89nk9i051AEY4/HAWzU0YpaTDw8IofUpmuIlvzWF13jxIw==}
     engines: {node: '>=18.17.0'}
     hasBin: true
@@ -8610,7 +8616,7 @@ packages:
       postcss: 8.4.31
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      styled-jsx: 5.1.1(react@18.2.0)
+      styled-jsx: 5.1.1(@babel/core@7.22.11)(react@18.2.0)
       watchpack: 2.4.0
     optionalDependencies:
       '@next/swc-darwin-arm64': 14.0.3
@@ -10800,7 +10806,7 @@ packages:
       inline-style-parser: 0.1.1
     dev: false
 
-  /styled-jsx@5.1.1(react@18.2.0):
+  /styled-jsx@5.1.1(@babel/core@7.22.11)(react@18.2.0):
     resolution: {integrity: sha512-pW7uC1l4mBZ8ugbiZrcIsiIvVx1UmTfw7UkC3Um2tmfUq9Bhk8IiyEIPl6F8agHgjzku6j0xQEZbfA5uSgSaCw==}
     engines: {node: '>= 12.0.0'}
     peerDependencies:
@@ -10813,6 +10819,7 @@ packages:
       babel-plugin-macros:
         optional: true
     dependencies:
+      '@babel/core': 7.22.11
       client-only: 0.0.1
       react: 18.2.0
     dev: true
