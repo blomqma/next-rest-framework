@@ -533,7 +533,7 @@ The `rpcClient` calls can also be easily integrated with any data fetching frame
 
 ### [Docs handler options](#docs-handler-options)
 
-The following options can be passed to the `docsRouteHandler` (app router) and `docsApiRouteHandler` (pages router) functions for customizing Next REST Framework:
+The following options can be passed to the `docsRoute` (app router) and `docsApiRoute` (pages router) functions for customizing Next REST Framework:
 
 | Name              | Description                                                                                                                                                                                                                                                                                                            |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -548,13 +548,14 @@ The following options can be passed to the `docsRouteHandler` (app router) and `
 
 The docs config options can be used to customize the generated docs:
 
-| Name          | Description                                                                                                 |
-| ------------- | ----------------------------------------------------------------------------------------------------------- |
-| `provider`    | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`. |
-| `title`       | Custom title, used for the visible title and HTML title.                                                    |
-| `description` | Custom description, used for the visible description and HTML meta description.                             |
-| `faviconUrl`  | Custom HTML meta favicon URL.                                                                               |
-| `logoUrl`     | A URL for a custom logo.                                                                                    |
+| Name          | Description                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provider`    | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`.                                  |
+| `title`       | Custom title, used for the visible title and HTML title.                                                                                     |
+| `description` | Custom description, used for the visible description and HTML meta description.                                                              |
+| `faviconUrl`  | Custom HTML meta favicon URL.                                                                                                                |
+| `logoUrl`     | A URL for a custom logo.                                                                                                                     |
+| `ogConfig`    | [Basic customization options](https://ogp.me/#metadata) for OG meta tags. Requires the following fields: `title`, `type`, `url`, `imageUrl`. |
 
 ### REST
 

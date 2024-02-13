@@ -2,7 +2,9 @@ import {
   DEFAULT_DESCRIPTION,
   DEFAULT_FAVICON_URL,
   DEFAULT_LOGO_URL,
-  DEFAULT_TITLE
+  DEFAULT_OG_TYPE,
+  DEFAULT_TITLE,
+  HOMEPAGE
 } from '../constants';
 import { type NextRestFrameworkConfig } from '../types';
 
@@ -16,7 +18,18 @@ export const getHtmlForDocs = ({
       title = openApiObject?.info?.title ?? DEFAULT_TITLE,
       description = openApiObject?.info?.description ?? DEFAULT_DESCRIPTION,
       faviconUrl = DEFAULT_FAVICON_URL,
-      logoUrl = DEFAULT_LOGO_URL
+      logoUrl = DEFAULT_LOGO_URL,
+      ogConfig: {
+        title: ogTitle = title,
+        type: ogType = DEFAULT_OG_TYPE,
+        url: orgUrl = HOMEPAGE,
+        imageUrl: ogImageUrl = DEFAULT_LOGO_URL
+      } = {
+        title: DEFAULT_TITLE,
+        type: 'website',
+        url: HOMEPAGE,
+        imageUrl: DEFAULT_LOGO_URL
+      }
     }
   },
   host
@@ -26,10 +39,7 @@ export const getHtmlForDocs = ({
 }) => {
   const url = `//${host}${openApiJsonPath}`; // Use protocol-relative URL to avoid mixed content warnings.
 
-  const redocHtml = `<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
+  const htmlMetaTags = `<meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${title}</title>
     <meta
@@ -37,6 +47,15 @@ export const getHtmlForDocs = ({
       content="${description}"
     />
     <link rel="icon" type="image/x-icon" href="${faviconUrl}">
+    <meta property="og:title" content="${ogTitle}" />
+    <meta property="og:type" content="${ogType}" />
+    <meta property="og:url" content="${orgUrl}" />
+    <meta property="og:image" content="${ogImageUrl}" />`;
+
+  const redocHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    ${htmlMetaTags}
     <link
       href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700"
       rel="stylesheet"
@@ -63,14 +82,7 @@ export const getHtmlForDocs = ({
   const swaggerUiHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${title}</title>
-    <meta
-      name="description"
-      content="${description}"
-    />
-    <link rel="icon" type="image/x-icon" href="${faviconUrl}">
+    ${htmlMetaTags}
     <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@4.5.0/swagger-ui.css" />
     <style>
       .topbar-wrapper img {

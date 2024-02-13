@@ -65,6 +65,13 @@ export interface NextRestFrameworkConfig {
     faviconUrl?: string;
     /*! A URL for a custom logo. */
     logoUrl?: string;
+    /*! Basic customization options for OG meta tags: https://ogp.me/#metadata */
+    ogConfig?: {
+      title: string /*! og:title */;
+      type: string /*! og:type */;
+      url: string /*! og:url */;
+      imageUrl: string /*! og:image */;
+    };
   };
   /*! Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`. */
   suppressInfo?: boolean;
