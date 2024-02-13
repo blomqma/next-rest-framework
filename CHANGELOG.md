@@ -1,6 +1,18 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.0 - 2024-02-14
+
+#### Fixed
+
+- Fix CLI commands not working on Windows due to incorrect file import URLs.
+- Fix ESM bundling by defining `next` and `zod` as peer dependencies and exclude them from the bundle.
+- Docs fixes.
+
+#### Added
+
+- Add support for custom OG meta tags in the Redoc/SwaggerUI documentation.
+
 ### 5.0.1 - 2024-02-01
 
 #### Fixed
