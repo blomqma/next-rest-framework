@@ -8,13 +8,13 @@
     "api",
     "next-rest-framework"
   ],
-  "homepage": "https://github.com/blomqma/next-rest-framework#readme",
+  "homepage": "https://next-rest-framework.vercel.app",
   "bugs": {
     "url": "https://github.com/blomqma/next-rest-framework/issues",
-    "email": "blomqma@omg.lol"
+    "email": "blomqist_markus@hotmail.com"
   },
   "license": "ISC",
-  "author": "Markus Blomqvist <blomqma@omg.lol>",
+  "author": "Markus Blomqvist <blomqvist_markus@hotmail.com>",
   "files": [
     "dist"
   ],
