@@ -97,14 +97,15 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
       await Promise.all(
         filteredRoutes.map(async (route) => {
           try {
-            const res = await import(
-              join(
-                process.cwd(),
-                NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-                path,
-                route
-              )
-            ).then((mod) => mod.default);
+            const filePathToRoute = join(
+              process.cwd(),
+              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
+              path,
+              route
+            );
+
+            const url = new URL(`file://${filePathToRoute}`).toString();
+            const res = await import(url).then((mod) => mod.default);
 
             const handlers: any[] = Object.entries(res)
               .filter(([key]) => isValidMethod(key))
@@ -156,14 +157,15 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
       await Promise.all(
         filteredApiRoutes.map(async (route) => {
           try {
-            const res = await import(
-              join(
-                process.cwd(),
-                NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-                'pages/api',
-                route
-              )
-            ).then((mod) => mod.default);
+            const filePathToRoute = join(
+              process.cwd(),
+              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
+              'pages/api',
+              route
+            );
+
+            const url = new URL(`file://${filePathToRoute}`).toString();
+            const res = await import(url).then((mod) => mod.default);
 
             const _config = res.default._nextRestFrameworkConfig;
 
@@ -342,14 +344,15 @@ export const generatePathsFromBuild = async ({
       await Promise.all(
         [...routes, ...rpcRoutes].map(async (route) => {
           try {
-            const res = await import(
-              join(
-                process.cwd(),
-                NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-                path,
-                route
-              )
-            ).then((mod) => mod.default);
+            const filePathToRoute = join(
+              process.cwd(),
+              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
+              path,
+              route
+            );
+
+            const url = new URL(`file://${filePathToRoute}`).toString();
+            const res = await import(url).then((mod) => mod.default);
 
             const handlers: any[] = Object.entries(res)
               .filter(([key]) => isValidMethod(key))
@@ -393,14 +396,15 @@ export const generatePathsFromBuild = async ({
       await Promise.all(
         [...apiRoutes, ...rpcApiRoutes].map(async (apiRoute) => {
           try {
-            const res = await import(
-              join(
-                process.cwd(),
-                NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-                path,
-                apiRoute
-              )
-            ).then((mod) => mod.default);
+            const filePathToRoute = join(
+              process.cwd(),
+              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
+              path,
+              apiRoute
+            );
+
+            const url = new URL(`file://${filePathToRoute}`).toString();
+            const res = await import(url).then((mod) => mod.default);
 
             const data = await res.default._getPathsForRoute(
               getApiRouteName(apiRoute)
