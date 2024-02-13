@@ -3,7 +3,9 @@ import {
   DEFAULT_DESCRIPTION,
   DEFAULT_FAVICON_URL,
   DEFAULT_LOGO_URL,
+  DEFAULT_OG_TYPE,
   DEFAULT_TITLE,
+  HOMEPAGE,
   VERSION
 } from '../constants';
 import { type NextRestFrameworkConfig } from '../types';
@@ -24,7 +26,13 @@ export const DEFAULT_CONFIG: Required<NextRestFrameworkConfig> = {
     title: DEFAULT_TITLE,
     description: DEFAULT_DESCRIPTION,
     faviconUrl: DEFAULT_FAVICON_URL,
-    logoUrl: DEFAULT_LOGO_URL
+    logoUrl: DEFAULT_LOGO_URL,
+    ogConfig: {
+      title: DEFAULT_TITLE,
+      type: DEFAULT_OG_TYPE,
+      url: HOMEPAGE,
+      imageUrl: DEFAULT_LOGO_URL
+    }
   },
   suppressInfo: false
 };

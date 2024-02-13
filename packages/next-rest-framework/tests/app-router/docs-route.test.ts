@@ -42,7 +42,13 @@ describe('docsRoute', () => {
           title: 'foo',
           description: 'bar',
           faviconUrl: 'baz.ico',
-          logoUrl: 'qux.jpeg'
+          logoUrl: 'qux.jpeg',
+          ogConfig: {
+            title: 'quux',
+            type: 'corge',
+            url: 'grault',
+            imageUrl: 'garply'
+          }
         }
       };
 
@@ -58,6 +64,11 @@ describe('docsRoute', () => {
       expect(text).toContain('foo');
       expect(text).toContain('bar');
       expect(text).toContain('baz.ico');
+      expect(text).toContain('qux.jpeg');
+      expect(text).toContain('quux');
+      expect(text).toContain('corge');
+      expect(text).toContain('grault');
+      expect(text).toContain('garply');
     }
   );
 });
