@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.2 - 2024-02-14
+
+#### Fixed
+
+- Remove all peer dependencies from the library causing a runtime import error.
+
 ### 5.1.1 - 2024-02-14
 
 #### Fixed
