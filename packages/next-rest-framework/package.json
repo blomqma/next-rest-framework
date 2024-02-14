@@ -56,10 +56,5 @@
     "typescript": "*",
     "next": "*",
     "zod": "*"
-  },
-  "peerDependencies": {
-    "next": "12 - 14",
-    "zod": "^3",
-    "typescript": "3 - 5"
   }
 }
