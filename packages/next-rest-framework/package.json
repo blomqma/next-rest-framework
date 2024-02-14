@@ -11,10 +11,10 @@
   "homepage": "https://next-rest-framework.vercel.app",
   "bugs": {
     "url": "https://github.com/blomqma/next-rest-framework/issues",
-    "email": "blomqist_markus@hotmail.com"
+    "email": "blomqma@omg.lol"
   },
   "license": "ISC",
-  "author": "Markus Blomqvist <blomqvist_markus@hotmail.com>",
+  "author": "Markus Blomqvist <blomqma@omg.lol>",
   "files": [
     "dist"
   ],
