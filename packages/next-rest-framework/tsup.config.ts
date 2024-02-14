@@ -9,6 +9,6 @@ export default defineConfig({
   ],
   bundle: true,
   format: ['cjs', 'esm'],
-  external: ['next', 'zod'],
+  external: ['zod'],
   platform: 'node'
 });

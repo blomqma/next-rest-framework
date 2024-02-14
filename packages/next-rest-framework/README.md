@@ -95,9 +95,9 @@ This is a monorepo containing the following packages / projects:
 
 In order to use Next REST Framework you need to have a Next.js project with the following dependencies installed:
 
-- [Next.js](https://github.com/vercel/next.js) >= v12.2.0
-- [Zod](https://github.com/colinhacks/zod) >= v3.0.0
-- [TypeScript](https://www.typescriptlang.org/) >= v3.0.0
+- [Next.js](https://github.com/vercel/next.js) >= v12
+- [Zod](https://github.com/colinhacks/zod) >= v3
+- [TypeScript](https://www.typescriptlang.org/) >= v3
 
 ## [Installation](#installation)
 

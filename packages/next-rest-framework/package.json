@@ -58,7 +58,8 @@
     "zod": "*"
   },
   "peerDependencies": {
-    "next": "^12.2.0",
-    "zod": "^3.0.0"
+    "next": "12 - 14",
+    "zod": "^3",
+    "typescript": "3 - 5"
   }
 }
