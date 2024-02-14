@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.1 - 2024-02-14
+
+#### Fixed
+
+- Fix runtime issue of Next.js modules not being imported correctly.
+
 ### 5.1.0 - 2024-02-14
 
 #### Fixed
