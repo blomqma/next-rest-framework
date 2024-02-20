@@ -118,7 +118,15 @@ To get access to the auto-generated documentation, initialize the docs endpoint 
 
 import { docsRoute } from 'next-rest-framework';
 
+// export const runtime = 'edge'; // Edge runtime is supported.
+
 export const { GET } = docsRoute();
+```
+
+When using the default `nodejs` runtime, you may encounter the [Dynamic server usage](https://nextjs.org/docs/messages/dynamic-server-error) Next.js error when running `next build`. In that case you should force the route to be dynamically rendered with the [dynamic](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic) option:
+
+```typescript
+export const dynamic = 'force-dynamic';
 ```
 
 #### [Pages router docs API route](#pages-router-docs-api-route):
@@ -152,6 +160,8 @@ const TODOS = [
     completed: false
   }
 ];
+
+// export const runtime = 'edge'; // Edge runtime is supported.
 
 // Example app router route handler with GET/POST handlers.
 export const { GET, POST } = route({
@@ -434,6 +444,8 @@ The file path to and RPC route must end with `/[operationId]/route.ts`. Import t
 
 import { createTodo, deleteTodo, getTodoById, getTodos } from 'src/app/actions';
 import { rpcRoute } from 'next-rest-framework';
+
+// export const runtime = 'edge'; // Edge runtime is supported.
 
 export const { POST } = rpcRoute({
   getTodos,
