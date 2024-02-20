@@ -29,13 +29,15 @@ export const compileEndpoints = async () => {
   console.info(chalk.yellowBright('Compiling endpoints...'));
   const entryPoints = await glob('./**/*.ts');
 
+  // Bundle to CJS modules and use an explicit .cjs extension to make the file imports work in other parts of the CLI.
   await build({
     entryPoints,
     bundle: true,
     format: 'cjs',
     platform: 'node',
     outdir: NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-    outExtension: { '.js': '.cjs' }
+    outExtension: { '.js': '.cjs' },
+    packages: 'external'
   });
 };
 
