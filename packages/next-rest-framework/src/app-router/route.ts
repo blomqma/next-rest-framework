@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { OpenAPIV3_1 } from 'openapi-types';
 import { DEFAULT_ERRORS } from '../constants';
-import { validateSchema } from '../shared';
+import { getJsonSchema, validateSchema } from '../shared';
 import { logNextRestFrameworkError } from '../shared/logging';
 import { getPathsFromRoute } from '../shared/paths';
 import {
@@ -136,11 +137,17 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         }
 
         if (querySchema) {
+          const jsonSchema =
+            getJsonSchema({ schema: querySchema }).properties ?? {};
           const { valid, errors } = await validateSchema({
             schema: querySchema,
             obj: Array.from(new Set(req.nextUrl.searchParams.keys())).map(
               (key) => ({
-                [key]: req.nextUrl.searchParams.getAll(key)
+                [key]:
+                  (jsonSchema[key] as OpenAPIV3_1.SchemaObject)?.type ===
+                  'array'
+                    ? req.nextUrl.searchParams.getAll(key)
+                    : req.nextUrl.searchParams.get(key)
               })
             )
           });
