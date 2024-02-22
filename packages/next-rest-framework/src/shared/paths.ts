@@ -3,7 +3,7 @@ import { type OpenAPIV3_1 } from 'openapi-types';
 import { DEFAULT_ERRORS } from '../constants';
 import { merge } from 'lodash';
 
-import { getJsonSchema, getSchemaKeys } from './schemas';
+import { getJsonSchema } from './schemas';
 import { type ZodObject, type ZodSchema, type ZodRawShape } from 'zod';
 import { type ApiRouteOperationDefinition } from '../pages-router';
 import { type RouteOperationDefinition } from '../app-router';
@@ -149,22 +149,22 @@ export const getPathsFromRoute = ({
       if (input?.query) {
         generatedOperationObject.parameters = [
           ...(generatedOperationObject.parameters ?? []),
-          ...getSchemaKeys({
-            schema: input.query
-          })
+          ...Object.entries(
+            getJsonSchema({ schema: input.query }).properties ?? {}
+          )
             // Filter out query parameters that have already been added to the path parameters automatically.
-            .filter((key) => !pathParameters?.includes(key))
-            .map((key) => {
-              const schema = (input.query as ZodObject<ZodRawShape>).shape[
-                key
+            .filter(([name]) => !pathParameters?.includes(name))
+            .map(([name, schema]) => {
+              const _schema = (input.query as ZodObject<ZodRawShape>).shape[
+                name
               ] as ZodSchema;
 
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
               return {
-                name: key,
+                name,
                 in: 'query',
-                required: !schema.isOptional(),
-                schema: getJsonSchema({ schema })
+                required: !_schema.isOptional(),
+                schema
               } as OpenAPIV3_1.ParameterObject;
             })
         ];

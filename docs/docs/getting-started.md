@@ -34,12 +34,6 @@ import { docsRoute } from 'next-rest-framework';
 export const { GET } = docsRoute();
 ```
 
-When using the default `nodejs` runtime, you may encounter the [Dynamic server usage](https://nextjs.org/docs/messages/dynamic-server-error) Next.js error when running `next build`. In that case you should force the route to be dynamically rendered with the [dynamic](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic) option:
-
-```typescript
-export const dynamic = 'force-dynamic';
-```
-
 #### [Pages router docs API route](#pages-router-docs-api-route):
 
 ```typescript
@@ -154,6 +148,12 @@ export const { GET, POST } = route({
 ```
 
 The `TypedNextResponse` ensures that the response status codes and content-type headers are type-checked. You can still use the regular `NextResponse` if you prefer to have less type-safety.
+
+When using the default `nodejs` runtime with app router routes (`docsRoute` or `route`), you may encounter the [Dynamic server usage](https://nextjs.org/docs/messages/dynamic-server-error) Next.js error when running `next build`. In that case you should force the route to be dynamically rendered with the [dynamic](https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamic) option:
+
+```typescript
+export const dynamic = 'force-dynamic';
+```
 
 ##### [Pages router API route](#pages-router-api-route):
 

@@ -6,6 +6,51 @@
     "version": "v5.1.8"
   },
   "paths": {
+    "/api/v1/route-with-query-params": {
+      "get": {
+        "operationId": "getQueryParams",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetQueryParams200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "foo",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "bar",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "baz",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
+      }
+    },
     "/api/v1/rpc/createTodo": {
       "post": {
         "operationId": "createTodo",
@@ -284,6 +329,51 @@
           }
         ],
         "tags": ["example-api", "todos", "pages-router"]
+      }
+    },
+    "/api/v2/route-with-query-params": {
+      "get": {
+        "operationId": "getQueryParams",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetQueryParams200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "foo",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "bar",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "baz",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ]
       }
     },
     "/api/v2/rpc/createTodo": {
@@ -600,6 +690,16 @@
         "type": "object",
         "properties": { "message": { "type": "string" } },
         "required": ["message"],
+        "additionalProperties": false
+      },
+      "GetQueryParams200ResponseBody": {
+        "type": "object",
+        "properties": {
+          "foo": { "type": "string", "format": "uuid" },
+          "bar": { "type": "string" },
+          "baz": { "type": "string" }
+        },
+        "required": ["foo", "baz"],
         "additionalProperties": false
       },
       "GetTodoById200ResponseBody": {
