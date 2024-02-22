@@ -162,6 +162,51 @@ describe('apiRoute', () => {
     });
   });
 
+  it('works with valid query parameters', async () => {
+    const query = {
+      foo: 'bar'
+    };
+
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.POST,
+      query,
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string()
+    });
+
+    await apiRoute({
+      test: apiRouteOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          query: schema
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            schema: z.object({
+              foo: z.string()
+            })
+          }
+        ])
+        .handler((req, res) => {
+          const { foo } = req.query;
+          res.json({ foo });
+        })
+    })(req, res);
+
+    expect(res.statusCode).toEqual(200);
+
+    expect(res._getJSONData()).toEqual({
+      foo: 'bar'
+    });
+  });
+
   it('returns error for invalid content-type', async () => {
     const { req, res } = createMockApiRouteRequest({
       method: ValidMethod.POST,

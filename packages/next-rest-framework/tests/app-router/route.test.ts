@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { route, routeOperation } from '../../src/app-router';
+import { TypedNextResponse, route, routeOperation } from '../../src/app-router';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import { createMockRouteRequest } from '../utils';
 import { NextResponse } from 'next/server';
@@ -161,6 +161,52 @@ describe('route', () => {
     expect(json).toEqual({
       message: DEFAULT_ERRORS.invalidQueryParameters,
       errors
+    });
+  });
+
+  it('works with valid query parameters', async () => {
+    const query = {
+      foo: 'bar'
+    };
+
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST,
+      query,
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string()
+    });
+
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          query: schema
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            schema: z.object({
+              foo: z.string()
+            })
+          }
+        ])
+        .handler((req) => {
+          const foo = req.nextUrl.searchParams.get('foo') ?? '';
+          return TypedNextResponse.json({ foo });
+        })
+    }).POST(req, context);
+
+    const json = await res?.json();
+    expect(res?.status).toEqual(200);
+
+    expect(json).toEqual({
+      foo: 'bar'
     });
   });
 

@@ -18,6 +18,7 @@ import { type BaseParams, type Modify } from '../src/types';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import { getJsonSchema } from '../src/shared';
 import { OPEN_API_VERSION } from '../src/cli/constants';
+import qs from 'qs';
 
 export const createMockRouteRequest = <Body, Query>({
   path = '/',
@@ -37,20 +38,15 @@ export const createMockRouteRequest = <Body, Query>({
   req: NextRequest;
   context: { params: typeof params };
 } => ({
-  req: new NextRequest(
-    `http://localhost:3000${path}${
-      query ? `?${new URLSearchParams(query).toString()}` : ''
-    }`,
-    {
-      method,
-      body: JSON.stringify(body),
-      headers: {
-        host: 'localhost:3000',
-        'x-forwarded-proto': 'http',
-        ...headers
-      }
+  req: new NextRequest(`http://localhost:3000${path}?${qs.stringify(query)}`, {
+    method,
+    body: JSON.stringify(body),
+    headers: {
+      host: 'localhost:3000',
+      'x-forwarded-proto': 'http',
+      ...headers
     }
-  ),
+  }),
   context: { params }
 });
 
