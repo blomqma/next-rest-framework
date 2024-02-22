@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEFAULT_ERRORS } from '../constants';
-import {
-  type OpenApiPathItem,
-  type BaseParams,
-  type BaseOptions
-} from '../types';
 import { validateSchema } from '../shared';
-import {
-  type TypedNextRequest,
-  type RouteOperationDefinition
-} from './route-operation';
 import { logNextRestFrameworkError } from '../shared/logging';
 import { getPathsFromRoute } from '../shared/paths';
+import {
+  type BaseOptions,
+  type BaseParams,
+  type OpenApiPathItem
+} from '../types';
+import {
+  type RouteOperationDefinition,
+  type TypedNextRequest
+} from './route-operation';
 
 export const route = <T extends Record<string, RouteOperationDefinition>>(
   operations: T,
@@ -138,7 +138,11 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         if (querySchema) {
           const { valid, errors } = await validateSchema({
             schema: querySchema,
-            obj: Object.fromEntries(new URLSearchParams(req.nextUrl.search))
+            obj: Array.from(new Set(req.nextUrl.searchParams.keys())).map(
+              (key) => ({
+                [key]: req.nextUrl.searchParams.getAll(key)
+              })
+            )
           });
 
           if (!valid) {
