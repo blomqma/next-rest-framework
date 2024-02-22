@@ -149,22 +149,22 @@ export const getPathsFromRoute = ({
       if (input?.query) {
         generatedOperationObject.parameters = [
           ...(generatedOperationObject.parameters ?? []),
-          ...getSchemaKeys({
-            schema: input.query
-          })
+          ...Object.entries(
+            getJsonSchema({ schema: input.query }).properties ?? {}
+          )
             // Filter out query parameters that have already been added to the path parameters automatically.
-            .filter((key) => !pathParameters?.includes(key))
-            .map((key) => {
-              const schema = (input.query as ZodObject<ZodRawShape>).shape[
-                key
+            .filter(([name]) => !pathParameters?.includes(name))
+            .map(([name, schema]) => {
+              const _schema = (input.query as ZodObject<ZodRawShape>).shape[
+                name
               ] as ZodSchema;
 
               // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
               return {
-                name: key,
+                name,
                 in: 'query',
-                required: !schema.isOptional(),
-                schema: getJsonSchema({ schema })
+                required: !_schema.isOptional(),
+                schema
               } as OpenAPIV3_1.ParameterObject;
             })
         ];
