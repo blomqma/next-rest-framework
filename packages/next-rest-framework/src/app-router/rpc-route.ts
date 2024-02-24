@@ -52,10 +52,18 @@ export const rpcRoute = <
       const { input, handler, middleware1, middleware2, middleware3 } =
         operation._meta;
 
+      const parseRequestBody = async (req: NextRequest) => {
+        if (req.clone().body) {
+          return await req.clone().json();
+        }
+
+        return {};
+      };
+
       let middlewareOptions: BaseOptions = {};
 
       if (middleware1) {
-        const body = req.clone().body;
+        const body = await parseRequestBody(req);
 
         middlewareOptions = await middleware1(body, middlewareOptions);
 
@@ -110,7 +118,8 @@ export const rpcRoute = <
         }
       }
 
-      const res = await handler?.(req.clone().body, middlewareOptions);
+      const body = await parseRequestBody(req);
+      const res = await handler?.(body, middlewareOptions);
 
       if (!res) {
         return NextResponse.json(
