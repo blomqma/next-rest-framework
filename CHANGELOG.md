@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.6 - 2024-02-24
+
+### Fixed
+
+- Fix request body being parsed as `ReadableStream` instead of JSON when used in app router RPC endpoints.
+
 ### 5.1.5 - 2024-02-24
 
 ### Removed
