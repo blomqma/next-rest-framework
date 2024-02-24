@@ -1,6 +1,7 @@
 {
   "extends": "next/core-web-vitals",
   "rules": {
-    "@typescript-eslint/triple-slash-reference": "off"
+    "@typescript-eslint/triple-slash-reference": "off",
+    "@next/next/no-html-link-for-pages": ["error", "./apps/example/src/app"] // When linting from the root of the monorepo.
   }
 }
