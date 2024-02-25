@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.7 - 2024-02-25
+
+### Fixed
+
+- Fix custom HTTP responses from middleware functions not working with app router endpoints.
+
 ### 5.1.6 - 2024-02-24
 
 ### Fixed
