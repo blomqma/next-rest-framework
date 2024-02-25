@@ -54,7 +54,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         const isOptionsResponse = (res: unknown): res is BaseOptions =>
           typeof res === 'object';
 
-        if (res instanceof NextResponse) {
+        if (res instanceof Response) {
           return res;
         } else if (isOptionsResponse(res)) {
           middlewareOptions = res;
@@ -67,7 +67,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
             middlewareOptions
           );
 
-          if (res2 instanceof NextResponse) {
+          if (res2 instanceof Response) {
             return res2;
           } else if (isOptionsResponse(res2)) {
             middlewareOptions = res2;
@@ -80,7 +80,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
               middlewareOptions
             );
 
-            if (res3 instanceof NextResponse) {
+            if (res3 instanceof Response) {
               return res3;
             } else if (isOptionsResponse(res3)) {
               middlewareOptions = res3;
