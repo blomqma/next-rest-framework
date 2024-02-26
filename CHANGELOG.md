@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.9 - 2024-02-26
+
+### Fixed
+
+- Fix OpenAPI spec generation for query parameters.
+
 ### 5.1.8 - 2024-02-26
 
 ### Fixed
