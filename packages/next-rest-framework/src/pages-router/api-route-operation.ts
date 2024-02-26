@@ -95,7 +95,7 @@ type ApiRouteMiddleware<
     Outputs[number]['contentType']
   >,
   options: InputOptions
-) => Promise<void> | void | OutputOptions;
+) => Promise<void> | void | Promise<OutputOptions> | OutputOptions;
 
 interface InputObject<Body = unknown, Query = BaseQuery> {
   contentType?: BaseContentType;

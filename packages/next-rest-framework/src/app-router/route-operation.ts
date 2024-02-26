@@ -146,7 +146,11 @@ type RouteMiddleware<
   req: NextRequest,
   context: { params: BaseParams },
   options: InputOptions
-) => Promise<TypedResponse> | TypedResponse | OutputOptions;
+) =>
+  | Promise<TypedResponse>
+  | TypedResponse
+  | Promise<OutputOptions>
+  | OutputOptions;
 
 type TypedRouteHandler<
   Body = unknown,

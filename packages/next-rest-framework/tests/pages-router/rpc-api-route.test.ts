@@ -187,18 +187,23 @@ describe('rpcApiRoute', () => {
     expect(console.log).not.toHaveBeenCalled();
   });
 
-  it('passes middleware response to the handler', async () => {
-    const { req, res } = createMockRpcApiRouteRequest();
+  it('passes data between middleware and handler', async () => {
+    const { req, res } = createMockRpcApiRouteRequest({
+      body: { foo: 'bar' }
+    });
 
     console.log = jest.fn();
 
     await rpcApiRoute({
       test: rpcOperation()
-        .middleware(() => {
-          return { foo: 'bar' };
+        .input(z.object({ foo: z.string() }))
+        .middleware((input) => {
+          console.log(input);
+          return { bar: 'baz' };
         })
-        .handler((_input, options) => {
-          console.log('foo');
+        .handler((input, options) => {
+          console.log(input);
+          console.log(options);
           return options;
         })
     })(req, res);
@@ -207,10 +212,12 @@ describe('rpcApiRoute', () => {
     expect(res.statusCode).toEqual(200);
 
     expect(json).toEqual({
-      foo: 'bar'
+      bar: 'baz'
     });
 
-    expect(console.log).toHaveBeenCalledWith('foo');
+    expect(console.log).toHaveBeenNthCalledWith(1, { foo: 'bar' });
+    expect(console.log).toHaveBeenNthCalledWith(2, { foo: 'bar' });
+    expect(console.log).toHaveBeenNthCalledWith(3, { bar: 'baz' });
   });
 
   it('allows chaining three middlewares', async () => {

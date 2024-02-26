@@ -53,11 +53,11 @@ export const rpcRoute = <
         operation._meta;
 
       const parseRequestBody = async (req: NextRequest) => {
-        if (req.clone().body) {
+        try {
           return await req.clone().json();
+        } catch {
+          return {};
         }
-
-        return {};
       };
 
       let middlewareOptions: BaseOptions = {};
