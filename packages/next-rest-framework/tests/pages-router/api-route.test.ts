@@ -333,20 +333,26 @@ describe('apiRoute', () => {
     expect(console.log).not.toHaveBeenCalled();
   });
 
-  it('passes non-HTTP middleware response to handler', async () => {
+  it('passes data between middleware and handler', async () => {
     const { req, res } = createMockApiRouteRequest({
-      method: ValidMethod.GET
+      method: ValidMethod.POST,
+      body: { foo: 'bar' }
     });
 
     console.log = jest.fn();
 
     await apiRoute({
-      test: apiRouteOperation({ method: 'GET' })
-        .middleware(() => {
-          return { foo: 'bar' };
+      test: apiRouteOperation({ method: 'POST' })
+        .input({ body: z.object({ foo: z.string() }) })
+        .middleware((req) => {
+          const body = req.body;
+          console.log(body);
+          return { bar: 'baz' };
         })
-        .handler((_req, res, options) => {
-          console.log('foo');
+        .handler(async (req, res, options) => {
+          const body = req.body;
+          console.log(body);
+          console.log(options);
           res.json(options);
         })
     })(req, res);
@@ -354,10 +360,12 @@ describe('apiRoute', () => {
     expect(res.statusCode).toEqual(200);
 
     expect(res._getJSONData()).toEqual({
-      foo: 'bar'
+      bar: 'baz'
     });
 
-    expect(console.log).toHaveBeenCalledWith('foo');
+    expect(console.log).toHaveBeenNthCalledWith(1, { foo: 'bar' });
+    expect(console.log).toHaveBeenNthCalledWith(2, { foo: 'bar' });
+    expect(console.log).toHaveBeenNthCalledWith(3, { bar: 'baz' });
   });
 
   it('allows chaining three middlewares', async () => {

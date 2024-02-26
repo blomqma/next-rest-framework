@@ -339,32 +339,40 @@ describe('route', () => {
     expect(console.log).not.toHaveBeenCalled();
   });
 
-  it('passes non-HTTP middleware response to handler', async () => {
+  it('passes data between middleware and handler', async () => {
     const { req, context } = createMockRouteRequest({
-      method: ValidMethod.GET
+      method: ValidMethod.POST,
+      body: { foo: 'bar' }
     });
 
     console.log = jest.fn();
 
     const res = await route({
-      test: routeOperation({ method: 'GET' })
-        .middleware(() => {
-          return { foo: 'bar' };
+      test: routeOperation({ method: 'POST' })
+        .input({ body: z.object({ foo: z.string() }) })
+        .middleware(async (req) => {
+          const body = await req.json();
+          console.log(body);
+          return { bar: 'baz' };
         })
-        .handler((_req, _ctx, options) => {
-          console.log('foo');
+        .handler(async (req, _ctx, options) => {
+          const body = await req.json();
+          console.log(body);
+          console.log(options);
           return NextResponse.json(options);
         })
-    }).GET(req, context);
+    }).POST(req, context);
 
     const json = await res?.json();
     expect(res?.status).toEqual(200);
 
     expect(json).toEqual({
-      foo: 'bar'
+      bar: 'baz'
     });
 
-    expect(console.log).toHaveBeenCalledWith('foo');
+    expect(console.log).toHaveBeenNthCalledWith(1, { foo: 'bar' });
+    expect(console.log).toHaveBeenNthCalledWith(2, { foo: 'bar' });
+    expect(console.log).toHaveBeenNthCalledWith(3, { bar: 'baz' });
   });
 
   it('allows chaining three middlewares', async () => {
