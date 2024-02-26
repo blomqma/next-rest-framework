@@ -1,6 +1,13 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.8 - 2024-02-26
+
+### Fixed
+
+- Fix RPC route returning an error when using a middleware with no input.
+- Fix typings for asynchronous `routeOperation`/`apiRouteOperation` middlewares.
+
 ### 5.1.7 - 2024-02-25
 
 ### Fixed
