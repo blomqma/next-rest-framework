@@ -1,6 +1,26 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.7 - 2024-02-25
+
+### Fixed
+
+- Fix custom HTTP responses from middleware functions not working with app router endpoints.
+
+### 5.1.6 - 2024-02-24
+
+### Fixed
+
+- Fix request body being parsed as `ReadableStream` instead of JSON when used in app router RPC endpoints.
+
+### 5.1.5 - 2024-02-24
+
+### Removed
+
+- Remove additional console logs from the CLI commands.
+
+### 5.1.4 - 2024-02-24
+
 ### 5.1.4-beta.1 - 2024-02-20
 
 #### Fixed
