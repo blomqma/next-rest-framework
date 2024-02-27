@@ -33,8 +33,7 @@ export const DEFAULT_CONFIG: Required<NextRestFrameworkConfig> = {
       url: HOMEPAGE,
       imageUrl: DEFAULT_LOGO_URL
     }
-  },
-  suppressInfo: false
+  }
 };
 
 export const getConfig = (config?: NextRestFrameworkConfig) =>
