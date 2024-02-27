@@ -36,8 +36,7 @@ export const compileEndpoints = async () => {
     format: 'cjs',
     platform: 'node',
     outdir: NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-    outExtension: { '.js': '.cjs' },
-    packages: 'external'
+    outExtension: { '.js': '.cjs' }
   });
 };
 
