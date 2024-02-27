@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.10 - 2024-02-27
+
+### Fixed
+
+- Fix external dependency resolution causing the CLI commands not working for some users.
+
 ### 5.1.9 - 2024-02-26
 
 ### Fixed
