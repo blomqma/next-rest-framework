@@ -15,7 +15,6 @@ The following options can be passed to the `docsRoute` (app router) and `docsApi
 | `openApiObject`   | An [OpenAPI Object](https://swagger.io/specification/#openapi-object) that can be used to override and extend the auto-generated specification.                                                                                                                                                                        |
 | `openApiJsonPath` | Path that will be used for fetching the OpenAPI spec - defaults to `/openapi.json`. This path also determines the path where this file will be generated inside the `public` folder.                                                                                                                                   |
 | `docsConfig`      | A [Docs config](#docs-config) object for customizing the generated docs.                                                                                                                                                                                                                                               |
-| `suppressInfo`    | Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`.                                                                                                                                                                                                             |
 
 ### [Docs config](#docs-config)
 
@@ -27,8 +26,8 @@ The docs config options can be used to customize the generated docs:
 | `title`       | Custom title, used for the visible title and HTML title.                                                                                     |
 | `description` | Custom description, used for the visible description and HTML meta description.                                                              |
 | `faviconUrl`  | Custom HTML meta favicon URL.                                                                                                                |
-| `ogConfig`    | [Basic customization options](https://ogp.me/#metadata) for OG meta tags. Requires the following fields: `title`, `type`, `url`, `imageUrl`. |
 | `logoUrl`     | A URL for a custom logo.                                                                                                                     |
+| `ogConfig`    | [Basic customization options](https://ogp.me/#metadata) for OG meta tags. Requires the following fields: `title`, `type`, `url`, `imageUrl`. |
 
 ### REST
 
@@ -43,7 +42,7 @@ The following options can be passed to the `routeHandler` (app router) and `apiR
 
 #### [Route operations](#route-operations)
 
-The route operation functions `routeOperation` (app router) and `apiRouteOperation` (pages router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions.
+The route operation functions `routeOperation` (app router) and `apiRouteOperation` (pages router) allow you to define your API handlers for your endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification. Calling this function allows you to chain your API handler logic with the following functions:
 
 | Name         | Description                                                                                                                                                                                                                                                          |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -124,14 +123,9 @@ const handler = route({
 
 #### [RPC route handler options](#rpc-route-handler-options)
 
-The `rpcRouteHandler` (app router) and `rpcApiRouteHandler` (pages router) functions allow the following options as the second parameter after passing your RPC operations.
+The `rpcRouteHandler` (app router) and `rpcApiRouteHandler` (pages router) functions allow you to define your API handlers for your RPC endpoints. These functions accept an OpenAPI [Operation object](https://swagger.io/specification/#operation-object) as a parameter, that can be used to override the auto-generated specification.
 
-| Name               | Description                                                                                                                                                 | Required |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `openApiPath`      | An OpenAPI [Path Item Object](https://swagger.io/specification/#path-item-object) that can be used to override and extend the auto-generated specification. | `false`  |
-| `openApiOperation` | An OpenAPI [Path Item Object](https://swagger.io/specification/#operation-object) that can be used to override and extend the auto-generated specification. | `false`  |
-
-#### [RPC operations](#rpc-route-operations)
+#### [RPC operations](#rpc-operations)
 
 The `rpcOperation` function allows you to define your API handlers for your RPC endpoint. Calling this function allows you to chain your API handler logic with the following functions.
 
@@ -219,10 +213,7 @@ The `next-rest-framework validate` command is useful to have as part of the stat
 A good practice is to set these in your `package.json` as both commands are needed:
 
 ```json
-// package.json
-...
 "scripts": {
-  ...
   "generate": "next-rest-framework generate",
   "validate": "next-rest-framework validate",
 }

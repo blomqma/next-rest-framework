@@ -73,8 +73,6 @@ export interface NextRestFrameworkConfig {
       imageUrl: string /*! og:image */;
     };
   };
-  /*! Setting this to `true` will suppress all informational logs from Next REST Framework. Defaults to `false`. */
-  suppressInfo?: boolean;
 }
 
 export type BaseStatus = number;
