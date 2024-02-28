@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.11 - 2024-02-28
+
+### Fixed
+
+- Fix `node_modules` being resolved by ESBuild when running the CLI commands with `npm`/`npx`.
+
 ### 5.1.10 - 2024-02-27
 
 ### Fixed
