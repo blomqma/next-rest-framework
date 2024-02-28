@@ -1,6 +1,6 @@
 import { rm } from 'fs/promises';
 import chalk from 'chalk';
-import glob from 'tiny-glob';
+import { globSync } from 'fast-glob';
 import { build } from 'esbuild';
 import { type NrfOasData } from '../shared/paths';
 import { type NextRestFrameworkConfig } from '../types';
@@ -27,7 +27,7 @@ export const clearTmpFolder = async () => {
 export const compileEndpoints = async () => {
   await clearTmpFolder();
   console.info(chalk.yellowBright('Compiling endpoints...'));
-  const entryPoints = await glob('./**/*.ts');
+  const entryPoints = globSync(['./**/*.ts', '!**/node_modules/**']);
 
   // Bundle to CJS modules and use an explicit .cjs extension to make the file imports work in other parts of the CLI.
   await build({
