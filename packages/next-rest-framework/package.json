@@ -41,7 +41,7 @@
     "esbuild": "0.19.11",
     "lodash": "4.17.21",
     "prettier": "3.0.2",
-    "tiny-glob": "0.2.9",
+    "fast-glob": "3.3.2",
     "zod-to-json-schema": "3.21.4",
     "qs": "6.11.2"
   },
