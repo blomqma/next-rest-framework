@@ -4,72 +4,55 @@ import { z } from 'zod';
 
 export const runtime = 'edge';
 
-// Example app router route handler with GET/POST handlers.
 export const { GET, POST } = route({
   getTodos: routeOperation({
-    method: 'GET',
-    // Optional OpenAPI operation documentation.
-    openApiOperation: {
-      tags: ['example-api', 'todos', 'app-router']
-    }
+    method: 'GET'
   })
-    // Output schema for strictly-typed responses and OpenAPI documentation.
     .outputs([
       {
         status: 200,
         contentType: 'application/json',
-        schema: z.array(todoSchema)
+        body: z.array(todoSchema)
       }
     ])
     .handler(() => {
-      // Type-checked response.
       return TypedNextResponse.json(MOCK_TODOS, {
         status: 200
       });
     }),
 
   createTodo: routeOperation({
-    method: 'POST',
-    // Optional OpenAPI operation documentation.
-    openApiOperation: {
-      tags: ['example-api', 'todos', 'app-router']
-    }
+    method: 'POST'
   })
-    // Input schema for strictly-typed request, request validation and OpenAPI documentation.
     .input({
       contentType: 'application/json',
       body: z.object({
         name: z.string()
       })
     })
-    // Output schema for strictly-typed responses and OpenAPI documentation.
     .outputs([
       {
         status: 201,
         contentType: 'application/json',
-        schema: z.string()
+        body: z.string()
       },
       {
         status: 401,
         contentType: 'application/json',
-        schema: z.string()
+        body: z.string()
       }
     ])
-    .middleware(
-      // Optional middleware logic executed before request validation.
-      (req) => {
-        if (!req.headers.get('authorization')) {
-          // Type-checked response.
-          return TypedNextResponse.json('Unauthorized', {
-            status: 401
-          });
-        }
+    // Optional middleware logic executed before request validation.
+    .middleware((req) => {
+      if (!req.headers.get('very-secure')) {
+        return TypedNextResponse.json('Unauthorized', {
+          status: 401
+        });
       }
-    )
+    })
     .handler(async (req) => {
-      const { name } = await req.json(); // Strictly-typed request.
+      const { name } = await req.json();
 
-      // Type-checked response.
       return TypedNextResponse.json(`New TODO created: ${name}`, {
         status: 201
       });

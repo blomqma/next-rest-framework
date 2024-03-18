@@ -1,5 +1,5 @@
 import { type OpenAPIV3_1 } from 'openapi-types';
-import { type ZodSchema } from 'zod';
+import { type ZodEffects, type z, type ZodSchema } from 'zod';
 
 export type DocsProvider = 'redoc' | 'swagger-ui';
 
@@ -76,7 +76,6 @@ export interface NextRestFrameworkConfig {
 }
 
 export type BaseStatus = number;
-export type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
 export type BaseQuery = Record<string, string | string[]>;
 export type BaseParams = Record<string, string>;
 export type BaseOptions = Record<string, unknown>;
@@ -84,12 +83,16 @@ export type BaseOptions = Record<string, unknown>;
 export interface OutputObject<
   Body = unknown,
   Status extends BaseStatus = BaseStatus,
-  ContentType extends BaseContentType = BaseContentType
+  ContentType extends
+    AnyContentTypeWithAutocompleteForMostCommonOnes = AnyContentTypeWithAutocompleteForMostCommonOnes
 > {
-  schema: ZodSchema<Body>;
+  body: ZodSchema<Body>;
+  bodySchema?:
+    | OpenAPIV3_1.SchemaObject
+    | OpenAPIV3_1.ReferenceObject /*! If defined, this will override the body schema for the OpenAPI spec. */;
   status: Status;
   contentType: ContentType;
-  name?: string;
+  name?: string /*! A custom name for the response, used for the generated component name in the OpenAPI spec. */;
 }
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
@@ -164,3 +167,41 @@ export type AnyContentTypeWithAutocompleteForMostCommonOnes =
     | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     | 'application/vnd.mozilla.xul+xml'
   >;
+
+export type BaseContentType = AnyContentTypeWithAutocompleteForMostCommonOnes;
+
+export type ContentTypesThatSupportInputValidation =
+  | 'application/json'
+  | 'application/x-www-form-urlencoded'
+  | 'multipart/form-data';
+
+export type FormDataContentType =
+  | 'application/x-www-form-urlencoded'
+  | 'multipart/form-data';
+
+export type TypedFormData<T> = Modify<
+  FormData,
+  {
+    append: <K extends keyof T>(name: K, value: T[K] | Blob) => void;
+    delete: <K extends keyof T>(name: K) => void;
+    get: <K extends keyof T>(name: K) => T[K];
+    getAll: <K extends keyof T>(name: K) => Array<T[K]>;
+    has: <K extends keyof T>(name: K) => boolean;
+    set: <K extends keyof T>(name: K, value: T[K] | Blob) => void;
+    forEach: <K extends keyof T>(
+      callbackfn: (value: T[K], key: T, parent: TypedFormData<T>) => void,
+      thisArg?: any
+    ) => void;
+  }
+>;
+
+interface FormDataLikeInput {
+  [Symbol.iterator]: () => IterableIterator<[string, FormDataEntryValue]>;
+  entries: () => IterableIterator<[string, FormDataEntryValue]>;
+}
+
+export type ZodFormSchema<Data> = ZodEffects<
+  ZodSchema<Data>,
+  z.output<ZodSchema<Data>>,
+  FormData | FormDataLikeInput
+>;

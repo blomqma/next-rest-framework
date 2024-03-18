@@ -1,4 +1,8 @@
-import { DEFAULT_ERRORS, ValidMethod } from '../constants';
+import {
+  DEFAULT_ERRORS,
+  FORM_DATA_CONTENT_TYPES_THAT_SUPPORT_VALIDATION,
+  ValidMethod
+} from '../constants';
 import {
   validateSchema,
   logNextRestFrameworkError,
@@ -7,8 +11,8 @@ import {
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import {
+  type FormDataContentType,
   type BaseOptions,
-  type OpenApiOperation,
   type OpenApiPathItem
 } from '../types';
 import { type RpcClient } from '../client/rpc-client';
@@ -16,12 +20,11 @@ import { type NextRequest } from 'next/server';
 import { getPathsFromRpcRoute } from '../shared/paths';
 
 export const rpcApiRoute = <
-  T extends Record<string, RpcOperationDefinition<any, any, any>>
+  T extends Record<string, RpcOperationDefinition<any, any, any, any>>
 >(
   operations: T,
   options?: {
     openApiPath?: OpenApiPathItem;
-    openApiOperation?: OpenApiOperation;
   }
 ) => {
   const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -70,30 +73,89 @@ export const rpcApiRoute = <
       }
 
       if (input) {
-        if (req.headers['content-type']?.split(';')[0] !== 'application/json') {
+        const { body: bodySchema, contentType: contentTypeSchema } = input;
+        const contentType = req.headers['content-type']?.split(';')[0];
+
+        if (contentType !== contentTypeSchema) {
           res.status(400).json({ message: DEFAULT_ERRORS.invalidMediaType });
+          return;
         }
 
-        try {
-          const { valid, errors } = await validateSchema({
-            schema: input,
-            obj: req.body
-          });
-
-          if (!valid) {
-            res.status(400).json({
-              message: DEFAULT_ERRORS.invalidRequestBody,
-              errors
+        if (bodySchema) {
+          if (contentType === 'application/json') {
+            const { valid, errors, data } = validateSchema({
+              schema: bodySchema,
+              obj: req.body
             });
 
-            return;
-          }
-        } catch (error) {
-          res.status(400).json({
-            message: DEFAULT_ERRORS.missingRequestBody
-          });
+            if (!valid) {
+              res.status(400).json({
+                message: DEFAULT_ERRORS.invalidRequestBody,
+                errors
+              });
 
-          return;
+              return;
+            }
+
+            req.body = data;
+          }
+
+          if (
+            FORM_DATA_CONTENT_TYPES_THAT_SUPPORT_VALIDATION.includes(
+              contentType as FormDataContentType
+            )
+          ) {
+            if (
+              contentType === 'multipart/form-data' &&
+              !(req.body instanceof FormData) &&
+              typeof EdgeRuntime !== 'string'
+            ) {
+              const { parseMultiPartFormData } = await import(
+                '../shared/form-data'
+              );
+
+              // Parse multipart/form-data into a FormData object.
+              try {
+                req.body = await parseMultiPartFormData(req);
+              } catch (e) {
+                res.status(400).json({
+                  message: `${DEFAULT_ERRORS.invalidRequestBody} Failed to parse form data.`
+                });
+
+                return;
+              }
+            }
+
+            try {
+              const { valid, errors, data } = validateSchema({
+                schema: bodySchema,
+                obj: req.body
+              });
+
+              if (!valid) {
+                res.status(400).json({
+                  message: DEFAULT_ERRORS.invalidRequestBody,
+                  errors
+                });
+
+                return;
+              }
+
+              const formData = new FormData();
+
+              Object.entries(data).forEach(([key, value]) => {
+                formData.append(key, value as string | Blob);
+              });
+
+              req.body = formData;
+            } catch {
+              res.status(400).json({
+                message: `${DEFAULT_ERRORS.invalidRequestBody} Failed to parse form data.`
+              });
+
+              return;
+            }
+          }
         }
       }
 

@@ -1,28 +1,27 @@
 import { TypedNextResponse, route, routeOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
-const schema = z.object({
+const querySchema = z.object({
   foo: z.string().uuid(),
   bar: z.string().optional(),
   baz: z.string()
 });
 
-export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
-// Example app router route handler with query params.
 export const { GET } = route({
   getQueryParams: routeOperation({
     method: 'GET'
   })
     .input({
       contentType: 'application/json',
-      query: schema
+      query: querySchema
     })
     .outputs([
       {
         status: 200,
         contentType: 'application/json',
-        schema
+        body: querySchema
       }
     ])
     .handler((req) => {

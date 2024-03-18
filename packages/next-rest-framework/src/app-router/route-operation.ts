@@ -4,12 +4,17 @@ import {
   type BaseStatus,
   type BaseQuery,
   type OutputObject,
-  type BaseContentType,
   type Modify,
   type AnyCase,
   type OpenApiOperation,
   type BaseParams,
-  type BaseOptions
+  type BaseOptions,
+  type TypedFormData,
+  type AnyContentTypeWithAutocompleteForMostCommonOnes,
+  type BaseContentType,
+  type ZodFormSchema,
+  type FormDataContentType,
+  type ContentTypesThatSupportInputValidation
 } from '../types';
 import { NextResponse, type NextRequest } from 'next/server';
 import { type ZodSchema, type z } from 'zod';
@@ -17,12 +22,25 @@ import { type ValidMethod } from '../constants';
 import { type I18NConfig } from 'next/dist/server/config-shared';
 import { type ResponseCookies } from 'next/dist/server/web/spec-extension/cookies';
 import { type NextURL } from 'next/dist/server/web/next-url';
+import { type OpenAPIV3_1 } from 'openapi-types';
 
-export type TypedNextRequest<Body = unknown, Query = BaseQuery> = Modify<
+export type TypedNextRequest<
+  Method = keyof typeof ValidMethod,
+  ContentType = BaseContentType,
+  Body = unknown,
+  Query = BaseQuery
+> = Modify<
   NextRequest,
   {
-    json: () => Promise<Body>;
-    method: ValidMethod;
+    method: Method;
+    /*! Prevent parsing JSON body for GET requests. Form requests return parsed form data as JSON when the form schema is defined. */
+    json: Method extends 'GET' ? never : () => Promise<Body>;
+    /*! Prevent parsing form data for GET and non-form requests. */
+    formData: Method extends 'GET'
+      ? never
+      : ContentType extends FormDataContentType
+      ? () => Promise<TypedFormData<Body>>
+      : never;
     nextUrl: Modify<
       NextURL,
       {
@@ -130,17 +148,18 @@ type RouteMiddleware<
   OutputOptions extends BaseOptions = BaseOptions,
   ResponseBody = unknown,
   Status extends BaseStatus = BaseStatus,
-  ContentType extends BaseContentType = BaseContentType,
+  ResponseContentType extends
+    AnyContentTypeWithAutocompleteForMostCommonOnes = AnyContentTypeWithAutocompleteForMostCommonOnes,
   Outputs extends ReadonlyArray<
-    OutputObject<ResponseBody, Status, ContentType>
-  > = ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>,
+    OutputObject<ResponseBody, Status, ResponseContentType>
+  > = ReadonlyArray<OutputObject<ResponseBody, Status, ResponseContentType>>,
   TypedResponse =
     | TypedNextResponseType<
-        z.infer<Outputs[number]['schema']>,
+        z.infer<Outputs[number]['body']>,
         Outputs[number]['status'],
         Outputs[number]['contentType']
       >
-    | NextResponse<z.infer<Outputs[number]['schema']>>
+    | NextResponse<z.infer<Outputs[number]['body']>>
     | void
 > = (
   req: NextRequest,
@@ -153,34 +172,50 @@ type RouteMiddleware<
   | OutputOptions;
 
 type TypedRouteHandler<
+  Method extends keyof typeof ValidMethod = keyof typeof ValidMethod,
+  ContentType extends BaseContentType = BaseContentType,
   Body = unknown,
   Query extends BaseQuery = BaseQuery,
   Params extends BaseParams = BaseParams,
   Options extends BaseOptions = BaseOptions,
   ResponseBody = unknown,
   Status extends BaseStatus = BaseStatus,
-  ContentType extends BaseContentType = BaseContentType,
+  ResponseContentType extends BaseContentType = BaseContentType,
   Outputs extends ReadonlyArray<
-    OutputObject<ResponseBody, Status, ContentType>
-  > = ReadonlyArray<OutputObject<ResponseBody, Status, ContentType>>,
+    OutputObject<ResponseBody, Status, ResponseContentType>
+  > = ReadonlyArray<OutputObject<ResponseBody, Status, ResponseContentType>>,
   TypedResponse =
     | TypedNextResponseType<
-        z.infer<Outputs[number]['schema']>,
+        z.infer<Outputs[number]['body']>,
         Outputs[number]['status'],
         Outputs[number]['contentType']
       >
-    | NextResponse<z.infer<Outputs[number]['schema']>>
+    | NextResponse<z.infer<Outputs[number]['body']>>
     | void
 > = (
-  req: TypedNextRequest<Body, Query>,
+  req: TypedNextRequest<Method, ContentType, Body, Query>,
   context: { params: Params },
   options: Options
 ) => Promise<TypedResponse> | TypedResponse;
 
-interface InputObject<Body = unknown, Query = BaseQuery, Params = BaseParams> {
-  contentType?: BaseContentType;
-  body?: ZodSchema<Body>;
+interface InputObject<
+  ContentType = BaseContentType,
+  Body = unknown,
+  Query = BaseQuery,
+  Params = BaseParams
+> {
+  contentType?: ContentType;
+  /*! Body schema is supported only for certain content types that support input validation. */
+  body?: ContentType extends ContentTypesThatSupportInputValidation
+    ? ContentType extends FormDataContentType
+      ? ZodFormSchema<Body>
+      : ZodSchema<Body>
+    : never;
+  /*! If defined, this will override the body schema for the OpenAPI spec. */
+  bodySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
   query?: ZodSchema<Query>;
+  /*! If defined, this will override the query schema for the OpenAPI spec. */
+  querySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
   params?: ZodSchema<Params>;
 }
 
@@ -218,7 +253,7 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
     middleware1?: RouteMiddleware<any, any>;
     middleware2?: RouteMiddleware<any, any>;
     middleware3?: RouteMiddleware<any, any>;
-    handler?: TypedRouteHandler<any, any, any, any>;
+    handler?: TypedRouteHandler<any, any, any, any, any, any>;
   }): RouteOperationDefinition<Method> => ({
     openApiOperation,
     method,
@@ -231,15 +266,20 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
   });
 
   return {
-    input: <Body, Query extends BaseQuery, Params extends BaseParams>(
-      input: InputObject<Body, Query, Params>
+    input: <
+      ContentType extends BaseContentType,
+      Body,
+      Query extends BaseQuery,
+      Params extends BaseParams
+    >(
+      input: InputObject<ContentType, Body, Query, Params>
     ) => ({
       outputs: <
         ResponseBody,
         Status extends BaseStatus,
-        ContentType extends BaseContentType,
+        ResponseContentType extends BaseContentType,
         Outputs extends ReadonlyArray<
-          OutputObject<ResponseBody, Status, ContentType>
+          OutputObject<ResponseBody, Status, ResponseContentType>
         >
       >(
         outputs: Outputs
@@ -250,7 +290,7 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
             Options1,
             ResponseBody,
             Status,
-            ContentType,
+            ResponseContentType,
             Outputs
           >
         ) => ({
@@ -260,7 +300,7 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
               Options2,
               ResponseBody,
               Status,
-              ContentType,
+              ResponseContentType,
               Outputs
             >
           ) => ({
@@ -270,19 +310,21 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
                 Options3,
                 ResponseBody,
                 Status,
-                ContentType,
+                ResponseContentType,
                 Outputs
               >
             ) => ({
               handler: (
                 handler: TypedRouteHandler<
+                  Method,
+                  ContentType,
                   Body,
                   Query,
                   Params,
                   Options3,
                   ResponseBody,
                   Status,
-                  ContentType,
+                  ResponseContentType,
                   Outputs
                 >
               ) =>
@@ -297,13 +339,15 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
             }),
             handler: (
               handler: TypedRouteHandler<
+                Method,
+                ContentType,
                 Body,
                 Query,
                 Params,
                 Options2,
                 ResponseBody,
                 Status,
-                ContentType,
+                ResponseContentType,
                 Outputs
               >
             ) =>
@@ -317,26 +361,30 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
           }),
           handler: (
             handler: TypedRouteHandler<
+              Method,
+              ContentType,
               Body,
               Query,
               Params,
               Options1,
               ResponseBody,
               Status,
-              ContentType,
+              ResponseContentType,
               Outputs
             >
           ) => createOperation({ input, outputs, middleware1, handler })
         }),
         handler: (
           handler: TypedRouteHandler<
+            Method,
+            ContentType,
             Body,
             Query,
             Params,
             BaseOptions,
             ResponseBody,
             Status,
-            ContentType,
+            ResponseContentType,
             Outputs
           >
         ) => createOperation({ input, outputs, handler })
@@ -353,22 +401,24 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
             outputs: <
               ResponseBody,
               Status extends BaseStatus,
-              ContentType extends BaseContentType,
+              ResponseContentType extends BaseContentType,
               Outputs extends ReadonlyArray<
-                OutputObject<ResponseBody, Status, ContentType>
+                OutputObject<ResponseBody, Status, ResponseContentType>
               >
             >(
               outputs: Outputs
             ) => ({
               handler: (
                 handler: TypedRouteHandler<
+                  Method,
+                  ContentType,
                   Body,
                   Query,
                   Params,
                   Options3,
                   ResponseBody,
                   Status,
-                  ContentType,
+                  ResponseContentType,
                   Outputs
                 >
               ) =>
@@ -382,28 +432,37 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
                 })
             }),
             handler: (
-              handler: TypedRouteHandler<Body, Query, Params, Options2>
+              handler: TypedRouteHandler<
+                Method,
+                ContentType,
+                Body,
+                Query,
+                Params,
+                Options2
+              >
             ) => createOperation({ input, middleware1, middleware2, handler })
           }),
           outputs: <
             ResponseBody,
             Status extends BaseStatus,
-            ContentType extends BaseContentType,
+            ResponseContentType extends BaseContentType,
             Outputs extends ReadonlyArray<
-              OutputObject<ResponseBody, Status, ContentType>
+              OutputObject<ResponseBody, Status, ResponseContentType>
             >
           >(
             outputs: Outputs
           ) => ({
             handler: (
               handler: TypedRouteHandler<
+                Method,
+                ContentType,
                 Body,
                 Query,
                 Params,
                 Options2,
                 ResponseBody,
                 Status,
-                ContentType,
+                ResponseContentType,
                 Outputs
               >
             ) =>
@@ -416,44 +475,62 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
               })
           }),
           handler: (
-            handler: TypedRouteHandler<Body, Query, Params, Options2>
+            handler: TypedRouteHandler<
+              Method,
+              ContentType,
+              Body,
+              Query,
+              Params,
+              Options2
+            >
           ) => createOperation({ input, middleware1, middleware2, handler })
         }),
         outputs: <
           ResponseBody,
           Status extends BaseStatus,
-          ContentType extends BaseContentType,
+          ResponseContentType extends BaseContentType,
           Outputs extends ReadonlyArray<
-            OutputObject<ResponseBody, Status, ContentType>
+            OutputObject<ResponseBody, Status, ResponseContentType>
           >
         >(
           outputs: Outputs
         ) => ({
           handler: (
             handler: TypedRouteHandler<
+              Method,
+              ContentType,
               Body,
               Query,
               Params,
               Options1,
               ResponseBody,
               Status,
-              ContentType,
+              ResponseContentType,
               Outputs
             >
           ) => createOperation({ input, outputs, middleware1, handler })
         }),
-        handler: (handler: TypedRouteHandler<Body, Query, Params, Options1>) =>
-          createOperation({ input, middleware1, handler })
+        handler: (
+          handler: TypedRouteHandler<
+            Method,
+            ContentType,
+            Body,
+            Query,
+            Params,
+            Options1
+          >
+        ) => createOperation({ input, middleware1, handler })
       }),
-      handler: (handler: TypedRouteHandler<Body, Query, Params>) =>
-        createOperation({ input, handler })
+      handler: (
+        handler: TypedRouteHandler<Method, ContentType, Body, Query, Params>
+      ) => createOperation({ input, handler })
     }),
     outputs: <
       ResponseBody,
       Status extends BaseStatus,
-      ContentType extends BaseContentType,
+      ResponseContentType extends BaseContentType,
       Outputs extends ReadonlyArray<
-        OutputObject<ResponseBody, Status, ContentType>
+        OutputObject<ResponseBody, Status, ResponseContentType>
       >
     >(
       outputs: Outputs
@@ -464,7 +541,7 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
           Options1,
           ResponseBody,
           Status,
-          ContentType,
+          ResponseContentType,
           Outputs
         >
       ) => ({
@@ -474,7 +551,7 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
             Options2,
             ResponseBody,
             Status,
-            ContentType,
+            ResponseContentType,
             Outputs
           >
         ) => ({
@@ -484,19 +561,21 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
               Options3,
               ResponseBody,
               Status,
-              ContentType,
+              ResponseContentType,
               Outputs
             >
           ) => ({
             handler: (
               handler: TypedRouteHandler<
+                Method,
+                BaseContentType,
                 unknown,
                 BaseQuery,
                 BaseParams,
                 Options3,
                 ResponseBody,
                 Status,
-                ContentType,
+                ResponseContentType,
                 Outputs
               >
             ) =>
@@ -510,39 +589,45 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
           }),
           handler: (
             handler: TypedRouteHandler<
+              Method,
+              BaseContentType,
               unknown,
               BaseQuery,
               BaseParams,
               Options2,
               ResponseBody,
               Status,
-              ContentType,
+              ResponseContentType,
               Outputs
             >
           ) => createOperation({ outputs, middleware1, middleware2, handler })
         }),
         handler: (
           handler: TypedRouteHandler<
+            Method,
+            BaseContentType,
             unknown,
             BaseQuery,
             BaseParams,
             Options1,
             ResponseBody,
             Status,
-            ContentType,
+            ResponseContentType,
             Outputs
           >
         ) => createOperation({ outputs, middleware1, handler })
       }),
       handler: (
         handler: TypedRouteHandler<
+          Method,
+          BaseContentType,
           unknown,
           BaseQuery,
           BaseParams,
           BaseOptions,
           ResponseBody,
           Status,
-          ContentType,
+          ResponseContentType,
           Outputs
         >
       ) => createOperation({ outputs, handler })
@@ -557,16 +642,37 @@ export const routeOperation = <Method extends keyof typeof ValidMethod>({
           middleware3: RouteMiddleware<Options2, Options3>
         ) => ({
           handler: (
-            handler: TypedRouteHandler<unknown, BaseQuery, BaseParams, Options3>
+            handler: TypedRouteHandler<
+              Method,
+              BaseContentType,
+              unknown,
+              BaseQuery,
+              BaseParams,
+              Options3
+            >
           ) =>
             createOperation({ middleware1, middleware2, middleware3, handler })
         }),
         handler: (
-          handler: TypedRouteHandler<unknown, BaseQuery, BaseParams, Options2>
+          handler: TypedRouteHandler<
+            Method,
+            BaseContentType,
+            unknown,
+            BaseQuery,
+            BaseParams,
+            Options2
+          >
         ) => createOperation({ middleware1, middleware2, handler })
       }),
       handler: (
-        handler: TypedRouteHandler<unknown, BaseQuery, BaseParams, Options1>
+        handler: TypedRouteHandler<
+          Method,
+          BaseContentType,
+          unknown,
+          BaseQuery,
+          BaseParams,
+          Options1
+        >
       ) => createOperation({ middleware1, handler })
     }),
     handler: (handler: TypedRouteHandler) => createOperation({ handler })

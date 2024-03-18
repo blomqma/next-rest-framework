@@ -1,11 +1,18 @@
-import { DEFAULT_ERRORS } from '../constants';
+import {
+  DEFAULT_ERRORS,
+  FORM_DATA_CONTENT_TYPES_THAT_SUPPORT_VALIDATION
+} from '../constants';
 import {
   validateSchema,
   logNextRestFrameworkError,
   logPagesEdgeRuntimeErrorForRoute
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { type BaseOptions, type OpenApiPathItem } from '../types';
+import {
+  type FormDataContentType,
+  type BaseOptions,
+  type OpenApiPathItem
+} from '../types';
 import {
   type TypedNextApiRequest,
   type ApiRouteOperationDefinition
@@ -89,34 +96,101 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
       }
 
       if (input) {
-        const { body: bodySchema, query: querySchema, contentType } = input;
+        const {
+          body: bodySchema,
+          query: querySchema,
+          contentType: contentTypeSchema
+        } = input;
 
-        if (
-          contentType &&
-          req.headers['content-type']?.split(';')[0] !== contentType
-        ) {
-          res.status(415).json({ message: DEFAULT_ERRORS.invalidMediaType });
+        const contentType = req.headers['content-type']?.split(';')[0];
+
+        if (contentTypeSchema && contentType !== contentTypeSchema) {
+          res.status(415).json({
+            message: `${DEFAULT_ERRORS.invalidMediaType} Expected ${contentTypeSchema}.`
+          });
+
           return;
         }
 
         if (bodySchema) {
-          const { valid, errors } = await validateSchema({
-            schema: bodySchema,
-            obj: req.body
-          });
-
-          if (!valid) {
-            res.status(400).json({
-              message: DEFAULT_ERRORS.invalidRequestBody,
-              errors
+          if (contentType === 'application/json') {
+            const { valid, errors, data } = validateSchema({
+              schema: bodySchema,
+              obj: req.body
             });
 
-            return;
+            if (!valid) {
+              res.status(400).json({
+                message: DEFAULT_ERRORS.invalidRequestBody,
+                errors
+              });
+
+              return;
+            }
+
+            req.body = data;
+          }
+
+          if (
+            FORM_DATA_CONTENT_TYPES_THAT_SUPPORT_VALIDATION.includes(
+              contentType as FormDataContentType
+            )
+          ) {
+            if (
+              contentType === 'multipart/form-data' &&
+              !(req.body instanceof FormData) &&
+              typeof EdgeRuntime !== 'string'
+            ) {
+              const { parseMultiPartFormData } = await import(
+                '../shared/form-data'
+              );
+
+              // Parse multipart/form-data into a FormData object.
+              try {
+                req.body = await parseMultiPartFormData(req);
+              } catch (e) {
+                res.status(400).json({
+                  message: `${DEFAULT_ERRORS.invalidRequestBody} Failed to parse form data.`
+                });
+
+                return;
+              }
+            }
+
+            try {
+              const { valid, errors, data } = validateSchema({
+                schema: bodySchema,
+                obj: req.body
+              });
+
+              if (!valid) {
+                res.status(400).json({
+                  message: DEFAULT_ERRORS.invalidRequestBody,
+                  errors
+                });
+
+                return;
+              }
+
+              const formData = new FormData();
+
+              Object.entries(data).forEach(([key, value]) => {
+                formData.append(key, value as string | Blob);
+              });
+
+              req.body = formData;
+            } catch {
+              res.status(400).json({
+                message: `${DEFAULT_ERRORS.invalidRequestBody} Failed to parse form data.`
+              });
+
+              return;
+            }
           }
         }
 
         if (querySchema) {
-          const { valid, errors } = await validateSchema({
+          const { valid, errors, data } = validateSchema({
             schema: querySchema,
             obj: req.query
           });
@@ -129,6 +203,8 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
 
             return;
           }
+
+          req.query = data;
         }
       }
 

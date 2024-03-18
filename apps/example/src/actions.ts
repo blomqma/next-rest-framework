@@ -1,83 +1,117 @@
 'use server';
 
 import { rpcOperation } from 'next-rest-framework';
-import { MOCK_TODOS, todoSchema } from '@/utils';
+import {
+  MOCK_TODOS,
+  formSchema,
+  multipartFormSchema,
+  todoSchema
+} from '@/utils';
 import { z } from 'zod';
 
 // The RPC operations can be used as server-actions and imported in the RPC route handlers.
 
-export const getTodos = rpcOperation({
-  tags: ['RPC']
-})
+export const getTodos = rpcOperation()
   .outputs([
     {
-      schema: z.array(todoSchema)
+      body: z.array(todoSchema),
+      contentType: 'application/json'
     }
   ])
   .handler(() => {
-    return MOCK_TODOS; // Type-checked output.
+    return MOCK_TODOS;
   });
 
-export const getTodoById = rpcOperation({
-  tags: ['RPC']
-})
-  .input(z.string())
+export const getTodoById = rpcOperation()
+  .input({
+    contentType: 'application/json',
+    body: z.string()
+  })
   .outputs([
     {
-      schema: z.object({
+      body: z.object({
         error: z.string()
-      })
+      }),
+      contentType: 'application/json'
     },
     {
-      schema: todoSchema
+      body: todoSchema,
+      contentType: 'application/json'
     }
   ])
   .handler((id) => {
     const todo = MOCK_TODOS.find((t) => t.id === Number(id));
 
     if (!todo) {
-      return { error: 'TODO not found.' }; // Type-checked output.
+      return { error: 'TODO not found.' };
     }
 
-    return todo; // Type-checked output.
+    return todo;
   });
 
-export const createTodo = rpcOperation({
-  tags: ['RPC']
-})
-  .input(
-    z.object({
+export const createTodo = rpcOperation()
+  .input({
+    contentType: 'application/json',
+    body: z.object({
       name: z.string()
     })
-  )
-  .outputs([{ schema: todoSchema }])
-  .handler(
-    async ({
-      name // Strictly-typed input.
-    }) => {
-      // Create todo.
-      const todo = { id: 2, name, completed: false };
-      return todo; // Type-checked output.
-    }
-  );
+  })
+  .outputs([{ body: todoSchema, contentType: 'application/json' }])
+  .handler(async ({ name }) => {
+    const todo = { id: 4, name, completed: false };
+    return todo;
+  });
 
-export const deleteTodo = rpcOperation({
-  tags: ['RPC']
-})
-  .input(z.string())
+export const deleteTodo = rpcOperation()
+  .input({
+    contentType: 'application/json',
+    body: z.string()
+  })
   .outputs([
-    { schema: z.object({ error: z.string() }) },
-    { schema: z.object({ message: z.string() }) }
+    { body: z.object({ error: z.string() }), contentType: 'application/json' },
+    { body: z.object({ message: z.string() }), contentType: 'application/json' }
   ])
   .handler((id) => {
-    // Delete todo.
     const todo = MOCK_TODOS.find((t) => t.id === Number(id));
 
     if (!todo) {
       return {
-        error: 'TODO not found.' // Type-checked output.
+        error: 'TODO not found.'
       };
     }
 
-    return { message: 'TODO deleted.' }; // Type-checked output.
+    return { message: 'TODO deleted.' };
+  });
+
+export const formDataUrlEncoded = rpcOperation()
+  .input({
+    contentType: 'application/x-www-form-urlencoded',
+    body: formSchema // A zod-form-data schema is required.
+  })
+  .outputs([{ body: formSchema, contentType: 'application/json' }])
+  .handler((formData) => {
+    return {
+      text: formData.get('text')
+    };
+  });
+
+export const formDataMultipart = rpcOperation()
+  .input({
+    contentType: 'multipart/form-data',
+    body: multipartFormSchema // A zod-form-data schema is required.
+  })
+  .outputs([
+    {
+      body: z.custom<File>(),
+      // The binary file cannot described with a Zod schema so we define it by hand for the OpenAPI spec.
+      bodySchema: {
+        type: 'string',
+        format: 'binary'
+      },
+      contentType: 'application/json'
+    }
+  ])
+  .handler((formData) => {
+    const file = formData.get('file');
+    return file;
   });

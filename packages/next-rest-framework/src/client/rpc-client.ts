@@ -3,7 +3,7 @@ import { type RpcOperationDefinition } from '../shared';
 type RpcRequestInit = Omit<RequestInit, 'method' | 'body'>;
 
 export type RpcClient<
-  T extends Record<string, RpcOperationDefinition<any, any, any>>
+  T extends Record<string, RpcOperationDefinition<any, any, any, any>>
 > = {
   [key in keyof T]: T[key] & { _meta: never };
 };
@@ -41,7 +41,7 @@ const fetcher = async ({
 };
 
 export const rpcClient = <
-  T extends Record<string, RpcOperationDefinition<any, any, any>>
+  T extends Record<string, RpcOperationDefinition<any, any, any, any>>
 >({
   url: _url,
   init

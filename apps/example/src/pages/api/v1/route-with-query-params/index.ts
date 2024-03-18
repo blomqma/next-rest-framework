@@ -1,26 +1,25 @@
 import { apiRoute, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
-const schema = z.object({
+const querySchema = z.object({
   foo: z.string().uuid(),
   bar: z.string().optional(),
   baz: z.string()
 });
 
-// Example pages router API route handler with query params.
 export default apiRoute({
   getQueryParams: apiRouteOperation({
     method: 'GET'
   })
     .input({
       contentType: 'application/json',
-      query: schema
+      query: querySchema
     })
     .outputs([
       {
         status: 200,
         contentType: 'application/json',
-        schema
+        body: querySchema
       }
     ])
     .handler((req, res) => {

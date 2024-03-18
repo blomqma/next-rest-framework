@@ -1,21 +1,10 @@
+import { MOCK_TODOS, todoSchema } from '@/utils';
 import { apiRoute, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
-const TODOS = [
-  {
-    id: 1,
-    name: 'TODO 1',
-    completed: false
-  }
-];
-
-// Example dynamic pages router API route with GET/DELETE handlers.
 export default apiRoute({
   getTodoById: apiRouteOperation({
-    method: 'GET',
-    openApiOperation: {
-      tags: ['example-api', 'todos', 'pages-router']
-    }
+    method: 'GET'
   })
     .input({
       query: z.object({
@@ -24,22 +13,18 @@ export default apiRoute({
     })
     .outputs([
       {
-        schema: z.object({
-          id: z.number(),
-          name: z.string(),
-          completed: z.boolean()
-        }),
+        body: todoSchema,
         status: 200,
         contentType: 'application/json'
       },
       {
-        schema: z.string(),
+        body: z.string(),
         status: 404,
         contentType: 'application/json'
       }
     ])
     .handler((req, res) => {
-      const todo = TODOS.find((t) => t.id === Number(req.query.id));
+      const todo = MOCK_TODOS.find((t) => t.id === Number(req.query.id));
 
       if (!todo) {
         res.status(404).json('TODO not found.');
@@ -50,10 +35,7 @@ export default apiRoute({
     }),
 
   deleteTodo: apiRouteOperation({
-    method: 'DELETE',
-    openApiOperation: {
-      tags: ['example-api', 'todos', 'pages-router']
-    }
+    method: 'DELETE'
   })
     .input({
       query: z.object({
@@ -62,24 +44,24 @@ export default apiRoute({
     })
     .outputs([
       {
-        schema: z.string(),
+        body: z.string(),
         status: 204,
         contentType: 'application/json'
       },
       {
-        schema: z.string(),
+        body: z.string(),
         status: 404,
         contentType: 'application/json'
       }
     ])
     .handler((req, res) => {
-      // Delete todo.
-      const todo = TODOS.find((t) => t.id === Number(req.query.id));
+      const todo = MOCK_TODOS.find((t) => t.id === Number(req.query.id));
 
       if (!todo) {
         res.status(404).json('TODO not found.');
       }
 
+      // Delete the todo.
       res.status(204).json('TODO deleted.');
     })
 });

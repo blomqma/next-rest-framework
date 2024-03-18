@@ -5,6 +5,7 @@ import { validateSchema } from '../shared';
 import { logNextRestFrameworkError } from '../shared/logging';
 import { getPathsFromRoute } from '../shared/paths';
 import {
+  type FormDataContentType,
   type BaseOptions,
   type BaseParams,
   type OpenApiPathItem
@@ -13,6 +14,11 @@ import {
   type RouteOperationDefinition,
   type TypedNextRequest
 } from './route-operation';
+
+const FORM_DATA_CONTENT_TYPES: FormDataContentType[] = [
+  'multipart/form-data',
+  'application/x-www-form-urlencoded'
+];
 
 export const route = <T extends Record<string, RouteOperationDefinition>>(
   operations: T,
@@ -43,14 +49,12 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
       const { input, handler, middleware1, middleware2, middleware3 } =
         operation;
 
+      let reqClone = req.clone() as NextRequest;
+
       let middlewareOptions: BaseOptions = {};
 
       if (middleware1) {
-        const res = await middleware1(
-          new NextRequest(req.clone()),
-          context,
-          middlewareOptions
-        );
+        const res = await middleware1(reqClone, context, middlewareOptions);
 
         const isOptionsResponse = (res: unknown): res is BaseOptions =>
           typeof res === 'object';
@@ -62,11 +66,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         }
 
         if (middleware2) {
-          const res2 = await middleware2(
-            new NextRequest(req.clone()),
-            context,
-            middlewareOptions
-          );
+          const res2 = await middleware2(reqClone, context, middlewareOptions);
 
           if (res2 instanceof Response) {
             return res2;
@@ -76,7 +76,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
 
           if (middleware3) {
             const res3 = await middleware3(
-              new NextRequest(req.clone()),
+              reqClone,
               context,
               middlewareOptions
             );
@@ -91,12 +91,15 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
       }
 
       if (input) {
-        const { body: bodySchema, query: querySchema, contentType } = input;
+        const {
+          body: bodySchema,
+          query: querySchema,
+          contentType: contentTypeSchema
+        } = input;
 
-        if (
-          contentType &&
-          req.headers.get('content-type')?.split(';')[0] !== contentType
-        ) {
+        const contentType = req.headers.get('content-type')?.split(';')[0];
+
+        if (contentTypeSchema && contentType !== contentTypeSchema) {
           return NextResponse.json(
             { message: DEFAULT_ERRORS.invalidMediaType },
             { status: 415 }
@@ -104,40 +107,101 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         }
 
         if (bodySchema) {
-          try {
-            const reqClone = req.clone();
-            const body = await reqClone.json();
+          if (contentType === 'application/json') {
+            try {
+              const json = await req.clone().json();
 
-            const { valid, errors } = await validateSchema({
-              schema: bodySchema,
-              obj: body
-            });
+              const { valid, errors, data } = validateSchema({
+                schema: bodySchema,
+                obj: json
+              });
 
-            if (!valid) {
+              if (!valid) {
+                return NextResponse.json(
+                  {
+                    message: DEFAULT_ERRORS.invalidRequestBody,
+                    errors
+                  },
+                  {
+                    status: 400
+                  }
+                );
+              }
+
+              reqClone = new NextRequest(reqClone.url, {
+                ...reqClone,
+                method: reqClone.method,
+                headers: reqClone.headers,
+                body: JSON.stringify(data)
+              });
+            } catch {
               return NextResponse.json(
                 {
-                  message: DEFAULT_ERRORS.invalidRequestBody,
-                  errors
+                  message: `${DEFAULT_ERRORS.invalidRequestBody} Failed to parse JSON body.`
                 },
                 {
                   status: 400
                 }
               );
             }
-          } catch (error) {
-            return NextResponse.json(
-              {
-                message: DEFAULT_ERRORS.missingRequestBody
-              },
-              {
-                status: 400
+          }
+
+          if (
+            FORM_DATA_CONTENT_TYPES.includes(contentType as FormDataContentType)
+          ) {
+            try {
+              const formData = await req.clone().formData();
+
+              const { valid, errors, data } = validateSchema({
+                schema: bodySchema,
+                obj: formData
+              });
+
+              if (!valid) {
+                return NextResponse.json(
+                  {
+                    message: DEFAULT_ERRORS.invalidRequestBody,
+                    errors
+                  },
+                  {
+                    status: 400
+                  }
+                );
               }
-            );
+
+              // Inject parsed for data to JSON body.
+              reqClone = new NextRequest(reqClone.url, {
+                ...reqClone,
+                method: reqClone.method,
+                headers: reqClone.headers,
+                body: JSON.stringify(data)
+              });
+
+              // Return parsed form data.
+              reqClone.formData = async () => {
+                const formData = new FormData();
+
+                for (const [key, value] of Object.entries(data)) {
+                  formData.append(key, value as string | Blob);
+                }
+
+                return formData;
+              };
+            } catch {
+              return NextResponse.json(
+                {
+                  message: `${DEFAULT_ERRORS.invalidRequestBody} Failed to parse form data.`
+                },
+                {
+                  status: 400
+                }
+              );
+            }
           }
         }
 
         if (querySchema) {
-          const { valid, errors } = await validateSchema({
+          const { valid, errors, data } = validateSchema({
             schema: querySchema,
             obj: qs.parse(req.nextUrl.search, { ignoreQueryPrefix: true })
           });
@@ -153,11 +217,28 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
               }
             );
           }
+
+          const url = new URL(reqClone.url);
+
+          // Update the query parameters
+          url.searchParams.forEach((_value, key) => {
+            url.searchParams.delete(key);
+
+            if (data[key]) {
+              url.searchParams.append(key, data[key]);
+            }
+          });
+
+          reqClone = new NextRequest(url, {
+            ...reqClone,
+            method: reqClone.method,
+            headers: reqClone.headers
+          });
         }
       }
 
       const res = await handler?.(
-        req as TypedNextRequest,
+        reqClone as TypedNextRequest,
         context,
         middlewareOptions
       );

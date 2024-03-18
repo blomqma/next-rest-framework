@@ -1,3 +1,5 @@
+import { type FormDataContentType } from './types';
+
 export const DEFAULT_ERRORS = {
   unexpectedError: 'An unknown error occurred, trying again might help.',
   methodNotAllowed: 'Method not allowed.',
@@ -39,3 +41,6 @@ export const DEFAULT_FAVICON_URL =
 
 export const DEFAULT_LOGO_URL =
   'https://raw.githubusercontent.com/blomqma/next-rest-framework/d02224b38d07ede85257b22ed50159a947681f99/packages/next-rest-framework/logo.svg';
+
+export const FORM_DATA_CONTENT_TYPES_THAT_SUPPORT_VALIDATION: FormDataContentType[] =
+  ['multipart/form-data', 'application/x-www-form-urlencoded'];

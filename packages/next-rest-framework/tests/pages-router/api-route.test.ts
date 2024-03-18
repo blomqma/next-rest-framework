@@ -3,6 +3,7 @@ import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import { validateSchema } from '../../src/shared';
 import { createMockApiRouteRequest } from '../utils';
 import { apiRoute, apiRouteOperation } from '../../src/pages-router';
+import { zfd } from 'zod-form-data';
 
 describe('apiRoute', () => {
   it.each(Object.values(ValidMethod))(
@@ -20,7 +21,7 @@ describe('apiRoute', () => {
             {
               status: 200,
               contentType: 'application/json',
-              schema: z.array(z.string())
+              body: z.array(z.string())
             }
           ])
           .handler((_req, res) => {
@@ -118,7 +119,7 @@ describe('apiRoute', () => {
 
     expect(res.statusCode).toEqual(400);
 
-    const { errors } = await validateSchema({ schema, obj: body });
+    const { errors } = validateSchema({ schema, obj: body });
 
     expect(res._getJSONData()).toEqual({
       message: DEFAULT_ERRORS.invalidRequestBody,
@@ -154,7 +155,7 @@ describe('apiRoute', () => {
 
     expect(res.statusCode).toEqual(400);
 
-    const { errors } = await validateSchema({ schema, obj: query });
+    const { errors } = validateSchema({ schema, obj: query });
 
     expect(res._getJSONData()).toEqual({
       message: DEFAULT_ERRORS.invalidQueryParameters,
@@ -189,7 +190,7 @@ describe('apiRoute', () => {
           {
             status: 200,
             contentType: 'application/json',
-            schema: z.object({
+            body: z.object({
               foo: z.string()
             })
           }
@@ -222,7 +223,9 @@ describe('apiRoute', () => {
       test: apiRouteOperation({ method: 'POST' })
         .input({
           contentType: 'application/json',
-          body: z.string()
+          body: z.object({
+            foo: z.string()
+          })
         })
         .handler(() => {})
     })(req, res);
@@ -230,62 +233,141 @@ describe('apiRoute', () => {
     expect(res.statusCode).toEqual(415);
 
     expect(res._getJSONData()).toEqual({
-      message: DEFAULT_ERRORS.invalidMediaType
+      message: `${DEFAULT_ERRORS.invalidMediaType} Expected application/json.`
     });
   });
 
-  it.each([
-    {
-      definedContentType: 'application/json',
-      requestContentType: 'application/json'
-    },
-    {
-      definedContentType: 'application/json',
-      requestContentType: 'application/json; charset=utf-8'
-    },
-    {
-      definedContentType: 'application/form-data',
-      requestContentType: 'application/form-data; name: "foo"'
-    }
-  ])(
-    'works with different content types: %s',
-    async ({ definedContentType, requestContentType }) => {
-      const { req, res } = createMockApiRouteRequest({
-        method: ValidMethod.POST,
-        body: {
-          foo: 'bar'
-        },
-        headers: {
-          'content-type': requestContentType
-        }
-      });
+  it('works with application/json', async () => {
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.POST,
+      body: {
+        foo: 'bar'
+      },
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
 
-      await apiRoute({
-        test: apiRouteOperation({ method: 'POST' })
-          .input({
-            contentType: definedContentType,
+    await apiRoute({
+      test: apiRouteOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          body: z.object({
+            foo: z.string()
+          })
+        })
+        .outputs([
+          {
+            status: 201,
+            contentType: 'application/json',
             body: z.object({
               foo: z.string()
             })
-          })
-          .outputs([
-            {
-              status: 201,
-              contentType: 'application/json',
-              schema: z.object({
-                foo: z.string()
-              })
-            }
-          ])
-          .handler(() => {
-            res.json({ foo: 'bar' });
-          })
-      })(req, res);
+          }
+        ])
+        .handler((req) => {
+          const { foo } = req.body;
+          res.json({ foo });
+        })
+    })(req, res);
 
-      expect(res.statusCode).toEqual(200);
-      expect(res._getJSONData()).toEqual({ foo: 'bar' });
-    }
-  );
+    expect(res.statusCode).toEqual(200);
+    expect(res._getJSONData()).toEqual({ foo: 'bar' });
+  });
+
+  it('works with application/x-www-form-urlencoded', async () => {
+    const body = new FormData();
+    body.append('foo', 'bar');
+    body.append('baz', 'qux');
+
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.POST,
+      body,
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.string().optional(),
+      baz: z.string()
+    });
+
+    await apiRoute({
+      test: apiRouteOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/x-www-form-urlencoded',
+          body: zfd.formData(schema)
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: schema
+          }
+        ])
+        .handler((req, res) => {
+          const formData = req.body;
+
+          res.json({
+            foo: formData.get('foo'),
+            bar: formData.get('bar'),
+            baz: formData.get('baz')
+          });
+        })
+    })(req, res);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res._getJSONData()).toEqual({ foo: 'bar', bar: null, baz: 'qux' });
+  });
+
+  it('works with multipart/form-data', async () => {
+    const body = new FormData();
+    body.append('foo', 'bar');
+    body.append('baz', 'qux');
+
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.POST,
+      body,
+      headers: {
+        'content-type': 'multipart/form-data'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.string().optional(),
+      baz: z.string()
+    });
+
+    await apiRoute({
+      test: apiRouteOperation({ method: 'POST' })
+        .input({
+          contentType: 'multipart/form-data',
+          body: zfd.formData(schema)
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: schema
+          }
+        ])
+        .handler((req, res) => {
+          const formData = req.body;
+
+          res.json({
+            foo: formData.get('foo'),
+            bar: formData.get('bar'),
+            baz: formData.get('baz')
+          });
+        })
+    })(req, res);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res._getJSONData()).toEqual({ foo: 'bar', bar: null, baz: 'qux' });
+  });
 
   it('returns a default error response and logs the error', async () => {
     const { req, res } = createMockApiRouteRequest({
@@ -344,7 +426,7 @@ describe('apiRoute', () => {
 
     expect(res.statusCode).toEqual(400);
 
-    const { errors } = await validateSchema({ schema, obj: body });
+    const { errors } = validateSchema({ schema, obj: body });
 
     expect(res._getJSONData()).toEqual({
       message: DEFAULT_ERRORS.invalidRequestBody,
@@ -381,7 +463,10 @@ describe('apiRoute', () => {
   it('passes data between middleware and handler', async () => {
     const { req, res } = createMockApiRouteRequest({
       method: ValidMethod.POST,
-      body: { foo: 'bar' }
+      body: { foo: 'bar' },
+      headers: {
+        'content-type': 'application/json'
+      }
     });
 
     console.log = jest.fn();
