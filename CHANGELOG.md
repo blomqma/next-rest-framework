@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 5.1.12 - 2024-03-23
+
+### Fixed
+
+- Fix CLI not finding config when using pages router and `src` folder.
+
 ### 5.1.11 - 2024-02-28
 
 ### Fixed

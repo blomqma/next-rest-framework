@@ -1,6 +1,6 @@
 {
   "name": "next-rest-framework",
-  "version": "5.1.11",
+  "version": "5.1.12",
   "description": "Next REST Framework - Type-safe, self-documenting APIs for Next.js",
   "keywords": [
     "nextjs",
