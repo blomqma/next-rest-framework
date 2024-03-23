@@ -161,7 +161,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
             const filePathToRoute = join(
               process.cwd(),
               NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-              'pages/api',
+              path,
               route
             );
 
