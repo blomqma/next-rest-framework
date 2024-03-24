@@ -40,7 +40,10 @@ export const createMockRouteRequest = <Body, Query>({
 } => ({
   req: new NextRequest(`http://localhost:3000${path}?${qs.stringify(query)}`, {
     method,
-    body: JSON.stringify(body),
+    body:
+      body instanceof URLSearchParams || body instanceof FormData
+        ? body
+        : JSON.stringify(body),
     headers: {
       host: 'localhost:3000',
       'x-forwarded-proto': 'http',
@@ -71,7 +74,6 @@ export const createMockRpcRouteRequest = <Body>({
     body,
     method,
     headers: {
-      'Content-Type': 'application/json',
       ...headers
     }
   });
@@ -117,7 +119,6 @@ export const createMockRpcApiRouteRequest = <Body>({
     body,
     method,
     headers: {
-      'Content-Type': 'application/json',
       ...headers
     }
   });
@@ -131,7 +132,11 @@ export const getExpectedSpec = ({
   allowedPaths: string[];
   deniedPaths: string[];
 }) => {
-  const schema = getJsonSchema({ schema: zodSchema });
+  const schema = getJsonSchema({
+    schema: zodSchema,
+    operationId: 'test',
+    type: 'input-body'
+  });
 
   const parameters: OpenAPIV3_1.ParameterObject[] = [
     {

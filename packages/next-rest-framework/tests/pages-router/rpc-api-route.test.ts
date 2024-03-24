@@ -3,6 +3,7 @@ import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import { z } from 'zod';
 import { rpcApiRoute, rpcOperation } from '../../src';
 import { createMockRpcApiRouteRequest } from '../utils';
+import { zfd } from 'zod-form-data';
 
 describe('rpcApiRoute', () => {
   it.each(Object.values(ValidMethod))(
@@ -15,7 +16,9 @@ describe('rpcApiRoute', () => {
       const data = ['All good!'];
 
       const operation = rpcOperation()
-        .outputs([{ schema: z.array(z.string()) }])
+        .outputs([
+          { body: z.array(z.string()), contentType: 'application/json' }
+        ])
         .handler(() => data);
 
       await rpcApiRoute({
@@ -85,7 +88,10 @@ describe('rpcApiRoute', () => {
     };
 
     const { req, res } = createMockRpcApiRouteRequest({
-      body
+      body,
+      headers: {
+        'content-type': 'application/json'
+      }
     });
 
     const schema = z.object({
@@ -94,14 +100,14 @@ describe('rpcApiRoute', () => {
 
     await rpcApiRoute({
       test: rpcOperation()
-        .input(schema)
+        .input({ contentType: 'application/json', body: schema })
         .handler(() => {})
     })(req, res);
 
     const json = res._getJSONData();
     expect(res.statusCode).toEqual(400);
 
-    const { errors } = await validateSchema({ schema, obj: body });
+    const { errors } = validateSchema({ schema, obj: body });
 
     expect(json).toEqual({
       message: DEFAULT_ERRORS.invalidRequestBody,
@@ -109,8 +115,172 @@ describe('rpcApiRoute', () => {
     });
   });
 
-  it('returns a default error response', async () => {
-    const { req, res } = createMockRpcApiRouteRequest();
+  it('returns error for invalid content-type', async () => {
+    const { req, res } = createMockRpcApiRouteRequest({
+      method: ValidMethod.POST,
+      body: {
+        foo: 'bar'
+      },
+      headers: {
+        'content-type': 'application/xml'
+      }
+    });
+
+    await rpcApiRoute({
+      test: rpcOperation()
+        .input({
+          contentType: 'application/json',
+          body: z.object({
+            foo: z.string()
+          })
+        })
+        .handler(() => {})
+    })(req, res);
+
+    const json = res._getJSONData();
+    expect(res.statusCode).toEqual(400);
+
+    expect(json).toEqual({
+      message: DEFAULT_ERRORS.invalidMediaType
+    });
+  });
+
+  it('works with application/json', async () => {
+    const { req, res } = createMockRpcApiRouteRequest({
+      method: ValidMethod.POST,
+      body: {
+        foo: 'bar'
+      },
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    await rpcApiRoute({
+      test: rpcOperation()
+        .input({
+          contentType: 'application/json',
+          body: z.object({
+            foo: z.string()
+          })
+        })
+        .outputs([
+          {
+            body: z.object({
+              foo: z.string()
+            }),
+            contentType: 'application/json'
+          }
+        ])
+        .handler(({ foo }) => ({ foo }))
+    })(req, res);
+
+    const json = res._getJSONData();
+    expect(res.statusCode).toEqual(200);
+    expect(json).toEqual({ foo: 'bar' });
+  });
+
+  it('works with application/x-www-form-urlencoded', async () => {
+    const { req, res } = createMockRpcApiRouteRequest({
+      method: ValidMethod.POST,
+      body: new URLSearchParams({
+        foo: 'bar',
+        baz: 'qux'
+      }),
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.string().optional(),
+      baz: z.string()
+    });
+
+    await rpcApiRoute({
+      test: rpcOperation()
+        .input({
+          contentType: 'application/x-www-form-urlencoded',
+          body: zfd.formData(schema)
+        })
+        .outputs([
+          {
+            body: schema,
+            contentType: 'application/json'
+          }
+        ])
+        .handler((formData) => {
+          return {
+            foo: formData.get('foo'),
+            bar: formData.get('bar'),
+            baz: formData.get('baz')
+          };
+        })
+    })(req, res);
+
+    const json = res._getJSONData();
+    expect(res.statusCode).toEqual(200);
+
+    expect(json).toEqual({
+      foo: 'bar',
+      bar: null,
+      baz: 'qux'
+    });
+  });
+
+  it('works with multipart/form-data', async () => {
+    const body = new FormData();
+    body.append('foo', 'bar');
+    body.append('baz', 'qux');
+
+    const { req, res } = createMockRpcApiRouteRequest({
+      method: ValidMethod.POST,
+      body,
+      headers: {
+        'content-type': 'multipart/form-data'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.string().optional(),
+      baz: z.string()
+    });
+
+    await rpcApiRoute({
+      test: rpcOperation()
+        .input({
+          contentType: 'multipart/form-data',
+          body: zfd.formData(schema)
+        })
+        .outputs([
+          {
+            body: schema,
+            contentType: 'application/json'
+          }
+        ])
+        .handler(async (formData) => ({
+          foo: formData.get('foo'),
+          bar: formData.get('bar'),
+          baz: formData.get('baz')
+        }))
+    })(req, res);
+
+    const json = res._getJSONData();
+    expect(res.statusCode).toEqual(200);
+
+    expect(json).toEqual({
+      foo: 'bar',
+      bar: null,
+      baz: 'qux'
+    });
+  });
+
+  it('returns a default error response and logs the error', async () => {
+    const { req, res } = createMockRpcApiRouteRequest({
+      method: ValidMethod.POST
+    });
 
     console.error = jest.fn();
 
@@ -126,6 +296,10 @@ describe('rpcApiRoute', () => {
     expect(json).toEqual({
       message: DEFAULT_ERRORS.unexpectedError
     });
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Something went wrong')
+    );
   });
 
   it('executes middleware before validating input', async () => {
@@ -133,7 +307,10 @@ describe('rpcApiRoute', () => {
       foo: 'bar'
     };
 
-    const { req, res } = createMockRpcApiRouteRequest({ body });
+    const { req, res } = createMockRpcApiRouteRequest({
+      body,
+      headers: { 'content-type': 'application/json' }
+    });
 
     const schema = z.object({
       foo: z.number()
@@ -143,7 +320,7 @@ describe('rpcApiRoute', () => {
 
     await rpcApiRoute({
       test: rpcOperation()
-        .input(schema)
+        .input({ contentType: 'application/json', body: schema })
         .middleware(() => {
           console.log('foo');
         })
@@ -152,7 +329,7 @@ describe('rpcApiRoute', () => {
 
     expect(console.log).toHaveBeenCalledWith('foo');
 
-    const { errors } = await validateSchema({ schema, obj: body });
+    const { errors } = validateSchema({ schema, obj: body });
 
     expect(res._getJSONData()).toEqual({
       message: DEFAULT_ERRORS.invalidRequestBody,
@@ -189,14 +366,20 @@ describe('rpcApiRoute', () => {
 
   it('passes data between middleware and handler', async () => {
     const { req, res } = createMockRpcApiRouteRequest({
-      body: { foo: 'bar' }
+      body: { foo: 'bar' },
+      headers: {
+        'content-type': 'application/json'
+      }
     });
 
     console.log = jest.fn();
 
     await rpcApiRoute({
       test: rpcOperation()
-        .input(z.object({ foo: z.string() }))
+        .input({
+          contentType: 'application/json',
+          body: z.object({ foo: z.string() })
+        })
         .middleware((input) => {
           console.log(input);
           return { bar: 'baz' };

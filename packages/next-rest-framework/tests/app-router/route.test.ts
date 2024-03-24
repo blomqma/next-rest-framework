@@ -4,6 +4,7 @@ import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import { createMockRouteRequest } from '../utils';
 import { NextResponse } from 'next/server';
 import { validateSchema } from '../../src/shared';
+import { zfd } from 'zod-form-data';
 
 describe('route', () => {
   it.each(Object.values(ValidMethod))(
@@ -21,7 +22,7 @@ describe('route', () => {
             {
               status: 200,
               contentType: 'application/json',
-              schema: z.array(z.string())
+              body: z.array(z.string())
             }
           ])
           .handler(() => NextResponse.json(data));
@@ -119,7 +120,7 @@ describe('route', () => {
     const json = await res?.json();
     expect(res?.status).toEqual(400);
 
-    const { errors } = await validateSchema({ schema, obj: body });
+    const { errors } = validateSchema({ schema, obj: body });
 
     expect(json).toEqual({
       message: DEFAULT_ERRORS.invalidRequestBody,
@@ -156,7 +157,7 @@ describe('route', () => {
     const json = await res?.json();
     expect(res?.status).toEqual(400);
 
-    const { errors } = await validateSchema({ schema, obj: query });
+    const { errors } = validateSchema({ schema, obj: query });
 
     expect(json).toEqual({
       message: DEFAULT_ERRORS.invalidQueryParameters,
@@ -191,7 +192,7 @@ describe('route', () => {
           {
             status: 200,
             contentType: 'application/json',
-            schema: z.object({
+            body: z.object({
               foo: z.string()
             })
           }
@@ -225,7 +226,9 @@ describe('route', () => {
       test: routeOperation({ method: 'POST' })
         .input({
           contentType: 'application/json',
-          body: z.string()
+          body: z.object({
+            foo: z.string()
+          })
         })
         .handler(() => {})
     }).POST(req, context);
@@ -238,57 +241,146 @@ describe('route', () => {
     });
   });
 
-  it.each([
-    {
-      definedContentType: 'application/json',
-      requestContentType: 'application/json'
-    },
-    {
-      definedContentType: 'application/json',
-      requestContentType: 'application/json; charset=utf-8'
-    },
-    {
-      definedContentType: 'application/form-data',
-      requestContentType: 'application/form-data; name: "foo"'
-    }
-  ])(
-    'works with different content types: %s',
-    async ({ definedContentType, requestContentType }) => {
-      const { req, context } = createMockRouteRequest({
-        method: ValidMethod.POST,
-        body: {
-          foo: 'bar'
-        },
-        headers: {
-          'content-type': requestContentType
-        }
-      });
+  it('works with application/json', async () => {
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST,
+      body: {
+        foo: 'bar'
+      },
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
 
-      const res = await route({
-        test: routeOperation({ method: 'POST' })
-          .input({
-            contentType: definedContentType,
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          body: z.object({
+            foo: z.string()
+          })
+        })
+        .outputs([
+          {
+            status: 201,
+            contentType: 'application/json',
             body: z.object({
               foo: z.string()
             })
-          })
-          .outputs([
-            {
-              status: 201,
-              contentType: 'application/json',
-              schema: z.object({
-                foo: z.string()
-              })
-            }
-          ])
-          .handler(() => NextResponse.json({ foo: 'bar' }))
-      }).POST(req, context);
+          }
+        ])
+        .handler(async (req) => {
+          const { foo } = await req.json();
+          return NextResponse.json({ foo });
+        })
+    }).POST(req, context);
 
-      const json = await res?.json();
-      expect(res?.status).toEqual(200);
-      expect(json).toEqual({ foo: 'bar' });
-    }
-  );
+    const json = await res?.json();
+    expect(res?.status).toEqual(200);
+    expect(json).toEqual({ foo: 'bar' });
+  });
+
+  it('works with application/x-www-form-urlencoded', async () => {
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST,
+      body: new URLSearchParams({
+        foo: 'bar',
+        baz: 'qux'
+      }),
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.string().optional(),
+      baz: z.string()
+    });
+
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/x-www-form-urlencoded',
+          body: zfd.formData(schema)
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: schema
+          }
+        ])
+        .handler(async (req) => {
+          const formData = await req.formData();
+
+          return TypedNextResponse.json({
+            foo: formData.get('foo'),
+            bar: formData.get('bar'),
+            baz: formData.get('baz')
+          });
+        })
+    }).POST(req, context);
+
+    const json = await res?.json();
+    expect(res?.status).toEqual(200);
+
+    expect(json).toEqual({
+      foo: 'bar',
+      bar: null,
+      baz: 'qux'
+    });
+  });
+
+  it('works with multipart/form-data', async () => {
+    const body = new FormData();
+    body.append('foo', 'bar');
+    body.append('baz', 'qux');
+
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST,
+      body
+    });
+
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.string().optional(),
+      baz: z.string()
+    });
+
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
+        .input({
+          contentType: 'multipart/form-data',
+          body: zfd.formData(schema)
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: schema
+          }
+        ])
+        .handler(async (req) => {
+          const formData = await req.formData();
+
+          return TypedNextResponse.json({
+            foo: formData.get('foo'),
+            bar: formData.get('bar'),
+            baz: formData.get('baz')
+          });
+        })
+    }).POST(req, context);
+
+    const json = await res?.json();
+    expect(res?.status).toEqual(200);
+
+    expect(json).toEqual({
+      foo: 'bar',
+      bar: null,
+      baz: 'qux'
+    });
+  });
 
   it('returns a default error response and logs the error', async () => {
     const { req, context } = createMockRouteRequest({
@@ -350,7 +442,7 @@ describe('route', () => {
     const json = await res?.json();
     expect(res?.status).toEqual(400);
 
-    const { errors } = await validateSchema({ schema, obj: body });
+    const { errors } = validateSchema({ schema, obj: body });
 
     expect(json).toEqual({
       message: DEFAULT_ERRORS.invalidRequestBody,
@@ -388,7 +480,10 @@ describe('route', () => {
   it('passes data between middleware and handler', async () => {
     const { req, context } = createMockRouteRequest({
       method: ValidMethod.POST,
-      body: { foo: 'bar' }
+      body: { foo: 'bar' },
+      headers: {
+        'content-type': 'application/json'
+      }
     });
 
     console.log = jest.fn();

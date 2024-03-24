@@ -6,6 +6,74 @@
     "version": "v5.1.12"
   },
   "paths": {
+    "/api/v1/form-data/multipart": {
+      "post": {
+        "operationId": "multipartFormData",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MultipartFormDataRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultipartFormData200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/form-data/url-encoded": {
+      "post": {
+        "operationId": "urlEncodedFormData",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UrlEncodedFormDataRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UrlEncodedFormData200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/route-with-query-params": {
       "get": {
         "operationId": "getQueryParams",
@@ -80,8 +148,7 @@
               }
             }
           }
-        },
-        "tags": ["RPC"]
+        }
       }
     },
     "/api/v1/rpc/deleteTodo": {
@@ -113,8 +180,75 @@
               }
             }
           }
+        }
+      }
+    },
+    "/api/v1/rpc/formDataMultipart": {
+      "post": {
+        "operationId": "formDataMultipart",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/FormDataMultipartRequestBody"
+              }
+            }
+          }
         },
-        "tags": ["RPC"]
+        "responses": {
+          "200": {
+            "description": "FormDataMultipartResponseBody",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormDataMultipartResponseBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rpc/formDataUrlEncoded": {
+      "post": {
+        "operationId": "formDataUrlEncoded",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/FormDataUrlEncodedRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FormDataUrlEncodedResponseBody",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormDataUrlEncodedResponseBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/rpc/getTodoById": {
@@ -148,8 +282,7 @@
               }
             }
           }
-        },
-        "tags": ["RPC"]
+        }
       }
     },
     "/api/v1/rpc/getTodos": {
@@ -174,8 +307,7 @@
               }
             }
           }
-        },
-        "tags": ["RPC"]
+        }
       }
     },
     "/api/v1/todos": {
@@ -200,8 +332,7 @@
               }
             }
           }
-        },
-        "tags": ["example-api", "todos", "pages-router"]
+        }
       },
       "post": {
         "operationId": "createTodo",
@@ -241,8 +372,7 @@
               }
             }
           }
-        },
-        "tags": ["example-api", "todos", "pages-router"]
+        }
       }
     },
     "/api/v1/todos/{id}": {
@@ -285,8 +415,7 @@
             "required": true,
             "schema": { "type": "string" }
           }
-        ],
-        "tags": ["example-api", "todos", "pages-router"]
+        ]
       },
       "delete": {
         "operationId": "deleteTodo",
@@ -327,8 +456,75 @@
             "required": true,
             "schema": { "type": "string" }
           }
-        ],
-        "tags": ["example-api", "todos", "pages-router"]
+        ]
+      }
+    },
+    "/api/v2/form-data/multipart": {
+      "post": {
+        "operationId": "multipartFormData",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MultipartFormDataRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultipartFormData200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/form-data/url-encoded": {
+      "post": {
+        "operationId": "urlEncodedFormData",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UrlEncodedFormDataRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/UrlEncodedFormData200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v2/route-with-query-params": {
@@ -405,8 +601,7 @@
               }
             }
           }
-        },
-        "tags": ["RPC"]
+        }
       }
     },
     "/api/v2/rpc/deleteTodo": {
@@ -438,8 +633,75 @@
               }
             }
           }
+        }
+      }
+    },
+    "/api/v2/rpc/formDataMultipart": {
+      "post": {
+        "operationId": "formDataMultipart",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/FormDataMultipartRequestBody"
+              }
+            }
+          }
         },
-        "tags": ["RPC"]
+        "responses": {
+          "200": {
+            "description": "FormDataMultipartResponseBody",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormDataMultipartResponseBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/rpc/formDataUrlEncoded": {
+      "post": {
+        "operationId": "formDataUrlEncoded",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/FormDataUrlEncodedRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FormDataUrlEncodedResponseBody",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormDataUrlEncodedResponseBody"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v2/rpc/getTodoById": {
@@ -473,8 +735,7 @@
               }
             }
           }
-        },
-        "tags": ["RPC"]
+        }
       }
     },
     "/api/v2/rpc/getTodos": {
@@ -499,8 +760,7 @@
               }
             }
           }
-        },
-        "tags": ["RPC"]
+        }
       }
     },
     "/api/v2/todos": {
@@ -525,8 +785,7 @@
               }
             }
           }
-        },
-        "tags": ["example-api", "todos", "app-router"]
+        }
       },
       "post": {
         "operationId": "createTodo",
@@ -566,8 +825,7 @@
               }
             }
           }
-        },
-        "tags": ["example-api", "todos", "app-router"]
+        }
       }
     },
     "/api/v2/todos/{id}": {
@@ -610,8 +868,7 @@
             "required": true,
             "schema": { "type": "string" }
           }
-        ],
-        "tags": ["example-api", "todos", "app-router"]
+        ]
       },
       "delete": {
         "operationId": "deleteTodo",
@@ -652,8 +909,7 @@
             "required": true,
             "schema": { "type": "string" }
           }
-        ],
-        "tags": ["example-api", "todos", "app-router"]
+        ]
       }
     }
   },
@@ -690,6 +946,25 @@
         "type": "object",
         "properties": { "message": { "type": "string" } },
         "required": ["message"],
+        "additionalProperties": false
+      },
+      "FormDataMultipartRequestBody": {
+        "type": "object",
+        "properties": { "text": { "type": "string" }, "file": {} },
+        "required": ["text", "file"],
+        "additionalProperties": false
+      },
+      "FormDataMultipartResponseBody": { "type": "string", "format": "binary" },
+      "FormDataUrlEncodedRequestBody": {
+        "type": "object",
+        "properties": { "text": { "type": "string" } },
+        "required": ["text"],
+        "additionalProperties": false
+      },
+      "FormDataUrlEncodedResponseBody": {
+        "type": "object",
+        "properties": { "text": { "type": "string" } },
+        "required": ["text"],
         "additionalProperties": false
       },
       "GetQueryParams200ResponseBody": {
@@ -756,9 +1031,32 @@
           "additionalProperties": false
         }
       },
+      "MultipartFormData200ResponseBody": {
+        "type": "string",
+        "format": "binary"
+      },
+      "MultipartFormDataRequestBody": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string" },
+          "file": { "type": "string", "format": "binary" }
+        }
+      },
       "UnexpectedError": {
         "type": "object",
         "properties": { "message": { "type": "string" } },
+        "additionalProperties": false
+      },
+      "UrlEncodedFormData200ResponseBody": {
+        "type": "object",
+        "properties": { "text": { "type": "string" } },
+        "required": ["text"],
+        "additionalProperties": false
+      },
+      "UrlEncodedFormDataRequestBody": {
+        "type": "object",
+        "properties": { "text": { "type": "string" } },
+        "required": ["text"],
         "additionalProperties": false
       }
     }

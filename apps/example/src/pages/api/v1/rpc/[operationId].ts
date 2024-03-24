@@ -1,11 +1,20 @@
-import { createTodo, deleteTodo, getTodoById, getTodos } from '@/actions';
+import {
+  createTodo,
+  deleteTodo,
+  getTodoById,
+  getTodos,
+  formDataUrlEncoded,
+  formDataMultipart
+} from '@/actions';
 import { rpcApiRoute } from 'next-rest-framework';
 
 const handler = rpcApiRoute({
   getTodos,
   getTodoById,
   createTodo,
-  deleteTodo
+  deleteTodo,
+  formDataUrlEncoded,
+  formDataMultipart
 });
 
 export type RpcClient = typeof handler.client;

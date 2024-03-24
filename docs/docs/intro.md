@@ -25,11 +25,14 @@ Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set
 
 ## [Requirements](#requirements)
 
-In order to use Next REST Framework you need to have a Next.js project with the following dependencies installed:
+- Node.js v18.x. If you have an API using `File` or `FormData` web APIs, you might need Node v20.x, see: https://github.com/vercel/next.js/discussions/56032
+
+You also need the following dependencies installed in you Next.js project:
 
 - [Next.js](https://github.com/vercel/next.js) >= v12
 - [Zod](https://github.com/colinhacks/zod) >= v3
 - [TypeScript](https://www.typescriptlang.org/) >= v3
+- Optional, needed if working with forms: [zod-form-data](https://www.npmjs.com/package/zod-form-data) >= v2
 
 ### [Installation](#installation)
 

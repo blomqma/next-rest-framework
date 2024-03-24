@@ -10,6 +10,10 @@ import { type RouteOperationDefinition } from '../app-router';
 import { type RpcOperationDefinition } from './rpc-operation';
 import { capitalizeFirstLetter, isValidMethod } from './utils';
 
+const isSchemaRef = (
+  schema: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject
+): schema is OpenAPIV3_1.ReferenceObject => '$ref' in schema;
+
 export interface NrfOasData {
   paths?: OpenAPIV3_1.PathsObject;
   schemas?: Record<string, OpenAPIV3_1.SchemaObject>;
@@ -62,19 +66,31 @@ export const getPathsFromRoute = ({
       if (input?.body && input?.contentType) {
         const key = `${capitalizeFirstLetter(operationId)}RequestBody`;
 
-        const schema = getJsonSchema({ schema: input.body });
+        const schema =
+          input.bodySchema ??
+          getJsonSchema({
+            schema: input.body,
+            operationId,
+            type: 'input-body'
+          });
 
-        requestBodySchemas[method] = {
-          key,
-          ref: `#/components/schemas/${key}`,
-          schema
-        };
+        const ref = isSchemaRef(schema)
+          ? schema.$ref
+          : `#/components/schemas/${key}`;
+
+        if (!isSchemaRef(schema)) {
+          requestBodySchemas[method] = {
+            key,
+            ref,
+            schema
+          };
+        }
 
         generatedOperationObject.requestBody = {
           content: {
             [input.contentType]: {
               schema: {
-                $ref: `#/components/schemas/${key}`
+                $ref: ref
               }
             }
           }
@@ -84,7 +100,7 @@ export const getPathsFromRoute = ({
       const usedStatusCodes: number[] = [];
 
       generatedOperationObject.responses = outputs?.reduce(
-        (obj, { status, contentType, schema, name }) => {
+        (obj, { status, contentType, body, bodySchema, name }) => {
           const occurrenceOfStatusCode = usedStatusCodes.includes(status)
             ? usedStatusCodes.filter((s) => s === status).length + 1
             : '';
@@ -97,14 +113,28 @@ export const getPathsFromRoute = ({
 
           usedStatusCodes.push(status);
 
-          responseBodySchemas[method] = [
-            ...(responseBodySchemas[method] ?? []),
-            {
-              key,
-              ref: `#/components/schemas/${key}`,
-              schema: getJsonSchema({ schema })
-            }
-          ];
+          const schema =
+            bodySchema ??
+            getJsonSchema({
+              schema: body,
+              operationId,
+              type: 'output-body'
+            });
+
+          const ref = isSchemaRef(schema)
+            ? schema.$ref
+            : `#/components/schemas/${key}`;
+
+          if (!isSchemaRef(schema)) {
+            responseBodySchemas[method] = [
+              ...(responseBodySchemas[method] ?? []),
+              {
+                key,
+                ref,
+                schema
+              }
+            ];
+          }
 
           return Object.assign(obj, {
             [status]: {
@@ -112,7 +142,7 @@ export const getPathsFromRoute = ({
               content: {
                 [contentType]: {
                   schema: {
-                    $ref: `#/components/schemas/${key}`
+                    $ref: ref
                   }
                 }
               }
@@ -147,11 +177,18 @@ export const getPathsFromRoute = ({
       }
 
       if (input?.query) {
+        const schema =
+          input.querySchema ??
+          getJsonSchema({
+            schema: input.query,
+            operationId,
+            type: 'input-query'
+          }).properties ??
+          {};
+
         generatedOperationObject.parameters = [
           ...(generatedOperationObject.parameters ?? []),
-          ...Object.entries(
-            getJsonSchema({ schema: input.query }).properties ?? {}
-          )
+          ...Object.entries(schema)
             // Filter out query parameters that have already been added to the path parameters automatically.
             .filter(([name]) => !pathParameters?.includes(name))
             .map(([name, schema]) => {
@@ -216,7 +253,7 @@ export const getPathsFromRpcRoute = ({
   options,
   route: _route
 }: {
-  operations: Record<string, RpcOperationDefinition<any, any, any>>;
+  operations: Record<string, RpcOperationDefinition<any, any, any, any>>;
   options?: {
     openApiPath?: OpenApiPathItem;
     openApiOperation?: OpenApiOperation;
@@ -260,19 +297,32 @@ export const getPathsFromRpcRoute = ({
         operationId
       };
 
-      if (input) {
+      if (input?.body && input.contentType) {
         const key = `${capitalizeFirstLetter(operationId)}RequestBody`;
-        const ref = `#/components/schemas/${key}`;
 
-        requestBodySchemas[operationId] = {
-          key,
-          ref,
-          schema: getJsonSchema({ schema: input })
-        };
+        const schema =
+          input.bodySchema ??
+          getJsonSchema({
+            schema: input.body,
+            operationId,
+            type: 'input-body'
+          });
+
+        const ref = isSchemaRef(schema)
+          ? schema.$ref
+          : `#/components/schemas/${key}`;
+
+        if (!isSchemaRef(schema)) {
+          requestBodySchemas[operationId] = {
+            key,
+            ref,
+            schema
+          };
+        }
 
         generatedOperationObject.requestBody = {
           content: {
-            'application/json': {
+            [input.contentType]: {
               schema: {
                 $ref: ref
               }
@@ -282,29 +332,43 @@ export const getPathsFromRpcRoute = ({
       }
 
       generatedOperationObject.responses = outputs?.reduce(
-        (obj, { schema, name }, i) => {
+        (obj, { body, bodySchema, contentType, name }, i) => {
           const key =
             name ??
             `${capitalizeFirstLetter(operationId)}ResponseBody${
               i > 0 ? i + 1 : ''
             }`;
 
-          responseBodySchemas[operationId] = [
-            ...(responseBodySchemas[operationId] ?? []),
-            {
-              key,
-              ref: `#/components/schemas/${key}`,
-              schema: getJsonSchema({ schema })
-            }
-          ];
+          const schema =
+            bodySchema ??
+            getJsonSchema({
+              schema: body,
+              operationId,
+              type: 'output-body'
+            });
+
+          const ref = isSchemaRef(schema)
+            ? schema.$ref
+            : `#/components/schemas/${key}`;
+
+          if (!isSchemaRef(schema)) {
+            responseBodySchemas[operationId] = [
+              ...(responseBodySchemas[operationId] ?? []),
+              {
+                key,
+                ref,
+                schema
+              }
+            ];
+          }
 
           return Object.assign(obj, {
             200: {
               description: key,
               content: {
-                'application/json': {
+                [contentType]: {
                   schema: {
-                    $ref: `#/components/schemas/${key}`
+                    $ref: ref
                   }
                 }
               }

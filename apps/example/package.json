@@ -11,7 +11,8 @@
     "lint": "tsc && next lint"
   },
   "dependencies": {
-    "next-rest-framework": "workspace:*"
+    "next-rest-framework": "workspace:*",
+    "zod-form-data": "2.0.2"
   },
   "devDependencies": {
     "autoprefixer": "10.0.1",
