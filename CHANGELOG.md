@@ -1,6 +1,24 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.1.0-beta.1 - 2024-03-24
+
+This is a breaking change that improves handling form data requests for both app router and pages router routes and RPC routes.
+
+#### Added
+
+- Add support for strongly typed form data.
+- Add support for overriding generated JSON schema with a custom JSON schema for request bodies, search params and response bodies.
+- Add support for (strongly typed) form data for RPC routes.
+
+#### Changed
+
+- Rename response body schema in output objects from `schema` -> `body` for consistent naming conventions.
+
+#### Fixed
+
+- Misc docs fixes.
+
 ### 5.1.12 - 2024-03-23
 
 ### Fixed
