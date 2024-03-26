@@ -1,7 +1,19 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
-### 6.1.0-beta.1 - 2024-03-24
+### 6.0.0-beta.2 - 2024-03-27
+
+#### Added
+
+- Add support for validating path parameters with error responses for app router & using Zod-parsed path parameters.
+- Add 10s form parsing timeout for pages router.
+
+#### Fixed
+
+- Fix `req.json()` returning JSON serialized Zod-parsed request body instead of raw Zod-parsed body.
+- Fix RPC route response serialization for form data (app router and pages router) and File/Blob responses (pages router).
+
+### 6.0.0-beta.1 - 2024-03-24
 
 This is a breaking change that improves handling form data requests for both app router and pages router routes and RPC routes.
 
