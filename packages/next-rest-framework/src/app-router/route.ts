@@ -26,10 +26,13 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
     openApiPath?: OpenApiPathItem;
   }
 ) => {
-  const handler = async (req: NextRequest, context: { params: BaseParams }) => {
+  const handler = async (
+    _req: NextRequest,
+    context: { params: BaseParams }
+  ) => {
     try {
       const operation = Object.entries(operations).find(
-        ([_operationId, operation]) => operation.method === req.method
+        ([_operationId, operation]) => operation.method === _req.method
       )?.[1];
 
       if (!operation) {
@@ -49,7 +52,15 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
       const { input, handler, middleware1, middleware2, middleware3 } =
         operation;
 
-      let reqClone = req.clone() as NextRequest;
+      const _reqClone = _req.clone() as NextRequest;
+
+      let reqClone = new NextRequest(_reqClone.url, {
+        method: _reqClone.method,
+        headers: _reqClone.headers
+      });
+
+      reqClone.json = async () => await _req.clone().json();
+      reqClone.formData = async () => await _req.clone().formData();
 
       let middlewareOptions: BaseOptions = {};
 
@@ -94,10 +105,11 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         const {
           body: bodySchema,
           query: querySchema,
-          contentType: contentTypeSchema
+          contentType: contentTypeSchema,
+          params: paramsSchema
         } = input;
 
-        const contentType = req.headers.get('content-type')?.split(';')[0];
+        const contentType = reqClone.headers.get('content-type')?.split(';')[0];
 
         if (contentTypeSchema && contentType !== contentTypeSchema) {
           return NextResponse.json(
@@ -109,7 +121,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         if (bodySchema) {
           if (contentType === 'application/json') {
             try {
-              const json = await req.clone().json();
+              const json = await reqClone.json();
 
               const { valid, errors, data } = validateSchema({
                 schema: bodySchema,
@@ -129,11 +141,12 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
               }
 
               reqClone = new NextRequest(reqClone.url, {
-                ...reqClone,
                 method: reqClone.method,
                 headers: reqClone.headers,
                 body: JSON.stringify(data)
               });
+
+              reqClone.json = async () => data;
             } catch {
               return NextResponse.json(
                 {
@@ -150,7 +163,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
             FORM_DATA_CONTENT_TYPES.includes(contentType as FormDataContentType)
           ) {
             try {
-              const formData = await req.clone().formData();
+              const formData = await reqClone.formData();
 
               const { valid, errors, data } = validateSchema({
                 schema: bodySchema,
@@ -171,7 +184,6 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
 
               // Inject parsed for data to JSON body.
               reqClone = new NextRequest(reqClone.url, {
-                ...reqClone,
                 method: reqClone.method,
                 headers: reqClone.headers,
                 body: JSON.stringify(data)
@@ -203,7 +215,9 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         if (querySchema) {
           const { valid, errors, data } = validateSchema({
             schema: querySchema,
-            obj: qs.parse(req.nextUrl.search, { ignoreQueryPrefix: true })
+            obj: qs.parse(reqClone.nextUrl.search, {
+              ignoreQueryPrefix: true
+            })
           });
 
           if (!valid) {
@@ -230,9 +244,38 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
           });
 
           reqClone = new NextRequest(url, {
-            ...reqClone,
             method: reqClone.method,
-            headers: reqClone.headers
+            headers: reqClone.headers,
+            body: reqClone.body
+          });
+        }
+
+        if (paramsSchema) {
+          const { valid, errors, data } = validateSchema({
+            schema: paramsSchema,
+            obj: context.params
+          });
+
+          if (!valid) {
+            return NextResponse.json(
+              {
+                message: DEFAULT_ERRORS.invalidPathParameters,
+                errors
+              },
+              {
+                status: 400
+              }
+            );
+          }
+
+          context.params = data;
+          const url = new URL(reqClone.url);
+          url.search = new URLSearchParams(context.params).toString();
+
+          reqClone = new NextRequest(url, {
+            method: reqClone.method,
+            headers: reqClone.headers,
+            body: reqClone.body
           });
         }
       }

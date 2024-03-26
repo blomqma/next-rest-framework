@@ -9,7 +9,8 @@ export const DEFAULT_ERRORS = {
   operationNotAllowed: 'Operation not allowed.',
   invalidRequestBody: 'Invalid request body.',
   missingRequestBody: 'Missing request body.',
-  invalidQueryParameters: 'Invalid query parameters.'
+  invalidQueryParameters: 'Invalid query parameters.',
+  invalidPathParameters: 'Invalid path parameters.'
 };
 
 export enum ValidMethod {

@@ -476,13 +476,22 @@ describe('apiRoute', () => {
         .input({ body: z.object({ foo: z.string() }) })
         .middleware((req) => {
           const body = req.body;
-          console.log(body);
+          console.log({ middleware: 1, ...body });
+          req.headers = { ...req.headers, 'x-foo': 'custom-header' };
           return { bar: 'baz' };
+        })
+        .middleware((req, _res, options) => {
+          const body = req.body;
+          console.log({ middleware: 2, ...body });
+          req.headers = { ...req.headers, 'x-bar': 'custom-header-2' };
+          return { ...options, baz: 'qux' };
         })
         .handler(async (req, res, options) => {
           const body = req.body;
-          console.log(body);
-          console.log(options);
+          console.log({ handler: true, ...body });
+          console.log({ options: true, ...options });
+          console.log({ 'x-foo': req.headers['x-foo'] });
+          console.log({ 'x-bar': req.headers['x-bar'] });
           res.json(options);
         })
     })(req, res);
@@ -490,12 +499,38 @@ describe('apiRoute', () => {
     expect(res.statusCode).toEqual(200);
 
     expect(res._getJSONData()).toEqual({
-      bar: 'baz'
+      bar: 'baz',
+      baz: 'qux'
     });
 
-    expect(console.log).toHaveBeenNthCalledWith(1, { foo: 'bar' });
-    expect(console.log).toHaveBeenNthCalledWith(2, { foo: 'bar' });
-    expect(console.log).toHaveBeenNthCalledWith(3, { bar: 'baz' });
+    expect(console.log).toHaveBeenNthCalledWith(1, {
+      middleware: 1,
+      foo: 'bar'
+    });
+
+    expect(console.log).toHaveBeenNthCalledWith(2, {
+      middleware: 2,
+      foo: 'bar'
+    });
+
+    expect(console.log).toHaveBeenNthCalledWith(3, {
+      handler: true,
+      foo: 'bar'
+    });
+
+    expect(console.log).toHaveBeenNthCalledWith(4, {
+      options: true,
+      bar: 'baz',
+      baz: 'qux'
+    });
+
+    expect(console.log).toHaveBeenNthCalledWith(5, {
+      'x-foo': 'custom-header'
+    });
+
+    expect(console.log).toHaveBeenNthCalledWith(6, {
+      'x-bar': 'custom-header-2'
+    });
   });
 
   it('allows chaining three middlewares', async () => {

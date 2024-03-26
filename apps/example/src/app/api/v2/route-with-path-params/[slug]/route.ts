@@ -1,32 +1,30 @@
 import { TypedNextResponse, route, routeOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
-const querySchema = z.object({
-  total: z.string()
+const paramsSchema = z.object({
+  slug: z.enum(['foo', 'bar', 'baz'])
 });
 
 export const runtime = 'edge';
 
 export const { GET } = route({
-  getQueryParams: routeOperation({
+  getPathParams: routeOperation({
     method: 'GET'
   })
     .input({
       contentType: 'application/json',
-      query: querySchema
+      params: paramsSchema
     })
     .outputs([
       {
         status: 200,
         contentType: 'application/json',
-        body: querySchema
+        body: paramsSchema
       }
     ])
-    .handler((req) => {
-      const query = req.nextUrl.searchParams;
-
+    .handler((_req, { params: { slug } }) => {
       return TypedNextResponse.json({
-        total: query.get('total') ?? ''
+        slug
       });
     })
 });
