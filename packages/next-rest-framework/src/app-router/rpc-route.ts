@@ -7,7 +7,8 @@ import {
 import {
   validateSchema,
   logNextRestFrameworkError,
-  type RpcOperationDefinition
+  type RpcOperationDefinition,
+  parseRpcOperationResponseJson
 } from '../shared';
 import {
   type FormDataContentType,
@@ -194,21 +195,18 @@ export const rpcRoute = <
         );
       }
 
-      const parseRes = (res: unknown): BodyInit => {
-        if (
-          res instanceof ReadableStream ||
-          res instanceof ArrayBuffer ||
-          res instanceof Blob ||
-          res instanceof FormData ||
-          res instanceof URLSearchParams
-        ) {
+      const parseRes = async (res: unknown): Promise<BodyInit> => {
+        if (res instanceof ReadableStream || res instanceof Blob) {
           return res;
         }
 
-        return JSON.stringify(res);
+        const parsed = await parseRpcOperationResponseJson(res);
+        return JSON.stringify(parsed);
       };
 
-      return new NextResponse(parseRes(res), {
+      const json = await parseRes(res);
+
+      return new NextResponse(json, {
         status: 200,
         headers: {
           'Content-Type': 'application/json'

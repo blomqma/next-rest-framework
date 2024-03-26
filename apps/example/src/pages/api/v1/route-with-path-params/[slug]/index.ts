@@ -1,8 +1,8 @@
 import { apiRoute, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
-const querySchema = z.object({
-  total: z.string()
+const paramsSchema = z.object({
+  slug: z.enum(['foo', 'bar', 'baz'])
 });
 
 export default apiRoute({
@@ -11,13 +11,13 @@ export default apiRoute({
   })
     .input({
       contentType: 'application/json',
-      query: querySchema
+      query: paramsSchema
     })
     .outputs([
       {
         status: 200,
         contentType: 'application/json',
-        body: querySchema
+        body: paramsSchema
       }
     ])
     .handler((req, res) => {

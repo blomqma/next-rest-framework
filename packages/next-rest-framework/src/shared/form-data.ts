@@ -6,6 +6,10 @@ export const parseMultiPartFormData = async (req: NextApiRequest) =>
   await new Promise<FormData>((resolve, reject) => {
     const form = new Formidable();
 
+    setTimeout(() => {
+      reject(new Error('Form parsing timeout.'));
+    }, 10000);
+
     form.parse(req, (err, fields, files) => {
       if (err) {
         reject(err);

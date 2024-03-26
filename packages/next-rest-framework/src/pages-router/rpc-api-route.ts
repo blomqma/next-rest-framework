@@ -7,7 +7,8 @@ import {
   validateSchema,
   logNextRestFrameworkError,
   type RpcOperationDefinition,
-  logPagesEdgeRuntimeErrorForRoute
+  logPagesEdgeRuntimeErrorForRoute,
+  parseRpcOperationResponseJson
 } from '../shared';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import {
@@ -117,7 +118,7 @@ export const rpcApiRoute = <
               // Parse multipart/form-data into a FormData object.
               try {
                 req.body = await parseMultiPartFormData(req);
-              } catch (e) {
+              } catch {
                 res.status(400).json({
                   message: `${DEFAULT_ERRORS.invalidRequestBody} Failed to parse form data.`
                 });
@@ -166,7 +167,32 @@ export const rpcApiRoute = <
         return;
       }
 
-      res.status(200).json(_res);
+      if (_res instanceof Blob) {
+        const reader = _res.stream().getReader();
+        res.setHeader('Content-Type', 'application/octet-stream');
+
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${_res.name}"`
+        );
+
+        const pump = async () => {
+          await reader.read().then(async ({ done, value }) => {
+            if (done) {
+              res.end();
+              return;
+            }
+
+            res.write(value);
+            await pump();
+          });
+        };
+
+        await pump();
+      }
+
+      const json = await parseRpcOperationResponseJson(_res);
+      res.status(200).json(json);
     } catch (error) {
       logNextRestFrameworkError(error);
       res.status(400).json({ message: DEFAULT_ERRORS.unexpectedError });
