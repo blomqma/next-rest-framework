@@ -2,3 +2,4 @@ dist
 .next
 coverage
 .docusaurus
+pnpm-lock.yaml

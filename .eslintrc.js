@@ -5,8 +5,8 @@ module.exports = {
   extends: ['standard-with-typescript', 'prettier'],
   parserOptions: {
     project: [
-      path.resolve(__dirname, './packages/*/tsconfig.json'),
-      path.resolve(__dirname, './apps/*/tsconfig.json'),
+      path.resolve(__dirname, './packages/next-rest-framework/tsconfig.json'),
+      path.resolve(__dirname, './apps/example/tsconfig.json'),
       path.resolve(__dirname, './docs/tsconfig.json')
     ]
   },
