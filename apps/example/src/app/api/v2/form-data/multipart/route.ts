@@ -13,6 +13,7 @@ export const { POST } = route({
       body: multipartFormSchema, // A zod-form-data schema is required.
       // The binary file cannot described with a Zod schema so we define it by hand for the OpenAPI spec.
       bodySchema: {
+        description: 'Test form description.',
         type: 'object',
         properties: {
           text: {
@@ -29,9 +30,10 @@ export const { POST } = route({
       {
         status: 200,
         contentType: 'application/octet-stream',
-        body: z.unknown(),
+        body: z.custom<File>(),
         // The binary file cannot described with a Zod schema so we define it by hand for the OpenAPI spec.
         bodySchema: {
+          description: 'File response.',
           type: 'string',
           format: 'binary'
         }

@@ -99,6 +99,7 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
         const {
           body: bodySchema,
           query: querySchema,
+          params: paramsSchema,
           contentType: contentTypeSchema
         } = input;
 
@@ -189,22 +190,51 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
           }
         }
 
-        if (querySchema) {
-          const { valid, errors, data } = validateSchema({
-            schema: querySchema,
-            obj: req.query
-          });
+        if (querySchema ?? paramsSchema) {
+          const requestMeta:
+            | { initQuery: unknown; match: { params: unknown } }
+            | undefined =
+            req[Symbol.for('NextInternalRequestMeta') as keyof NextApiRequest];
 
-          if (!valid) {
-            res.status(400).json({
-              message: DEFAULT_ERRORS.invalidQueryParameters,
-              errors
+          let parsedQuery = {};
+
+          if (querySchema) {
+            const { valid, errors, data } = validateSchema({
+              schema: querySchema,
+              obj: requestMeta?.initQuery
             });
 
-            return;
+            if (!valid) {
+              res.status(400).json({
+                message: DEFAULT_ERRORS.invalidQueryParameters,
+                errors
+              });
+
+              return;
+            }
+
+            parsedQuery = { ...parsedQuery, ...data };
           }
 
-          req.query = data;
+          if (paramsSchema) {
+            const { valid, errors, data } = validateSchema({
+              schema: paramsSchema,
+              obj: requestMeta?.match.params
+            });
+
+            if (!valid) {
+              res.status(400).json({
+                message: DEFAULT_ERRORS.invalidPathParameters,
+                errors
+              });
+
+              return;
+            }
+
+            parsedQuery = { ...parsedQuery, ...data };
+          }
+
+          req.query = parsedQuery;
         }
       }
 

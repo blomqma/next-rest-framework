@@ -95,6 +95,13 @@ export const getPathsFromRoute = ({
             }
           }
         };
+
+        const description =
+          input.bodySchema?.description ?? input.body._def.description;
+
+        if (description) {
+          generatedOperationObject.requestBody.description = description;
+        }
       }
 
       const usedStatusCodes: number[] = [];
@@ -136,9 +143,14 @@ export const getPathsFromRoute = ({
             ];
           }
 
+          const description =
+            bodySchema?.description ??
+            body._def.description ??
+            `Response for status ${status}`;
+
           return Object.assign(obj, {
             [status]: {
-              description: `Response for status ${status}`,
+              description,
               content: {
                 [contentType]: {
                   schema: {
@@ -163,17 +175,54 @@ export const getPathsFromRoute = ({
         }
       );
 
-      const pathParameters = route
-        .match(/{([^}]+)}/g)
-        ?.map((param) => param.replace(/[{}]/g, ''));
+      let pathParameters: OpenAPIV3_1.ParameterObject[] = [];
 
-      if (pathParameters) {
-        generatedOperationObject.parameters = pathParameters.map((name) => ({
-          name,
-          in: 'path',
-          required: true,
-          schema: { type: 'string' }
-        }));
+      if (input?.params) {
+        const schema =
+          input.paramsSchema ??
+          getJsonSchema({
+            schema: input.params,
+            operationId,
+            type: 'input-params'
+          }).properties ??
+          {};
+
+        pathParameters = Object.entries(schema).map(([name, schema]) => {
+          const _schema = (input.params as ZodObject<ZodRawShape>).shape[
+            name
+          ] as ZodSchema;
+
+          // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+          return {
+            name,
+            in: 'path',
+            required: !_schema.isOptional(),
+            schema
+          } as OpenAPIV3_1.ParameterObject;
+        });
+
+        generatedOperationObject.parameters = [
+          ...(generatedOperationObject.parameters ?? []),
+          ...pathParameters
+        ];
+      }
+
+      const automaticPathParameters = route
+        .match(/{([^}]+)}/g)
+        ?.map((param) => param.replace(/[{}]/g, ''))
+        // Filter out path parameters that have been explicitly defined.
+        .filter((_name) => !pathParameters?.some(({ name }) => name === _name));
+
+      if (automaticPathParameters?.length) {
+        generatedOperationObject.parameters = [
+          ...(generatedOperationObject.parameters ?? []),
+          ...(automaticPathParameters.map((name) => ({
+            name,
+            in: 'path',
+            required: true,
+            schema: { type: 'string' }
+          })) as OpenAPIV3_1.ParameterObject[])
+        ];
       }
 
       if (input?.query) {
@@ -188,22 +237,19 @@ export const getPathsFromRoute = ({
 
         generatedOperationObject.parameters = [
           ...(generatedOperationObject.parameters ?? []),
-          ...Object.entries(schema)
-            // Filter out query parameters that have already been added to the path parameters automatically.
-            .filter(([name]) => !pathParameters?.includes(name))
-            .map(([name, schema]) => {
-              const _schema = (input.query as ZodObject<ZodRawShape>).shape[
-                name
-              ] as ZodSchema;
+          ...Object.entries(schema).map(([name, schema]) => {
+            const _schema = (input.query as ZodObject<ZodRawShape>).shape[
+              name
+            ] as ZodSchema;
 
-              // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-              return {
-                name,
-                in: 'query',
-                required: !_schema.isOptional(),
-                schema
-              } as OpenAPIV3_1.ParameterObject;
-            })
+            // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+            return {
+              name,
+              in: 'query',
+              required: !_schema.isOptional(),
+              schema
+            } as OpenAPIV3_1.ParameterObject;
+          })
         ];
       }
 

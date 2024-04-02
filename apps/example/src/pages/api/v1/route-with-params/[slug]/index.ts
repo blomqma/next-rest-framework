@@ -5,19 +5,24 @@ const paramsSchema = z.object({
   slug: z.enum(['foo', 'bar', 'baz'])
 });
 
+const querySchema = z.object({
+  total: z.string()
+});
+
 export default apiRoute({
-  getQueryParams: apiRouteOperation({
+  getParams: apiRouteOperation({
     method: 'GET'
   })
     .input({
       contentType: 'application/json',
-      query: paramsSchema
+      params: paramsSchema.describe('Path parameters input.'),
+      query: querySchema.describe('Query parameters input.')
     })
     .outputs([
       {
         status: 200,
         contentType: 'application/json',
-        body: paramsSchema
+        body: paramsSchema.merge(querySchema).describe('Parameters response.')
       }
     ])
     .handler((req, res) => {

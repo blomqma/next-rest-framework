@@ -16,11 +16,12 @@
                 "$ref": "#/components/schemas/MultipartFormDataRequestBody"
               }
             }
-          }
+          },
+          "description": "Test form description."
         },
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "File response.",
             "content": {
               "application/octet-stream": {
                 "schema": {
@@ -50,11 +51,12 @@
                 "$ref": "#/components/schemas/UrlEncodedFormDataRequestBody"
               }
             }
-          }
+          },
+          "description": "Test form description."
         },
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "Test form response.",
             "content": {
               "application/json": {
                 "schema": {
@@ -74,16 +76,16 @@
         }
       }
     },
-    "/api/v1/route-with-query-params": {
+    "/api/v1/route-with-params/{slug}": {
       "get": {
-        "operationId": "getQueryParams",
+        "operationId": "getParams",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "Parameters response.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetQueryParams200ResponseBody"
+                  "$ref": "#/components/schemas/GetParams200ResponseBody"
                 }
               }
             }
@@ -99,19 +101,13 @@
         },
         "parameters": [
           {
-            "name": "foo",
-            "in": "query",
+            "name": "slug",
+            "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": { "type": "string", "enum": ["foo", "bar", "baz"] }
           },
           {
-            "name": "bar",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "baz",
+            "name": "total",
             "in": "query",
             "required": true,
             "schema": { "type": "string" }
@@ -315,7 +311,7 @@
         "operationId": "getTodos",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "List of TODOs.",
             "content": {
               "application/json": {
                 "schema": {
@@ -341,11 +337,12 @@
             "application/json": {
               "schema": { "$ref": "#/components/schemas/CreateTodoRequestBody" }
             }
-          }
+          },
+          "description": "New TODO's name."
         },
         "responses": {
           "201": {
-            "description": "Response for status 201",
+            "description": "New TODO created message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -355,7 +352,7 @@
             }
           },
           "401": {
-            "description": "Response for status 401",
+            "description": "Unauthorized.",
             "content": {
               "application/json": {
                 "schema": {
@@ -380,7 +377,7 @@
         "operationId": "getTodoById",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "TODO response.",
             "content": {
               "application/json": {
                 "schema": {
@@ -390,7 +387,7 @@
             }
           },
           "404": {
-            "description": "Response for status 404",
+            "description": "TODO not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -469,11 +466,12 @@
                 "$ref": "#/components/schemas/MultipartFormDataRequestBody"
               }
             }
-          }
+          },
+          "description": "Test form description."
         },
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "File response.",
             "content": {
               "application/octet-stream": {
                 "schema": {
@@ -503,11 +501,12 @@
                 "$ref": "#/components/schemas/UrlEncodedFormDataRequestBody"
               }
             }
-          }
+          },
+          "description": "Test form description."
         },
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "Test form response.",
             "content": {
               "application/octet-stream": {
                 "schema": {
@@ -527,16 +526,16 @@
         }
       }
     },
-    "/api/v2/route-with-query-params": {
+    "/api/v2/route-with-params/{slug}": {
       "get": {
-        "operationId": "getQueryParams",
+        "operationId": "getPathParams",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "Parameters response.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GetQueryParams200ResponseBody"
+                  "$ref": "#/components/schemas/GetPathParams200ResponseBody"
                 }
               }
             }
@@ -552,19 +551,13 @@
         },
         "parameters": [
           {
-            "name": "foo",
-            "in": "query",
+            "name": "slug",
+            "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": { "type": "string", "enum": ["foo", "bar", "baz"] }
           },
           {
-            "name": "bar",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "baz",
+            "name": "total",
             "in": "query",
             "required": true,
             "schema": { "type": "string" }
@@ -768,7 +761,7 @@
         "operationId": "getTodos",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "List of TODOs.",
             "content": {
               "application/json": {
                 "schema": {
@@ -794,11 +787,12 @@
             "application/json": {
               "schema": { "$ref": "#/components/schemas/CreateTodoRequestBody" }
             }
-          }
+          },
+          "description": "New TODO's name."
         },
         "responses": {
           "201": {
-            "description": "Response for status 201",
+            "description": "New TODO created message.",
             "content": {
               "application/json": {
                 "schema": {
@@ -808,7 +802,7 @@
             }
           },
           "401": {
-            "description": "Response for status 401",
+            "description": "Unauthorized.",
             "content": {
               "application/json": {
                 "schema": {
@@ -833,7 +827,7 @@
         "operationId": "getTodoById",
         "responses": {
           "200": {
-            "description": "Response for status 200",
+            "description": "TODO response.",
             "content": {
               "application/json": {
                 "schema": {
@@ -843,7 +837,7 @@
             }
           },
           "404": {
-            "description": "Response for status 404",
+            "description": "TODO not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -874,7 +868,7 @@
         "operationId": "deleteTodo",
         "responses": {
           "204": {
-            "description": "Response for status 204",
+            "description": "TODO deleted.",
             "content": {
               "application/json": {
                 "schema": {
@@ -884,7 +878,7 @@
             }
           },
           "404": {
-            "description": "Response for status 404",
+            "description": "TODO not found.",
             "content": {
               "application/json": {
                 "schema": {
@@ -915,13 +909,20 @@
   },
   "components": {
     "schemas": {
-      "CreateTodo201ResponseBody": { "type": "string" },
-      "CreateTodo401ResponseBody": { "type": "string" },
+      "CreateTodo201ResponseBody": {
+        "type": "string",
+        "description": "New TODO created message."
+      },
+      "CreateTodo401ResponseBody": {
+        "type": "string",
+        "description": "Unauthorized."
+      },
       "CreateTodoRequestBody": {
         "type": "object",
         "properties": { "name": { "type": "string" } },
         "required": ["name"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "New TODO's name."
       },
       "CreateTodoResponseBody": {
         "type": "object",
@@ -940,42 +941,62 @@
         "type": "object",
         "properties": { "error": { "type": "string" } },
         "required": ["error"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "TODO not found."
       },
       "DeleteTodoResponseBody2": {
         "type": "object",
         "properties": { "message": { "type": "string" } },
         "required": ["message"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "TODO deleted message."
       },
       "FormDataMultipartRequestBody": {
+        "description": "Test form description.",
         "type": "object",
-        "properties": { "text": { "type": "string" }, "file": {} },
-        "required": ["text", "file"],
-        "additionalProperties": false
+        "properties": {
+          "text": { "type": "string" },
+          "file": { "type": "string", "format": "binary" }
+        }
       },
-      "FormDataMultipartResponseBody": { "type": "string", "format": "binary" },
+      "FormDataMultipartResponseBody": {
+        "description": "File response.",
+        "type": "string",
+        "format": "binary"
+      },
       "FormDataUrlEncodedRequestBody": {
         "type": "object",
         "properties": { "text": { "type": "string" } },
         "required": ["text"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Test form description."
       },
       "FormDataUrlEncodedResponseBody": {
         "type": "object",
         "properties": { "text": { "type": "string" } },
         "required": ["text"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Test form response."
       },
-      "GetQueryParams200ResponseBody": {
+      "GetParams200ResponseBody": {
         "type": "object",
         "properties": {
-          "foo": { "type": "string", "format": "uuid" },
-          "bar": { "type": "string" },
-          "baz": { "type": "string" }
+          "slug": { "type": "string", "enum": ["foo", "bar", "baz"] },
+          "total": { "type": "string" }
         },
-        "required": ["foo", "baz"],
-        "additionalProperties": false
+        "required": ["slug", "total"],
+        "additionalProperties": false,
+        "description": "Parameters response."
+      },
+      "GetPathParams200ResponseBody": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string", "enum": ["foo", "bar", "baz"] },
+          "total": { "type": "string" }
+        },
+        "required": ["slug", "total"],
+        "additionalProperties": false,
+        "description": "Parameters response."
       },
       "GetTodoById200ResponseBody": {
         "type": "object",
@@ -985,15 +1006,23 @@
           "completed": { "type": "boolean" }
         },
         "required": ["id", "name", "completed"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "TODO response."
       },
-      "GetTodoById404ResponseBody": { "type": "string" },
-      "GetTodoByIdRequestBody": { "type": "string" },
+      "GetTodoById404ResponseBody": {
+        "type": "string",
+        "description": "TODO not found."
+      },
+      "GetTodoByIdRequestBody": {
+        "type": "string",
+        "description": "TODO name."
+      },
       "GetTodoByIdResponseBody": {
         "type": "object",
         "properties": { "error": { "type": "string" } },
         "required": ["error"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "TODO not found."
       },
       "GetTodoByIdResponseBody2": {
         "type": "object",
@@ -1003,7 +1032,8 @@
           "completed": { "type": "boolean" }
         },
         "required": ["id", "name", "completed"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "TODO response."
       },
       "GetTodos200ResponseBody": {
         "type": "array",
@@ -1016,7 +1046,8 @@
           },
           "required": ["id", "name", "completed"],
           "additionalProperties": false
-        }
+        },
+        "description": "List of TODOs."
       },
       "GetTodosResponseBody": {
         "type": "array",
@@ -1029,13 +1060,16 @@
           },
           "required": ["id", "name", "completed"],
           "additionalProperties": false
-        }
+        },
+        "description": "List of TODOs."
       },
       "MultipartFormData200ResponseBody": {
+        "description": "File response.",
         "type": "string",
         "format": "binary"
       },
       "MultipartFormDataRequestBody": {
+        "description": "Test form description.",
         "type": "object",
         "properties": {
           "text": { "type": "string" },
@@ -1051,13 +1085,15 @@
         "type": "object",
         "properties": { "text": { "type": "string" } },
         "required": ["text"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Test form response."
       },
       "UrlEncodedFormDataRequestBody": {
         "type": "object",
         "properties": { "text": { "type": "string" } },
         "required": ["text"],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Test form description."
       }
     }
   }

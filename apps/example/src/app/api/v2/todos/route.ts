@@ -12,7 +12,7 @@ export const { GET, POST } = route({
       {
         status: 200,
         contentType: 'application/json',
-        body: z.array(todoSchema)
+        body: z.array(todoSchema).describe('List of TODOs.')
       }
     ])
     .handler(() => {
@@ -26,26 +26,28 @@ export const { GET, POST } = route({
   })
     .input({
       contentType: 'application/json',
-      body: z.object({
-        name: z.string()
-      })
+      body: z
+        .object({
+          name: z.string()
+        })
+        .describe("New TODO's name.")
     })
     .outputs([
       {
         status: 201,
         contentType: 'application/json',
-        body: z.string()
+        body: z.string().describe('New TODO created message.')
       },
       {
         status: 401,
         contentType: 'application/json',
-        body: z.string()
+        body: z.string().describe('Unauthorized.')
       }
     ])
     // Optional middleware logic executed before request validation.
     .middleware((req) => {
       if (!req.headers.get('very-secure')) {
-        return TypedNextResponse.json('Unauthorized', {
+        return TypedNextResponse.json('Unauthorized.', {
           status: 401
         });
       }

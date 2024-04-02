@@ -83,9 +83,13 @@ export const createMockRpcRouteRequest = <Body>({
 
 export const createMockApiRouteRequest = <
   Body,
-  Query = Partial<Record<string, string | string[]>>
+  Query = Partial<Record<string, string | string[]>>,
+  Params = BaseParams
 >(
-  _reqOptions?: Modify<RequestOptions, { body?: Body; query?: Query }>,
+  _reqOptions?: Modify<
+    RequestOptions,
+    { body?: Body; query?: Query; params?: Params }
+  >,
   resOptions?: ResponseOptions
 ) => {
   const reqOptions = {
@@ -98,7 +102,20 @@ export const createMockApiRouteRequest = <
   };
 
   // @ts-expect-error: The `NextApiRequest` does not satisfy the types for `Request`.
-  return createMocks<NextApiRequest, NextApiResponse>(reqOptions, resOptions);
+  const { req, res } = createMocks<NextApiRequest, NextApiResponse>(
+    reqOptions,
+    resOptions
+  );
+
+  // @ts-expect-error: The request query and path parameters need to be set by modifying the request object.
+  req[Symbol.for('NextInternalRequestMeta') as keyof NextApiRequest] = {
+    initQuery: _reqOptions?.query,
+    match: {
+      params: _reqOptions?.params
+    }
+  };
+
+  return { req, res };
 };
 
 export const createMockRpcApiRouteRequest = <Body>({
@@ -113,8 +130,8 @@ export const createMockRpcApiRouteRequest = <Body>({
   body?: Body;
   operation?: string;
   headers?: Record<string, string>;
-} = {}) =>
-  createMockApiRouteRequest({
+} = {}) => {
+  return createMockApiRouteRequest({
     path: `${path}?operationId=${operation}`,
     body,
     method,
@@ -122,6 +139,7 @@ export const createMockRpcApiRouteRequest = <Body>({
       ...headers
     }
   });
+};
 
 export const getExpectedSpec = ({
   zodSchema,
