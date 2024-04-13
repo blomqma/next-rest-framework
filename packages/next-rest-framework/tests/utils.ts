@@ -17,7 +17,7 @@ import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { type BaseParams, type Modify } from '../src/types';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import { getJsonSchema } from '../src/shared';
-import { OPEN_API_VERSION } from '../src/cli/constants';
+import { OPEN_API_VERSION } from '../src/generate/constants';
 import qs from 'qs';
 
 export const createMockRouteRequest = <Body, Query>({

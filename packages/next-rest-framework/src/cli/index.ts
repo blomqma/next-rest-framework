@@ -2,9 +2,12 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { clearTmpFolder, compileEndpoints } from './utils';
-import { validateOpenApiSpecFromBuild } from './validate';
-import { syncOpenApiSpecFromBuild } from './generate';
+import {
+  clearTmpFolder,
+  compileEndpoints,
+  validateOpenApiSpecFromBuild,
+  syncOpenApiSpecFromBuild
+} from '../generate';
 
 const program = new Command();
 
