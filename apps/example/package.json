@@ -7,6 +7,7 @@
     "build": "pnpm prebuild && next build",
     "start": "next start",
     "generate": "pnpm prebuild && next-rest-framework generate",
+    "generate-custom-script": "pnpm prebuild && ts-node ./openapi-generate.ts",
     "validate": "pnpm prebuild && next-rest-framework validate",
     "lint": "tsc && next lint"
   },
@@ -20,6 +21,7 @@
     "autoprefixer": "10.0.1",
     "eslint-config-next": "14.0.4",
     "postcss": "8.4.33",
-    "tailwindcss": "3.3.0"
+    "tailwindcss": "3.3.0",
+    "ts-node": "10.9.1"
   }
 }

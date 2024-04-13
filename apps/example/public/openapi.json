@@ -526,6 +526,31 @@
         }
       }
     },
+    "/api/v2/route-with-external-dep": {
+      "get": {
+        "operationId": "getDomInfo",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDomInfo200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v2/route-with-params/{slug}": {
       "get": {
         "operationId": "getPathParams",
@@ -977,6 +1002,12 @@
         "required": ["text"],
         "additionalProperties": false,
         "description": "Test form response."
+      },
+      "GetDomInfo200ResponseBody": {
+        "type": "object",
+        "properties": { "html": { "type": "string" } },
+        "required": ["html"],
+        "additionalProperties": false
       },
       "GetParams200ResponseBody": {
         "type": "object",
