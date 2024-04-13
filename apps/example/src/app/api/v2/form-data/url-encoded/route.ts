@@ -9,13 +9,13 @@ export const { POST } = route({
   })
     .input({
       contentType: 'application/x-www-form-urlencoded',
-      body: formSchema // A zod-form-data schema is required.
+      body: formSchema.describe('Test form description.') // A zod-form-data schema is required.
     })
     .outputs([
       {
         status: 200,
         contentType: 'application/octet-stream',
-        body: formSchema
+        body: formSchema.describe('Test form response.') // A zod-form-data schema is required.
       }
     ])
     .handler(async (req) => {

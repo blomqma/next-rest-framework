@@ -269,14 +269,6 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
           }
 
           context.params = data;
-          const url = new URL(reqClone.url);
-          url.search = new URLSearchParams(context.params).toString();
-
-          reqClone = new NextRequest(url, {
-            method: reqClone.method,
-            headers: reqClone.headers,
-            body: reqClone.body
-          });
         }
       }
 

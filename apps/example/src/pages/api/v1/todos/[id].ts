@@ -2,23 +2,27 @@ import { MOCK_TODOS, todoSchema } from '@/utils';
 import { apiRoute, apiRouteOperation } from 'next-rest-framework';
 import { z } from 'zod';
 
+const paramsSchema = z
+  .object({
+    id: z.string()
+  })
+  .describe('TODO ID path parameter.');
+
 export default apiRoute({
   getTodoById: apiRouteOperation({
     method: 'GET'
   })
     .input({
-      query: z.object({
-        id: z.string()
-      })
+      params: paramsSchema
     })
     .outputs([
       {
-        body: todoSchema,
+        body: todoSchema.describe('TODO response.'),
         status: 200,
         contentType: 'application/json'
       },
       {
-        body: z.string(),
+        body: z.string().describe('TODO not found.'),
         status: 404,
         contentType: 'application/json'
       }
@@ -38,9 +42,7 @@ export default apiRoute({
     method: 'DELETE'
   })
     .input({
-      query: z.object({
-        id: z.string()
-      })
+      params: paramsSchema
     })
     .outputs([
       {

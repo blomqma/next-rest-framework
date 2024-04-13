@@ -14,7 +14,8 @@ import {
   type TypedFormData,
   type ZodFormSchema,
   type ContentTypesThatSupportInputValidation,
-  type FormDataContentType
+  type FormDataContentType,
+  type BaseParams
 } from '../types';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
 import { type ZodSchema, type z } from 'zod';
@@ -23,7 +24,7 @@ export type TypedNextApiRequest<
   Method = keyof typeof ValidMethod,
   ContentType = BaseContentType,
   Body = unknown,
-  Query = BaseQuery
+  QueryAndParams = BaseQuery & BaseParams
 > = Modify<
   NextApiRequest,
   {
@@ -38,7 +39,7 @@ export type TypedNextApiRequest<
       : ContentType extends FormDataContentType
       ? TypedFormData<Body>
       : never;
-    query: Query;
+    query: QueryAndParams;
     method: ValidMethod;
   }
 >;
@@ -83,6 +84,7 @@ type TypedApiRouteHandler<
   ContentType extends BaseContentType = BaseContentType,
   Body = unknown,
   Query extends BaseQuery = BaseQuery,
+  Params extends BaseParams = BaseParams,
   Options extends BaseOptions = BaseOptions,
   ResponseBody = unknown,
   Status extends BaseStatus = BaseStatus,
@@ -91,7 +93,7 @@ type TypedApiRouteHandler<
     OutputObject<ResponseBody, Status, ResponseContentType>
   > = ReadonlyArray<OutputObject<ResponseBody, Status, ResponseContentType>>
 > = (
-  req: TypedNextApiRequest<Method, ContentType, Body, Query>,
+  req: TypedNextApiRequest<Method, ContentType, Body, Query & Params>,
   res: TypedNextApiResponse<
     z.infer<Outputs[number]['body']>,
     Outputs[number]['status'],
@@ -122,7 +124,8 @@ type ApiRouteMiddleware<
 interface InputObject<
   ContentType = BaseContentType,
   Body = unknown,
-  Query = BaseQuery
+  Query = BaseQuery,
+  Params = BaseParams
 > {
   contentType?: ContentType;
   /*!
@@ -139,6 +142,9 @@ interface InputObject<
   query?: ZodSchema<Query>;
   /*! If defined, this will override the query schema for the OpenAPI spec. */
   querySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
+  params?: ZodSchema<Params>;
+  /*! If defined, this will override the params schema for the OpenAPI spec. */
+  paramsSchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
 }
 
 export interface ApiRouteOperationDefinition<
@@ -188,8 +194,13 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
   });
 
   return {
-    input: <ContentType extends BaseContentType, Body, Query extends BaseQuery>(
-      input: InputObject<ContentType, Body, Query>
+    input: <
+      ContentType extends BaseContentType,
+      Body,
+      Query extends BaseQuery,
+      Params extends BaseParams
+    >(
+      input: InputObject<ContentType, Body, Query, Params>
     ) => ({
       outputs: <
         ResponseBody,
@@ -237,6 +248,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
                   ContentType,
                   Body,
                   Query,
+                  Params,
                   Options3,
                   ResponseBody,
                   Status,
@@ -259,6 +271,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
                 ContentType,
                 Body,
                 Query,
+                Params,
                 Options2,
                 ResponseBody,
                 Status,
@@ -280,6 +293,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
               ContentType,
               Body,
               Query,
+              Params,
               Options1,
               ResponseBody,
               Status,
@@ -294,6 +308,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
             ContentType,
             Body,
             Query,
+            Params,
             BaseOptions,
             ResponseBody,
             Status,
@@ -327,6 +342,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
                   ContentType,
                   Body,
                   Query,
+                  Params,
                   Options3,
                   ResponseBody,
                   Status,
@@ -349,6 +365,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
                 ContentType,
                 Body,
                 Query,
+                Params,
                 Options3
               >
             ) =>
@@ -376,6 +393,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
                 ContentType,
                 Body,
                 Query,
+                Params,
                 Options2,
                 ResponseBody,
                 Status,
@@ -397,6 +415,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
               ContentType,
               Body,
               Query,
+              Params,
               Options2
             >
           ) => createOperation({ input, middleware1, middleware2, handler })
@@ -417,6 +436,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
               ContentType,
               Body,
               Query,
+              Params,
               Options1,
               ResponseBody,
               Status,
@@ -431,6 +451,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
             ContentType,
             Body,
             Query,
+            Params,
             Options1
           >
         ) => createOperation({ input, middleware1, handler })
@@ -464,6 +485,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
                 BaseContentType,
                 unknown,
                 BaseQuery,
+                BaseParams,
                 Options3,
                 ResponseBody,
                 Status,
@@ -485,6 +507,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
               BaseContentType,
               unknown,
               BaseQuery,
+              BaseParams,
               Options2,
               ResponseBody,
               Status,
@@ -499,6 +522,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
             BaseContentType,
             unknown,
             BaseQuery,
+            BaseParams,
             Options1,
             ResponseBody,
             Status,
@@ -513,6 +537,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
           BaseContentType,
           unknown,
           BaseQuery,
+          BaseParams,
           BaseOptions,
           ResponseBody,
           Status,
@@ -536,6 +561,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
               BaseContentType,
               unknown,
               BaseQuery,
+              BaseParams,
               Options3
             >
           ) =>
@@ -547,6 +573,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
             BaseContentType,
             unknown,
             BaseQuery,
+            BaseParams,
             Options2
           >
         ) => createOperation({ middleware1, middleware2, handler })
@@ -557,6 +584,7 @@ export const apiRouteOperation = <Method extends keyof typeof ValidMethod>({
           BaseContentType,
           unknown,
           BaseQuery,
+          BaseParams,
           Options1
         >
       ) => createOperation({ middleware1, handler })

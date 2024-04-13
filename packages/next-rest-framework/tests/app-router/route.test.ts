@@ -211,6 +211,88 @@ describe('route', () => {
     });
   });
 
+  it('returns error for invalid path parameters', async () => {
+    const params = {
+      foo: 'bar'
+    };
+
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST,
+      params,
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    const schema = z.object({
+      bar: z.string()
+    });
+
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          params: schema
+        })
+        .handler(() => {})
+    }).POST(req, context);
+
+    const json = await res?.json();
+    expect(res?.status).toEqual(400);
+
+    const { errors } = validateSchema({ schema, obj: params });
+
+    expect(json).toEqual({
+      message: DEFAULT_ERRORS.invalidPathParameters,
+      errors
+    });
+  });
+
+  it('works with valid path parameters', async () => {
+    const params = {
+      foo: 'bar'
+    };
+
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST,
+      params,
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string()
+    });
+
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          params: schema
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: z.object({
+              foo: z.string()
+            })
+          }
+        ])
+        .handler((_req, { params: { foo } }) => {
+          return TypedNextResponse.json({ foo });
+        })
+    }).POST(req, context);
+
+    const json = await res?.json();
+    expect(res?.status).toEqual(200);
+
+    expect(json).toEqual({
+      foo: 'bar'
+    });
+  });
+
   it('returns error for invalid content-type', async () => {
     const { req, context } = createMockRouteRequest({
       method: ValidMethod.POST,

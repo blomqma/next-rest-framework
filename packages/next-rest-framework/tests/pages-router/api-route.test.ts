@@ -208,6 +208,87 @@ describe('apiRoute', () => {
     });
   });
 
+  it('returns error for invalid path parameters', async () => {
+    const params = {
+      foo: 'bar'
+    };
+
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.POST,
+      params,
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    const schema = z.object({
+      bar: z.string()
+    });
+
+    await apiRoute({
+      test: apiRouteOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          params: schema
+        })
+        .handler(() => {})
+    })(req, res);
+
+    expect(res.statusCode).toEqual(400);
+
+    const { errors } = validateSchema({ schema, obj: params });
+
+    expect(res._getJSONData()).toEqual({
+      message: DEFAULT_ERRORS.invalidPathParameters,
+      errors
+    });
+  });
+
+  it('works with valid path parameters', async () => {
+    const params = {
+      foo: 'bar'
+    };
+
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.POST,
+      params,
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    const schema = z.object({
+      foo: z.string()
+    });
+
+    await apiRoute({
+      test: apiRouteOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          params: schema
+        })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: z.object({
+              foo: z.string()
+            })
+          }
+        ])
+        .handler((req, res) => {
+          const { foo } = req.query;
+          res.json({ foo });
+        })
+    })(req, res);
+
+    expect(res.statusCode).toEqual(200);
+
+    expect(res._getJSONData()).toEqual({
+      foo: 'bar'
+    });
+  });
+
   it('returns error for invalid content-type', async () => {
     const { req, res } = createMockApiRouteRequest({
       method: ValidMethod.POST,

@@ -217,6 +217,8 @@ interface InputObject<
   /*! If defined, this will override the query schema for the OpenAPI spec. */
   querySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
   params?: ZodSchema<Params>;
+  /*! If defined, this will override the params schema for the OpenAPI spec. */
+  paramsSchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
 }
 
 export interface RouteOperationDefinition<

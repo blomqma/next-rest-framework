@@ -14,7 +14,7 @@ import { z } from 'zod';
 export const getTodos = rpcOperation()
   .outputs([
     {
-      body: z.array(todoSchema),
+      body: z.array(todoSchema).describe('List of TODOs.'),
       contentType: 'application/json'
     }
   ])
@@ -25,17 +25,19 @@ export const getTodos = rpcOperation()
 export const getTodoById = rpcOperation()
   .input({
     contentType: 'application/json',
-    body: z.string()
+    body: z.string().describe('TODO name.')
   })
   .outputs([
     {
-      body: z.object({
-        error: z.string()
-      }),
+      body: z
+        .object({
+          error: z.string()
+        })
+        .describe('TODO not found.'),
       contentType: 'application/json'
     },
     {
-      body: todoSchema,
+      body: todoSchema.describe('TODO response.'),
       contentType: 'application/json'
     }
   ])
@@ -52,9 +54,11 @@ export const getTodoById = rpcOperation()
 export const createTodo = rpcOperation()
   .input({
     contentType: 'application/json',
-    body: z.object({
-      name: z.string()
-    })
+    body: z
+      .object({
+        name: z.string()
+      })
+      .describe("New TODO's name.")
   })
   .outputs([{ body: todoSchema, contentType: 'application/json' }])
   .handler(async ({ name }) => {
@@ -68,8 +72,14 @@ export const deleteTodo = rpcOperation()
     body: z.string()
   })
   .outputs([
-    { body: z.object({ error: z.string() }), contentType: 'application/json' },
-    { body: z.object({ message: z.string() }), contentType: 'application/json' }
+    {
+      body: z.object({ error: z.string() }).describe('TODO not found.'),
+      contentType: 'application/json'
+    },
+    {
+      body: z.object({ message: z.string() }).describe('TODO deleted message.'),
+      contentType: 'application/json'
+    }
   ])
   .handler((id) => {
     const todo = MOCK_TODOS.find((t) => t.id === Number(id));
@@ -86,9 +96,14 @@ export const deleteTodo = rpcOperation()
 export const formDataUrlEncoded = rpcOperation()
   .input({
     contentType: 'application/x-www-form-urlencoded',
-    body: formSchema // A zod-form-data schema is required.
+    body: formSchema.describe('Test form description.') // A zod-form-data schema is required.
   })
-  .outputs([{ body: formSchema, contentType: 'application/json' }])
+  .outputs([
+    {
+      body: formSchema.describe('Test form response.'),
+      contentType: 'application/json'
+    }
+  ])
   .handler((formData) => {
     return {
       text: formData.get('text')
@@ -98,13 +113,28 @@ export const formDataUrlEncoded = rpcOperation()
 export const formDataMultipart = rpcOperation()
   .input({
     contentType: 'multipart/form-data',
-    body: multipartFormSchema // A zod-form-data schema is required.
+    body: multipartFormSchema, // A zod-form-data schema is required.
+    // The binary file cannot described with a Zod schema so we define it by hand for the OpenAPI spec.
+    bodySchema: {
+      description: 'Test form description.',
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string'
+        },
+        file: {
+          type: 'string',
+          format: 'binary'
+        }
+      }
+    }
   })
   .outputs([
     {
       body: z.custom<File>(),
       // The binary file cannot described with a Zod schema so we define it by hand for the OpenAPI spec.
       bodySchema: {
+        description: 'File response.',
         type: 'string',
         format: 'binary'
       },

@@ -4,18 +4,27 @@ import { z } from 'zod';
 
 export const runtime = 'edge';
 
+const paramsSchema = z
+  .object({
+    id: z.string()
+  })
+  .describe('TODO ID path parameter.');
+
 export const { GET, DELETE } = route({
   getTodoById: routeOperation({
     method: 'GET'
   })
+    .input({
+      params: paramsSchema
+    })
     .outputs([
       {
-        body: todoSchema,
+        body: todoSchema.describe('TODO response.'),
         status: 200,
         contentType: 'application/json'
       },
       {
-        body: z.string(),
+        body: z.string().describe('TODO not found.'),
         status: 404,
         contentType: 'application/json'
       }
@@ -37,14 +46,17 @@ export const { GET, DELETE } = route({
   deleteTodo: routeOperation({
     method: 'DELETE'
   })
+    .input({
+      params: paramsSchema
+    })
     .outputs([
       {
-        body: z.string(),
+        body: z.string().describe('TODO deleted.'),
         status: 204,
         contentType: 'application/json'
       },
       {
-        body: z.string(),
+        body: z.string().describe('TODO not found.'),
         status: 404,
         contentType: 'application/json'
       }
