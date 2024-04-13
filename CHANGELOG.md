@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.0-beta.3 - 2024-04-13
+
+#### Added
+
+- Add support for validating path parameters separately from query parameters with pages router.
+
 ### 6.0.0-beta.2 - 2024-03-27
 
 #### Added
