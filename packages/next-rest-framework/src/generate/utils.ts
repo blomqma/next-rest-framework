@@ -1,7 +1,7 @@
 import { rm } from 'fs/promises';
 import chalk from 'chalk';
 import { globSync } from 'fast-glob';
-import { build } from 'esbuild';
+import { type BuildOptions, build } from 'esbuild';
 import { type NrfOasData } from '../shared/paths';
 import { type NextRestFrameworkConfig } from '../types';
 import { existsSync, readdirSync } from 'fs';
@@ -24,7 +24,9 @@ export const clearTmpFolder = async () => {
 };
 
 // Compile the Next.js routes and API routes to CJS modules with esbuild.
-export const compileEndpoints = async () => {
+export const compileEndpoints = async ({
+  buildOptions
+}: { buildOptions?: BuildOptions } = {}) => {
   await clearTmpFolder();
   console.info(chalk.yellowBright('Compiling endpoints...'));
   const entryPoints = globSync(['./**/*.ts', '!**/node_modules/**']);
@@ -36,9 +38,19 @@ export const compileEndpoints = async () => {
     format: 'cjs',
     platform: 'node',
     outdir: NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-    outExtension: { '.js': '.cjs' }
+    outExtension: { '.js': '.cjs' },
+    ...buildOptions,
+    external: buildExternalDependencies(buildOptions)
   });
 };
+
+function buildExternalDependencies(buildOptions: BuildOptions = {}): string[] {
+  // explicitly add the `esbuild` as an external build dependency as recommended
+  // by esbuild to avoid bundling it in the output.
+  //
+  // ref: https://github.com/evanw/esbuild//issues/2698#issuecomment-1325160925
+  return ['esbuild', ...(buildOptions.external ?? [])];
+}
 
 // Traverse the base path and find all nested files.
 const getNestedFiles = (basePath: string, dir: string): string[] => {
@@ -105,8 +117,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
               route
             );
 
-            const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
+            const res = await dynamicallyImportRoute(filePathToRoute);
 
             const handlers: any[] = Object.entries(res)
               .filter(([key]) => isValidMethod(key))
@@ -165,9 +176,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
               route
             );
 
-            const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
-
+            const res = await dynamicallyImportRoute(filePathToRoute);
             const _config = res.default._nextRestFrameworkConfig;
 
             if (_config) {
@@ -226,6 +235,17 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
 
   return config;
 };
+
+async function dynamicallyImportRoute(filePathToRoute: string) {
+  try {
+    // First try to import the file as a URL and assume it has a default export.
+    // If that fails, try to import the module directly at its absolute path.
+    const url = new URL(`file://${filePathToRoute}`).toString();
+    return await import(url).then((mod) => mod.default);
+  } catch (err) {}
+
+  return await import(filePathToRoute).then((mod) => mod);
+}
 
 // Generate the OpenAPI paths from the Next.js routes and API routes from the build output.
 export const generatePathsFromBuild = async ({
@@ -352,8 +372,7 @@ export const generatePathsFromBuild = async ({
               route
             );
 
-            const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
+            const res = await dynamicallyImportRoute(filePathToRoute);
 
             const handlers: any[] = Object.entries(res)
               .filter(([key]) => isValidMethod(key))
@@ -404,8 +423,7 @@ export const generatePathsFromBuild = async ({
               apiRoute
             );
 
-            const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
+            const res = await dynamicallyImportRoute(filePathToRoute);
 
             const data = await res.default._getPathsForRoute(
               getApiRouteName(apiRoute)
