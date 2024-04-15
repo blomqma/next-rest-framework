@@ -207,10 +207,11 @@ The RPC operation handler function is a strongly-typed function to implement the
 
 ## [CLI](#cli)
 
-The Next REST Framework CLI supports generating and validating the `openapi.json` file:
+The CLI commands will parse your Next.js APIs and generate/validate the `openapi.json` file.
+If using TypeScript, you will need to install `tsx` and use it as the Node.js loader for the CLI commands below: `npm install --save-dev tsx`
 
-- `npx next-rest-framework generate` to generate the `openapi.json` file.
-- `npx next-rest-framework validate` to validate that the `openapi.json` file is up-to-date.
+- `NODE_OPTIONS='--import=tsx' npx next-rest-framework generate` to generate the `openapi.json` file.
+- `NODE_OPTIONS='--import=tsx' npx next-rest-framework validate` to validate that the `openapi.json` file is up-to-date.
 
 The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
 
@@ -222,7 +223,7 @@ A good practice is to set these in your `package.json` as both commands are need
 
 ```json
 "scripts": {
-  "generate": "next-rest-framework generate",
-  "validate": "next-rest-framework validate",
+  "generate": "NODE_OPTIONS='--import=tsx' next-rest-framework generate",
+  "validate": "NODE_OPTIONS='--import=tsx' next-rest-framework validate",
 }
 ```

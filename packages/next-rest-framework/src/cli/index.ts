@@ -2,9 +2,8 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { clearTmpFolder, compileEndpoints } from './utils';
-import { validateOpenApiSpecFromBuild } from './validate';
-import { syncOpenApiSpecFromBuild } from './generate';
+import { generate } from './generate';
+import { validate } from './validate';
 
 const program = new Command();
 
@@ -19,18 +18,15 @@ program
     const configPath: string = options.configPath ?? '';
 
     try {
-      await compileEndpoints();
       console.info(chalk.yellowBright('Generating OpenAPI spec...'));
 
-      await syncOpenApiSpecFromBuild({
+      await generate({
         configPath
       });
     } catch (e) {
       console.error(e);
       process.exit(1);
     }
-
-    await clearTmpFolder();
   });
 
 program
@@ -44,10 +40,9 @@ program
     const configPath: string = options.configPath ?? '';
 
     try {
-      await compileEndpoints();
       console.info(chalk.yellowBright('Validating OpenAPI spec...'));
 
-      const valid = await validateOpenApiSpecFromBuild({
+      const valid = await validate({
         configPath
       });
 
@@ -58,8 +53,6 @@ program
       console.error(e);
       process.exit(1);
     }
-
-    await clearTmpFolder();
   });
 
 program.parse(process.argv);

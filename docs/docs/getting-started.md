@@ -11,9 +11,10 @@ sidebar_position: 2
 You also need the following dependencies installed in you Next.js project:
 
 - [Next.js](https://github.com/vercel/next.js) >= v12
-- [Zod](https://github.com/colinhacks/zod) >= v3
-- [TypeScript](https://www.typescriptlang.org/) >= v3
-- Optional, needed if working with forms: [zod-form-data](https://www.npmjs.com/package/zod-form-data) >= v2
+- Optional (needed for validating input): [Zod](https://github.com/colinhacks/zod) >= v3
+- Optional: [TypeScript](https://www.typescriptlang.org/) >= v3
+- Optional (needed when using the CLI commands and using TypeScript): [tsx](https://github.com/privatenumber/tsx) >= v4
+- Optional (needed if working with forms): [zod-form-data](https://www.npmjs.com/package/zod-form-data) >= v2
 
 ## [Installation](#installation)
 

@@ -35,11 +35,7 @@ const writeOpenApiSpec = async ({
 };
 
 // Regenerate the OpenAPI spec if it has changed.
-export const syncOpenApiSpecFromBuild = async ({
-  configPath
-}: {
-  configPath?: string;
-}) => {
+export const generate = async ({ configPath }: { configPath?: string }) => {
   const config = await findConfig({ configPath });
 
   if (!config) {

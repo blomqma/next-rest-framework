@@ -66,6 +66,9 @@ importers:
       next-rest-framework:
         specifier: workspace:*
         version: link:../../packages/next-rest-framework
+      tsx:
+        specifier: 4.7.2
+        version: 4.7.2
       zod-form-data:
         specifier: 2.0.2
         version: 2.0.2(zod@3.22.2)
@@ -122,12 +125,6 @@ importers:
       commander:
         specifier: 10.0.1
         version: 10.0.1
-      esbuild:
-        specifier: 0.19.11
-        version: 0.19.11
-      fast-glob:
-        specifier: 3.3.2
-        version: 3.3.2
       formidable:
         specifier: ^3.5.1
         version: 3.5.1
@@ -156,6 +153,9 @@ importers:
       '@types/qs':
         specifier: 6.9.11
         version: 6.9.11
+      esbuild:
+        specifier: 0.19.11
+        version: 0.19.11
       jest:
         specifier: 29.6.4
         version: 29.6.4(@types/node@20.5.4)(ts-node@10.9.1)
@@ -6790,7 +6790,6 @@ packages:
     resolution: {integrity: sha512-wuMsz4leaj5hbGgg4IvDU0bqJagpftG5l5cXIAvo8uZrqn0NJqwtfupTN00VnkQJPcIRrxYrm1Ue24btpCha2A==}
     dependencies:
       resolve-pkg-maps: 1.0.0
-    dev: true
 
   /github-slugger@1.5.0:
     resolution: {integrity: sha512-wIh+gKBI9Nshz2o46B0B3f5k/W+WI9ZAv6y5Dn5WJ5SK1t0TnDimB4WE5rmTD05ZAIn8HALCZVmCsvj0w0v0lw==}
@@ -10213,7 +10212,6 @@ packages:
 
   /resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
-    dev: true
 
   /resolve.exports@2.0.2:
     resolution: {integrity: sha512-X2UW6Nw3n/aMgDVy+0rSqgHlv39WZAlZrXCdnbyEiKm17DSqHX4MmQMaST3FbeWR5FTuRcUwYAziZajji0Y7mg==}
@@ -11240,6 +11238,17 @@ packages:
       - supports-color
       - ts-node
     dev: true
+
+  /tsx@4.7.2:
+    resolution: {integrity: sha512-BCNd4kz6fz12fyrgCTEdZHGJ9fWTGeUzXmQysh0RVocDY3h4frk05ZNCXSy4kIenF7y/QnrdiVpTsyNRn6vlAw==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
+    dependencies:
+      esbuild: 0.19.11
+      get-tsconfig: 4.7.2
+    optionalDependencies:
+      fsevents: 2.3.3
+    dev: false
 
   /type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}

@@ -5,11 +5,7 @@ import { isEqualWith } from 'lodash';
 import chalk from 'chalk';
 
 // Check if the OpenAPI spec is up-to-date.
-export const validateOpenApiSpecFromBuild = async ({
-  configPath
-}: {
-  configPath?: string;
-}) => {
+export const validate = async ({ configPath }: { configPath?: string }) => {
   const config = await findConfig({ configPath });
 
   if (!config) {

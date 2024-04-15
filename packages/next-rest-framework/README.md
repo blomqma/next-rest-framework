@@ -101,9 +101,10 @@ This is a monorepo containing the following packages / projects:
 You also need the following dependencies installed in you Next.js project:
 
 - [Next.js](https://github.com/vercel/next.js) >= v12
-- [Zod](https://github.com/colinhacks/zod) >= v3
-- [TypeScript](https://www.typescriptlang.org/) >= v3
-- Optional, needed if working with forms: [zod-form-data](https://www.npmjs.com/package/zod-form-data) >= v2
+- Optional (needed for validating input): [Zod](https://github.com/colinhacks/zod) >= v3
+- Optional: [TypeScript](https://www.typescriptlang.org/) >= v3
+- Optional (needed when using the CLI commands and using TypeScript): [tsx](https://github.com/privatenumber/tsx) >= v4
+- Optional (needed if working with forms): [zod-form-data](https://www.npmjs.com/package/zod-form-data) >= v2
 
 ## [Installation](#installation)
 
@@ -886,10 +887,11 @@ The RPC operation handler function is a strongly-typed function to implement the
 
 ## [CLI](#cli)
 
-The Next REST Framework CLI supports generating and validating the `openapi.json` file:
+The CLI commands will parse your Next.js APIs and generate/validate the `openapi.json` file.
+If using TypeScript, you will need to install [tsx](https://github.com/privatenumber/tsx) and use it as the Node.js loader for the CLI commands below: `npm install --save-dev tsx`
 
-- `npx next-rest-framework generate` to generate the `openapi.json` file.
-- `npx next-rest-framework validate` to validate that the `openapi.json` file is up-to-date.
+- `NODE_OPTIONS='--import=tsx' npx next-rest-framework generate` to generate the `openapi.json` file.
+- `NODE_OPTIONS='--import=tsx' npx next-rest-framework validate` to validate that the `openapi.json` file is up-to-date.
 
 The `next-rest-framework validate` command is useful to have as part of the static checks in your CI/CD pipeline. Both commands support the following options:
 
@@ -901,8 +903,8 @@ A good practice is to set these in your `package.json` as both commands are need
 
 ```json
 "scripts": {
-  "generate": "next-rest-framework generate",
-  "validate": "next-rest-framework validate",
+  "generate": "NODE_OPTIONS='--import=tsx' next-rest-framework generate",
+  "validate": "NODE_OPTIONS='--import=tsx' next-rest-framework validate",
 }
 ```
 
