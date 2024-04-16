@@ -3,7 +3,6 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as prettier from 'prettier';
 import { findConfig, generateOpenApiSpec } from './utils';
-import { isEqualWith } from 'lodash';
 
 const writeOpenApiSpec = async ({
   path,
@@ -49,7 +48,7 @@ export const generate = async ({ configPath }: { configPath?: string }) => {
     const data = readFileSync(path);
     const openApiSpec = JSON.parse(data.toString());
 
-    if (!isEqualWith(openApiSpec, spec)) {
+    if (!(JSON.stringify(openApiSpec) === JSON.stringify(spec))) {
       console.info(
         chalk.yellowBright(
           'OpenAPI spec changed, regenerating `openapi.json`...'

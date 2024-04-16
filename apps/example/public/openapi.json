@@ -76,6 +76,31 @@
         }
       }
     },
+    "/api/v1/route-with-external-dep": {
+      "get": {
+        "operationId": "routeWithExternalDep",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteWithExternalDep200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/route-with-params/{slug}": {
       "get": {
         "operationId": "getParams",
@@ -511,6 +536,31 @@
               "application/octet-stream": {
                 "schema": {
                   "$ref": "#/components/schemas/UrlEncodedFormData200ResponseBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An unknown error occurred, trying again might help.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/route-with-external-dep": {
+      "get": {
+        "operationId": "routeWithExternalDep",
+        "responses": {
+          "200": {
+            "description": "Response for status 200",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteWithExternalDep200ResponseBody"
                 }
               }
             }
@@ -1076,6 +1126,7 @@
           "file": { "type": "string", "format": "binary" }
         }
       },
+      "RouteWithExternalDep200ResponseBody": { "type": "string" },
       "UnexpectedError": {
         "type": "object",
         "properties": { "message": { "type": "string" } },
