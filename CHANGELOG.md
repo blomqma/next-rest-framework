@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.0-beta.4 - 2024-04-17
+
+#### Fixed
+
+- Fix CLI commands causing ESBuild errors with third-party dependencies by parsing the OpenAPI specifications from the source code instead using `tsx`.
+
 ### 6.0.0-beta.3 - 2024-04-13
 
 #### Added
