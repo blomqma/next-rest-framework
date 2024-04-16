@@ -1,7 +1,4 @@
-import { rm } from 'fs/promises';
 import chalk from 'chalk';
-import { globSync } from 'fast-glob';
-import { build } from 'esbuild';
 import { type NrfOasData } from '../shared/paths';
 import { type NextRestFrameworkConfig } from '../types';
 import { existsSync, readdirSync } from 'fs';
@@ -9,36 +6,7 @@ import { type OpenAPIV3_1 } from 'openapi-types';
 import { join } from 'path';
 import { isValidMethod } from '../shared';
 import { merge } from 'lodash';
-import {
-  NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-  OPEN_API_VERSION
-} from './constants';
-
-export const clearTmpFolder = async () => {
-  try {
-    await rm(join(process.cwd(), NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME), {
-      recursive: true,
-      force: true
-    });
-  } catch {}
-};
-
-// Compile the Next.js routes and API routes to CJS modules with esbuild.
-export const compileEndpoints = async () => {
-  await clearTmpFolder();
-  console.info(chalk.yellowBright('Compiling endpoints...'));
-  const entryPoints = globSync(['./**/*.ts', '!**/node_modules/**']);
-
-  // Bundle to CJS modules and use an explicit .cjs extension to make the file imports work in other parts of the CLI.
-  await build({
-    entryPoints,
-    bundle: true,
-    format: 'cjs',
-    platform: 'node',
-    outdir: NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-    outExtension: { '.js': '.cjs' }
-  });
-};
+import { OPEN_API_VERSION } from './constants';
 
 // Traverse the base path and find all nested files.
 const getNestedFiles = (basePath: string, dir: string): string[] => {
@@ -55,7 +23,8 @@ const getNestedFiles = (basePath: string, dir: string): string[] => {
 // Convert file path of a route to a route name.
 const getRouteName = (file: string) =>
   `/${file}`
-    .replace('/route.cjs', '')
+    .replace('/route.ts', '')
+    .replace('/route.js', '')
     .replace(/\\/g, '/')
     .replaceAll('[', '{')
     .replaceAll(']', '}');
@@ -67,7 +36,8 @@ const getApiRouteName = (file: string) =>
     .replace(/\\/g, '/')
     .replaceAll('[', '{')
     .replaceAll(']', '}')
-    .replace('.cjs', '');
+    .replace('.ts', '')
+    .replace('.js', '');
 
 // Find the Next REST Framework config from one of the docs route handlers.
 export const findConfig = async ({ configPath }: { configPath?: string }) => {
@@ -78,11 +48,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
 
   // Scan `app` or `src/app` folders for docs route handlers.
   const findAppRouterConfig = async (path: string) => {
-    const appRouterPath = join(
-      process.cwd(),
-      NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-      path
-    );
+    const appRouterPath = join(process.cwd(), path);
 
     if (existsSync(appRouterPath)) {
       const filteredRoutes = getNestedFiles(appRouterPath, '').filter(
@@ -91,19 +57,14 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
             return configPath === getRouteName(file);
           }
 
-          return true;
+          return file.endsWith('route.ts') || file.endsWith('route.js');
         }
       );
 
       await Promise.all(
         filteredRoutes.map(async (route) => {
           try {
-            const filePathToRoute = join(
-              process.cwd(),
-              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-              path,
-              route
-            );
+            const filePathToRoute = join(process.cwd(), path, route);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
             const res = await import(url).then((mod) => mod.default);
@@ -122,7 +83,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
                 });
               }
             }
-          } catch (e) {
+          } catch {
             // Route was not a docs handler.
           }
         })
@@ -138,11 +99,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
 
   // Scan `pages/api` or `src/pages/api` folders for docs API route handlers.
   const findPagesRouterConfig = async (path: string) => {
-    const pagesRouterPath = join(
-      process.cwd(),
-      NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-      path
-    );
+    const pagesRouterPath = join(process.cwd(), path);
 
     if (existsSync(pagesRouterPath)) {
       const filteredApiRoutes = getNestedFiles(pagesRouterPath, '').filter(
@@ -158,12 +115,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
       await Promise.all(
         filteredApiRoutes.map(async (route) => {
           try {
-            const filePathToRoute = join(
-              process.cwd(),
-              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-              path,
-              route
-            );
+            const filePathToRoute = join(process.cwd(), path, route);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
             const res = await import(url).then((mod) => mod.default);
@@ -281,11 +233,14 @@ export const generatePathsFromBuild = async ({
    * - Filter disallowed paths.
    */
   const getCleanedRoutes = (files: string[]) =>
-    files
-      .filter((file) => file.endsWith('route.cjs'))
-      .filter((file) => !file.includes('[...'))
-      .filter((file) => !file.endsWith('rpc/[operationId]/route.cjs'))
-      .filter((file) => isAllowedRoute(getRouteName(file)));
+    files.filter(
+      (file) =>
+        (file.endsWith('route.ts') || file.endsWith('route.js')) &&
+        !file.includes('[...') &&
+        !file.endsWith('rpc/[operationId]/route.ts') &&
+        !file.endsWith('rpc/[operationId]/route.js') &&
+        isAllowedRoute(getRouteName(file))
+    );
 
   /*
    * Filter RPC routes to include:
@@ -293,21 +248,29 @@ export const generatePathsFromBuild = async ({
    * - Filter disallowed paths.
    */
   const getCleanedRpcRoutes = (files: string[]) =>
-    files
-      .filter((file) => file.endsWith('rpc/[operationId]/route.cjs'))
-      .filter((file) => isAllowedRoute(getRouteName(file)));
+    files.filter(
+      (file) =>
+        (file.endsWith('rpc/[operationId]/route.ts') ||
+          file.endsWith('rpc/[operationId]/route.js')) &&
+        isAllowedRoute(getRouteName(file))
+    );
 
   /*
    * Filter the API routes to include:
+   * - Remove non-TS/JS files.
    * - Remove catch-all API routes.
    * - Filter RPC API routes.
    * - Filter disallowed paths.
    */
   const getCleanedApiRoutes = (files: string[]) =>
-    files
-      .filter((file) => !file.includes('[...'))
-      .filter((file) => !file.endsWith('rpc/[operationId].cjs'))
-      .filter((file) => isAllowedRoute(getApiRouteName(file)));
+    files.filter(
+      (file) =>
+        (file.endsWith('.ts') || file.endsWith('.js')) &&
+        !file.includes('[...') &&
+        !file.endsWith('rpc/[operationId].ts') &&
+        !file.endsWith('rpc/[operationId].js') &&
+        isAllowedRoute(getApiRouteName(file))
+    );
 
   /*
    * Filter RPC API routes to include:
@@ -315,9 +278,12 @@ export const generatePathsFromBuild = async ({
    * - Filter disallowed paths.
    */
   const getCleanedRpcApiRoutes = (files: string[]) =>
-    files
-      .filter((file) => file.endsWith('rpc/[operationId].cjs'))
-      .filter((file) => isAllowedRoute(getApiRouteName(file)));
+    files.filter(
+      (file) =>
+        (file.endsWith('rpc/[operationId].ts') ||
+          file.endsWith('rpc/[operationId].js')) &&
+        isAllowedRoute(getApiRouteName(file))
+    );
 
   const isNrfOasData = (x: unknown): x is NrfOasData => {
     if (typeof x !== 'object' || x === null) {
@@ -331,11 +297,7 @@ export const generatePathsFromBuild = async ({
 
   // Scan `app` or `src/app` folders for route handlers and get the OpenAPI paths.
   const collectAppRouterPaths = async (path: string) => {
-    const appRouterPath = join(
-      process.cwd(),
-      NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-      path
-    );
+    const appRouterPath = join(process.cwd(), path);
 
     if (existsSync(appRouterPath)) {
       const files = getNestedFiles(appRouterPath, '');
@@ -345,12 +307,7 @@ export const generatePathsFromBuild = async ({
       await Promise.all(
         [...routes, ...rpcRoutes].map(async (route) => {
           try {
-            const filePathToRoute = join(
-              process.cwd(),
-              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-              path,
-              route
-            );
+            const filePathToRoute = join(process.cwd(), path, route);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
             const res = await import(url).then((mod) => mod.default);
@@ -383,11 +340,7 @@ export const generatePathsFromBuild = async ({
 
   // Scan `pages/api` or `src/pages/api` folders for API route handlers and get the OpenAPI paths.
   const collectPagesRouterPaths = async (path: string) => {
-    const pagesRouterPath = join(
-      process.cwd(),
-      NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-      path
-    );
+    const pagesRouterPath = join(process.cwd(), path);
 
     if (existsSync(pagesRouterPath)) {
       const files = getNestedFiles(pagesRouterPath, '');
@@ -397,12 +350,7 @@ export const generatePathsFromBuild = async ({
       await Promise.all(
         [...apiRoutes, ...rpcApiRoutes].map(async (apiRoute) => {
           try {
-            const filePathToRoute = join(
-              process.cwd(),
-              NEXT_REST_FRAMEWORK_TEMP_FOLDER_NAME,
-              path,
-              apiRoute
-            );
+            const filePathToRoute = join(process.cwd(), path, apiRoute);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
             const res = await import(url).then((mod) => mod.default);

@@ -25,7 +25,9 @@ export default defineConfig({
     'src/index.ts',
     'src/constants.ts',
     'src/client/index.ts',
-    'src/cli/index.ts'
+    'src/cli/index.ts',
+    'src/cli/generate.ts',
+    'src/cli/validate.ts'
   ],
   bundle: true,
   esbuildPlugins: [uaParserDirnamePlugin()],

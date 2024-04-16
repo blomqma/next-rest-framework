@@ -1,15 +1,10 @@
 import { join } from 'path';
 import { findConfig, generateOpenApiSpec } from './utils';
 import { readFileSync } from 'fs';
-import { isEqualWith } from 'lodash';
 import chalk from 'chalk';
 
 // Check if the OpenAPI spec is up-to-date.
-export const validateOpenApiSpecFromBuild = async ({
-  configPath
-}: {
-  configPath?: string;
-}) => {
+export const validate = async ({ configPath }: { configPath?: string }) => {
   const config = await findConfig({ configPath });
 
   if (!config) {
@@ -23,7 +18,7 @@ export const validateOpenApiSpecFromBuild = async ({
     const data = readFileSync(path);
     const openApiSpec = JSON.parse(data.toString());
 
-    if (!isEqualWith(openApiSpec, spec)) {
+    if (!(JSON.stringify(openApiSpec) === JSON.stringify(spec))) {
       console.error(
         chalk.red(
           'API spec changed is not up-to-date. Run `next-rest-framework generate` to update it.'
