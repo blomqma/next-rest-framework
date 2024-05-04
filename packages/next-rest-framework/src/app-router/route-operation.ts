@@ -20,41 +20,36 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { type ZodSchema, type z } from 'zod';
 import { type ValidMethod } from '../constants';
 import { type I18NConfig } from 'next/dist/server/config-shared';
-import { type ResponseCookies } from 'next/dist/server/web/spec-extension/cookies';
 import { type NextURL } from 'next/dist/server/web/next-url';
 import { type OpenAPIV3_1 } from 'openapi-types';
+import { type ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies';
 
-export type TypedNextRequest<
-  Method = keyof typeof ValidMethod,
+interface TypedSearchParams<Query = BaseQuery> extends URLSearchParams {
+  get: <K extends keyof Query & string>(key: K) => string | null;
+  getAll: <K extends keyof Query & string>(key: K) => string[];
+}
+
+interface TypedNextURL<Query = BaseQuery> extends NextURL {
+  searchParams: TypedSearchParams<Query>;
+}
+
+export interface TypedNextRequest<
+  Method extends string = keyof typeof ValidMethod,
   ContentType = BaseContentType,
   Body = unknown,
   Query = BaseQuery
-> = Modify<
-  NextRequest,
-  {
-    method: Method;
-    /*! Prevent parsing JSON body for GET requests. Form requests return parsed form data as JSON when the form schema is defined. */
-    json: Method extends 'GET' ? never : () => Promise<Body>;
-    /*! Prevent parsing form data for GET and non-form requests. */
-    formData: Method extends 'GET'
-      ? never
-      : ContentType extends FormDataContentType
-      ? () => Promise<TypedFormData<Body>>
-      : never;
-    nextUrl: Modify<
-      NextURL,
-      {
-        searchParams: Modify<
-          URLSearchParams,
-          {
-            get: (key: keyof Query) => string | null;
-            getAll: (key: keyof Query) => string[];
-          }
-        >;
-      }
-    >;
-  }
->;
+> extends NextRequest {
+  method: Method;
+  /*! Prevent parsing JSON body for GET requests. Form requests return parsed form data as JSON when the form schema is defined. */
+  json: Method extends 'GET' ? never : () => Promise<Body>;
+  /*! Prevent parsing form data for GET and non-form requests. */
+  formData: Method extends 'GET'
+    ? never
+    : ContentType extends FormDataContentType
+    ? () => Promise<TypedFormData<Body>>
+    : never;
+  nextUrl: TypedNextURL<Query>;
+}
 
 type TypedHeaders<ContentType extends BaseContentType> = Modify<
   Record<string, string>,
@@ -165,11 +160,7 @@ type RouteMiddleware<
   req: NextRequest,
   context: { params: BaseParams },
   options: InputOptions
-) =>
-  | Promise<TypedResponse>
-  | TypedResponse
-  | Promise<OutputOptions>
-  | OutputOptions;
+) => Promise<TypedResponse | OutputOptions> | TypedResponse | OutputOptions;
 
 type TypedRouteHandler<
   Method extends keyof typeof ValidMethod = keyof typeof ValidMethod,

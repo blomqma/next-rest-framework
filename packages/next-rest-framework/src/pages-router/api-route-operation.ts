@@ -44,7 +44,7 @@ export type TypedNextApiRequest<
   }
 >;
 
-type TypedNextApiResponse<Body, Status, ContentType> = Modify<
+export type TypedNextApiResponse<Body, Status, ContentType> = Modify<
   NextApiResponse<Body>,
   {
     status: (status: Status) => TypedNextApiResponse<Body, Status, ContentType>;

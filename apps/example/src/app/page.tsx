@@ -58,7 +58,7 @@ export default function Page() {
             </a>
           </li>
           <li>
-            <a className="link link-primary" href="/api/v2">
+            <a className="link link-primary" href="/api/v1">
               SwaggerUI
             </a>
           </li>

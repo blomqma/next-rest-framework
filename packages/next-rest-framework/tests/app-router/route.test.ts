@@ -2,7 +2,6 @@ import { z } from 'zod';
 import { TypedNextResponse, route, routeOperation } from '../../src/app-router';
 import { DEFAULT_ERRORS, ValidMethod } from '../../src/constants';
 import { createMockRouteRequest } from '../utils';
-import { NextResponse } from 'next/server';
 import { validateSchema } from '../../src/shared';
 import { zfd } from 'zod-form-data';
 
@@ -25,7 +24,7 @@ describe('route', () => {
               body: z.array(z.string())
             }
           ])
-          .handler(() => NextResponse.json(data));
+          .handler(() => TypedNextResponse.json(data));
 
       const res = await route({
         testGet: getOperation('GET'),
@@ -353,7 +352,7 @@ describe('route', () => {
         ])
         .handler(async (req) => {
           const { foo } = await req.json();
-          return NextResponse.json({ foo });
+          return TypedNextResponse.json({ foo });
         })
     }).POST(req, context);
 
@@ -542,7 +541,7 @@ describe('route', () => {
     const res = await route({
       test: routeOperation({ method: 'GET' })
         .middleware(() => {
-          return NextResponse.json({ foo: 'bar' }, { status: 200 });
+          return TypedNextResponse.json({ foo: 'bar' }, { status: 200 });
         })
         .handler(() => {
           console.log('foo');
@@ -591,7 +590,7 @@ describe('route', () => {
           console.log({ options: true, ...options });
           console.log({ 'x-foo': req.headers.get('x-foo') });
           console.log({ 'x-bar': req.headers.get('x-bar') });
-          return NextResponse.json(options);
+          return TypedNextResponse.json(options);
         })
     }).POST(req, context);
 
@@ -656,7 +655,7 @@ describe('route', () => {
         })
         .handler((_req, _ctx, options) => {
           console.log('handler');
-          return NextResponse.json(options);
+          return TypedNextResponse.json(options);
         })
     }).GET(req, context);
 
