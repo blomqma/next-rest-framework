@@ -179,21 +179,24 @@ export type FormDataContentType =
   | 'application/x-www-form-urlencoded'
   | 'multipart/form-data';
 
-export type TypedFormData<T> = Modify<
-  FormData,
-  {
-    append: <K extends keyof T>(name: K, value: T[K] | Blob) => void;
-    delete: <K extends keyof T>(name: K) => void;
-    get: <K extends keyof T>(name: K) => T[K];
-    getAll: <K extends keyof T>(name: K) => Array<T[K]>;
-    has: <K extends keyof T>(name: K) => boolean;
-    set: <K extends keyof T>(name: K, value: T[K] | Blob) => void;
-    forEach: <K extends keyof T>(
-      callbackfn: (value: T[K], key: T, parent: TypedFormData<T>) => void,
-      thisArg?: any
-    ) => void;
-  }
->;
+export interface TypedFormData<T> extends FormData {
+  append: <K extends keyof T>(name: K, value: Blob | string) => void;
+  delete: <K extends keyof T & string>(name: K) => void;
+  get: <K extends keyof T & string>(name: K) => T[K] & FormDataEntryValue;
+  getAll: <K extends keyof T & string>(
+    name: K
+  ) => Array<T[K]> & FormDataEntryValue[];
+  has: <K extends keyof T & string>(name: K) => boolean;
+  set: <K extends keyof T>(name: K, value: Blob | string) => void;
+  forEach: <K extends keyof T & string>(
+    callbackfn: (
+      value: T[K] & FormDataEntryValue,
+      key: K,
+      parent: TypedFormData<T>
+    ) => void,
+    thisArg?: any
+  ) => void;
+}
 
 interface FormDataLikeInput {
   [Symbol.iterator]: () => IterableIterator<[string, FormDataEntryValue]>;
