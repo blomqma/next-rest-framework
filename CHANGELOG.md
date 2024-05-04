@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.0 - 2024-05-04
+
+#### Fixed
+
+- Fix TS errors when using an async middleware.
+
+#### Added
+
+- Export typings for `TypedNextRequest`, `TypedNextApiRequest` and `TypedNextApiResponse` so that they can be used for custom abstractions.
+
 ### 6.0.0-beta.4 - 2024-04-17
 
 #### Fixed
