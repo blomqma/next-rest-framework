@@ -10,9 +10,12 @@ import {
 export const docsRoute = (_config?: NextRestFrameworkConfig) => {
   const config = getConfig(_config);
 
-  const handler = async (req: NextRequest, _context: { params: BaseQuery }) => {
+  const handler = async (
+    _req: NextRequest,
+    _context: { params: BaseQuery }
+  ) => {
     try {
-      const host = req.headers.get('host') ?? '';
+      const host = _req.clone().headers.get('host') ?? '';
       const html = getHtmlForDocs({ config, host });
 
       return new NextResponse(html, {
