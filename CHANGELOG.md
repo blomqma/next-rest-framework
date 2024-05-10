@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.1 - 2024-05-10
+
+#### Fixed
+
+- Fix dynamic server usage in app router docs endpoint by reading the headers from a cloned request object.
+
 ### 6.0.0 - 2024-05-04
 
 #### Fixed
