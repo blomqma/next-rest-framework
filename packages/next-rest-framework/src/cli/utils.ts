@@ -83,8 +83,9 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
                 });
               }
             }
-          } catch {
+          } catch(e) {
             // Route was not a docs handler.
+            console.error(chalk.red(`Routes generation Error ${e.message}`));
           }
         })
       );
