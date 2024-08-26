@@ -315,7 +315,9 @@ describe('route', () => {
     }).POST(req, context);
 
     const json = await res?.json();
+    const headers = res?.headers;
     expect(res?.status).toEqual(415);
+    expect(headers?.get('Allow')).toEqual('application/json');
 
     expect(json).toEqual({
       message: DEFAULT_ERRORS.invalidMediaType

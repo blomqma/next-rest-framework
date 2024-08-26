@@ -4,6 +4,8 @@ import {
   DEFAULT_DESCRIPTION,
   DEFAULT_ERRORS,
   DEFAULT_TITLE,
+  ERROR_MESSAGE_SCHEMA,
+  MESSAGE_WITH_ERRORS_SCHEMA,
   VERSION,
   ValidMethod
 } from '../src/constants';
@@ -170,15 +172,8 @@ export const getExpectedSpec = ({
   const paths: OpenAPIV3_1.PathsObject = {};
 
   const defaultSchemas: Record<string, OpenAPIV3_1.SchemaObject> = {
-    UnexpectedError: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        message: {
-          type: 'string'
-        }
-      }
-    }
+    MessageWithErrors: MESSAGE_WITH_ERRORS_SCHEMA,
+    ErrorMessage: ERROR_MESSAGE_SCHEMA
   };
 
   let schemas: Record<string, OpenAPIV3_1.SchemaObject> = {};

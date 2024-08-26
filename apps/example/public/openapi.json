@@ -30,11 +30,19 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageWithErrors" }
+              }
+            }
+          },
           "500": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -69,7 +77,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -94,7 +102,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -119,7 +127,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -165,7 +173,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -197,7 +205,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -228,10 +236,21 @@
             }
           },
           "400": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Error response.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": {
+                  "oneOf": [
+                    {
+                      "description": "Invalid request body.",
+                      "$ref": "#/components/schemas/MessageWithErrors"
+                    },
+                    {
+                      "description": "An unknown error occurred, trying again might help.",
+                      "$ref": "#/components/schemas/ErrorMessage"
+                    }
+                  ]
+                }
               }
             }
           }
@@ -265,7 +284,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -299,7 +318,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -324,7 +343,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -349,7 +368,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -390,7 +409,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -425,7 +444,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -466,7 +485,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -505,11 +524,19 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageWithErrors" }
+              }
+            }
+          },
           "500": {
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -544,7 +571,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -569,7 +596,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -594,7 +621,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -640,7 +667,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -672,7 +699,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -703,10 +730,21 @@
             }
           },
           "400": {
-            "description": "An unknown error occurred, trying again might help.",
+            "description": "Error response.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": {
+                  "oneOf": [
+                    {
+                      "description": "Invalid request body.",
+                      "$ref": "#/components/schemas/MessageWithErrors"
+                    },
+                    {
+                      "description": "An unknown error occurred, trying again might help.",
+                      "$ref": "#/components/schemas/ErrorMessage"
+                    }
+                  ]
+                }
               }
             }
           }
@@ -740,7 +778,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -774,7 +812,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -799,7 +837,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -824,7 +862,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -865,7 +903,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -900,7 +938,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -941,7 +979,7 @@
             "description": "An unknown error occurred, trying again might help.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UnexpectedError" }
+                "schema": { "$ref": "#/components/schemas/ErrorMessage" }
               }
             }
           }
@@ -1000,6 +1038,11 @@
         "required": ["message"],
         "additionalProperties": false,
         "description": "TODO deleted message."
+      },
+      "ErrorMessage": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "additionalProperties": false
       },
       "FormDataMultipartRequestBody": {
         "description": "Test form description.",
@@ -1113,6 +1156,39 @@
         },
         "description": "List of TODOs."
       },
+      "MessageWithErrors": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["code", "path", "message"],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "description": "Discriminator field for the Zod issue type."
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [{ "type": "string" }, { "type": "number" }]
+                  },
+                  "description": "Path to the error in the validated object, represented as an array of strings and/or numbers."
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Human-readable message describing the validation error."
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": ["message"],
+        "additionalProperties": false
+      },
       "MultipartFormData200ResponseBody": {
         "description": "File response.",
         "type": "string",
@@ -1127,11 +1203,6 @@
         }
       },
       "RouteWithExternalDep200ResponseBody": { "type": "string" },
-      "UnexpectedError": {
-        "type": "object",
-        "properties": { "message": { "type": "string" } },
-        "additionalProperties": false
-      },
       "UrlEncodedFormData200ResponseBody": {
         "type": "object",
         "properties": { "text": { "type": "string" } },
