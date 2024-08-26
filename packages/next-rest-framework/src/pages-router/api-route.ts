@@ -106,6 +106,7 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
         const contentType = req.headers['content-type']?.split(';')[0];
 
         if (contentTypeSchema && contentType !== contentTypeSchema) {
+          res.setHeader('Allow', contentTypeSchema);
           res.status(415).json({
             message: `${DEFAULT_ERRORS.invalidMediaType} Expected ${contentTypeSchema}.`
           });

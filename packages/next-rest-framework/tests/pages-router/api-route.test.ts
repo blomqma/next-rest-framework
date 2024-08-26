@@ -312,6 +312,7 @@ describe('apiRoute', () => {
     })(req, res);
 
     expect(res.statusCode).toEqual(415);
+    expect(res._getHeaders().allow).toEqual('application/json');
 
     expect(res._getJSONData()).toEqual({
       message: `${DEFAULT_ERRORS.invalidMediaType} Expected application/json.`

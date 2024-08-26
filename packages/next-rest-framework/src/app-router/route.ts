@@ -114,7 +114,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         if (contentTypeSchema && contentType !== contentTypeSchema) {
           return NextResponse.json(
             { message: DEFAULT_ERRORS.invalidMediaType },
-            { status: 415 }
+            { status: 415, headers: { Allow: contentTypeSchema } }
           );
         }
 

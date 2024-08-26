@@ -1,6 +1,14 @@
 import { type OpenApiPathItem, type OpenApiOperation } from '../types';
 import { type OpenAPIV3_1 } from 'openapi-types';
-import { DEFAULT_ERRORS } from '../constants';
+import {
+  ERROR_MESSAGE_SCHEMA,
+  INVALID_PATH_PARAMETERS_RESPONSE,
+  INVALID_QUERY_PARAMETERS_RESPONSE,
+  INVALID_REQUEST_BODY_RESPONSE,
+  INVALID_RPC_REQUEST_RESPONSE,
+  MESSAGE_WITH_ERRORS_SCHEMA,
+  UNEXPECTED_ERROR_RESPONSE
+} from '../constants';
 import { merge } from 'lodash';
 
 import { getJsonSchema } from './schemas';
@@ -47,6 +55,13 @@ export const getPathsFromRoute = ({
     string,
     Array<{ key: string; ref: string; schema: OpenAPIV3_1.SchemaObject }>
   > = {};
+
+  const baseResponseBodySchemaMapping: Record<
+    string,
+    OpenAPIV3_1.SchemaObject
+  > = {
+    ErrorMessage: ERROR_MESSAGE_SCHEMA
+  };
 
   Object.entries(operations).forEach(
     ([operationId, { openApiOperation, method: _method, input, outputs }]: [
@@ -106,6 +121,31 @@ export const getPathsFromRoute = ({
 
       const usedStatusCodes: number[] = [];
 
+      const baseOperationResponses: OpenAPIV3_1.ResponsesObject = {
+        500: UNEXPECTED_ERROR_RESPONSE
+      };
+
+      if (input?.bodySchema) {
+        baseOperationResponses[400] = INVALID_REQUEST_BODY_RESPONSE;
+
+        baseResponseBodySchemaMapping.MessageWithErrors =
+          MESSAGE_WITH_ERRORS_SCHEMA;
+      }
+
+      if (input?.querySchema) {
+        baseOperationResponses[400] = INVALID_QUERY_PARAMETERS_RESPONSE;
+
+        baseResponseBodySchemaMapping.InvalidQueryParameters =
+          MESSAGE_WITH_ERRORS_SCHEMA;
+      }
+
+      if (input?.paramsSchema) {
+        baseOperationResponses[400] = INVALID_PATH_PARAMETERS_RESPONSE;
+
+        baseResponseBodySchemaMapping.InvalidPathParameters =
+          MESSAGE_WITH_ERRORS_SCHEMA;
+      }
+
       generatedOperationObject.responses = outputs?.reduce(
         (obj, { status, contentType, body, bodySchema, name }) => {
           const occurrenceOfStatusCode = usedStatusCodes.includes(status)
@@ -161,18 +201,7 @@ export const getPathsFromRoute = ({
             }
           });
         },
-        {
-          500: {
-            description: DEFAULT_ERRORS.unexpectedError,
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: `#/components/schemas/UnexpectedError`
-                }
-              }
-            }
-          }
-        }
+        baseOperationResponses
       );
 
       let pathParameters: OpenAPIV3_1.ParameterObject[] = [];
@@ -274,15 +303,7 @@ export const getPathsFromRoute = ({
         acc[key] = schema;
         return acc;
       },
-      {
-        UnexpectedError: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' }
-          },
-          additionalProperties: false
-        }
-      }
+      baseResponseBodySchemaMapping
     );
 
   const schemas: Record<string, OpenAPIV3_1.SchemaObject> = {
@@ -325,6 +346,13 @@ export const getPathsFromRpcRoute = ({
       schema: OpenAPIV3_1.SchemaObject;
     }>
   > = {};
+
+  const baseResponseBodySchemaMapping: Record<
+    string,
+    OpenAPIV3_1.SchemaObject
+  > = {
+    ErrorMessage: ERROR_MESSAGE_SCHEMA
+  };
 
   Object.entries(operations).forEach(
     ([
@@ -377,6 +405,16 @@ export const getPathsFromRpcRoute = ({
         };
       }
 
+      const baseOperationResponses: OpenAPIV3_1.ResponsesObject = {};
+
+      if (input?.bodySchema) {
+        baseOperationResponses[400] = INVALID_RPC_REQUEST_RESPONSE;
+        baseResponseBodySchemaMapping.MessageWithErrors =
+          MESSAGE_WITH_ERRORS_SCHEMA;
+      } else {
+        baseOperationResponses[400] = UNEXPECTED_ERROR_RESPONSE;
+      }
+
       generatedOperationObject.responses = outputs?.reduce(
         (obj, { body, bodySchema, contentType, name }, i) => {
           const key =
@@ -421,18 +459,7 @@ export const getPathsFromRpcRoute = ({
             }
           });
         },
-        {
-          400: {
-            description: DEFAULT_ERRORS.unexpectedError,
-            content: {
-              'application/json': {
-                schema: {
-                  $ref: `#/components/schemas/UnexpectedError`
-                }
-              }
-            }
-          }
-        }
+        baseOperationResponses
       );
 
       paths[route] = {
@@ -459,15 +486,7 @@ export const getPathsFromRpcRoute = ({
         acc[key] = schema;
         return acc;
       },
-      {
-        UnexpectedError: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' }
-          },
-          additionalProperties: false
-        }
-      }
+      baseResponseBodySchemaMapping
     );
 
   const schemas: Record<string, OpenAPIV3_1.SchemaObject> = {
