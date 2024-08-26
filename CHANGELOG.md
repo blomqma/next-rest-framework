@@ -1,6 +1,16 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.2 - 2024-08-27
+
+#### Fixed
+
+- Fix inferred request body type for RPC API routes.
+
+### Added
+
+- Add dynamically included JSON schemas for request body, query and path parameter validation errors when validation schemas for them exist.
+
 ### 6.0.1 - 2024-05-10
 
 #### Fixed
