@@ -38,7 +38,7 @@ export type TypedNextApiRequest<
       ? never
       : ContentType extends FormDataContentType
       ? TypedFormData<Body>
-      : never;
+      : Body;
     query: QueryAndParams;
     method: ValidMethod;
   }
