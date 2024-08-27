@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.4 - 2024-08-27
+
+#### Fixed
+
+- Add support for CJS imports in generate.
+
 ### 6.0.3 - 2024-08-27
 
 #### Added
