@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.3 - 2024-08-27
+
+#### Added
+
+- Add proper error handling for generating OpenAPI paths from routes & API routes.
+
 ### 6.0.2 - 2024-08-27
 
 #### Fixed
