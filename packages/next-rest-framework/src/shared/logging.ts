@@ -24,3 +24,18 @@ export const logNextRestFrameworkError = (error: unknown) => {
 ${error}`)
   );
 };
+
+export const logGenerateErrorForRoute = (path: string, error: unknown) => {
+  console.info(
+    chalk.yellow(`---
+Error while importing ${path}, skipping path...`)
+  );
+
+  console.error(chalk.red(error));
+
+  console.info(
+    chalk.yellow(
+      `If you don't want this path to be part of your generated OpenAPI spec and want to prevent seeing this error in the future, please add ${path} to 'deniedPaths'.`
+    )
+  );
+};

@@ -4,7 +4,7 @@ import { type NextRestFrameworkConfig } from '../types';
 import { existsSync, readdirSync } from 'fs';
 import { type OpenAPIV3_1 } from 'openapi-types';
 import { join } from 'path';
-import { isValidMethod } from '../shared';
+import { isValidMethod, logGenerateErrorForRoute } from '../shared';
 import { merge } from 'lodash';
 import { OPEN_API_VERSION } from './constants';
 
@@ -83,8 +83,8 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
                 });
               }
             }
-          } catch {
-            // Route was not a docs handler.
+          } catch (e) {
+            logGenerateErrorForRoute(getRouteName(route), e);
           }
         })
       );
@@ -128,8 +128,8 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
                 config: _config
               });
             }
-          } catch {
-            // API route was not a docs handler.
+          } catch (e) {
+            logGenerateErrorForRoute(getApiRouteName(route), e);
           }
         })
       );
@@ -317,6 +317,12 @@ export const generatePathsFromBuild = async ({
               .map(([_key, handler]) => handler);
 
             for (const handler of handlers) {
+              const isDocsHandler = !!handler._nextRestFrameworkConfig;
+
+              if (isDocsHandler) {
+                continue;
+              }
+
               const data = await handler._getPathsForRoute(getRouteName(route));
 
               if (isNrfOasData(data)) {
@@ -324,8 +330,8 @@ export const generatePathsFromBuild = async ({
                 schemas = { ...schemas, ...data.schemas };
               }
             }
-          } catch {
-            // Route was not a route handler.
+          } catch (e) {
+            logGenerateErrorForRoute(getRouteName(route), e);
           }
         })
       );
@@ -355,6 +361,12 @@ export const generatePathsFromBuild = async ({
             const url = new URL(`file://${filePathToRoute}`).toString();
             const res = await import(url).then((mod) => mod.default);
 
+            const isDocsHandler = !!res.default._nextRestFrameworkConfig;
+
+            if (isDocsHandler) {
+              return;
+            }
+
             const data = await res.default._getPathsForRoute(
               getApiRouteName(apiRoute)
             );
@@ -363,8 +375,8 @@ export const generatePathsFromBuild = async ({
               paths = { ...paths, ...data.paths };
               schemas = { ...schemas, ...data.schemas };
             }
-          } catch {
-            // Route was not an API route handler.
+          } catch (e) {
+            logGenerateErrorForRoute(getApiRouteName(apiRoute), e);
           }
         })
       );
