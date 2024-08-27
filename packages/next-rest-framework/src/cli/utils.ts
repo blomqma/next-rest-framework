@@ -67,7 +67,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
             const filePathToRoute = join(process.cwd(), path, route);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
+            const res = await import(url).then((mod) => mod.default || mod);
 
             const handlers: any[] = Object.entries(res)
               .filter(([key]) => isValidMethod(key))
@@ -118,7 +118,7 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
             const filePathToRoute = join(process.cwd(), path, route);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
+            const res = await import(url).then((mod) => mod.default || mod);
 
             const _config = res.default._nextRestFrameworkConfig;
 
@@ -310,7 +310,7 @@ export const generatePathsFromBuild = async ({
             const filePathToRoute = join(process.cwd(), path, route);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
+            const res = await import(url).then((mod) => mod.default || mod);
 
             const handlers: any[] = Object.entries(res)
               .filter(([key]) => isValidMethod(key))
@@ -359,7 +359,7 @@ export const generatePathsFromBuild = async ({
             const filePathToRoute = join(process.cwd(), path, apiRoute);
 
             const url = new URL(`file://${filePathToRoute}`).toString();
-            const res = await import(url).then((mod) => mod.default);
+            const res = await import(url).then((mod) => mod.default || mod);
 
             const isDocsHandler = !!res.default._nextRestFrameworkConfig;
 
