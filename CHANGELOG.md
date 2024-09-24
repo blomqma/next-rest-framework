@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.5 - 2024-09-24
+
+#### Changed
+
+- Silence generate errors for finding NRF config from docs routes.
+
 ### 6.0.4 - 2024-08-27
 
 #### Fixed
