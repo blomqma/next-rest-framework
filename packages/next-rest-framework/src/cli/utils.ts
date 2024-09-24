@@ -83,8 +83,8 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
                 });
               }
             }
-          } catch (e) {
-            logGenerateErrorForRoute(getRouteName(route), e);
+          } catch {
+            // The route was not a docs route.
           }
         })
       );
@@ -128,8 +128,8 @@ export const findConfig = async ({ configPath }: { configPath?: string }) => {
                 config: _config
               });
             }
-          } catch (e) {
-            logGenerateErrorForRoute(getApiRouteName(route), e);
+          } catch {
+            // The API route was not a docs API route.
           }
         })
       );
