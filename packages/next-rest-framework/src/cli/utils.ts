@@ -285,6 +285,11 @@ export const generatePathsFromBuild = async ({
         isAllowedRoute(getApiRouteName(file))
     );
 
+  // Filter route group names, /(backend)/todos => /todos
+  const removeBracketedContent = (path: string) => {
+    return path.replace(/\/?\([^)]*\)/g, '').replace(/\/+/g, '/');
+  };
+
   const isNrfOasData = (x: unknown): x is NrfOasData => {
     if (typeof x !== 'object' || x === null) {
       return false;
@@ -367,9 +372,9 @@ export const generatePathsFromBuild = async ({
               return;
             }
 
-            const data = await res.default._getPathsForRoute(
-              getApiRouteName(apiRoute)
-            );
+            const cleanedApiRouteName = removeBracketedContent(getApiRouteName(apiRoute));
+
+            const data = await res.default._getPathsForRoute(cleanedApiRouteName);
 
             if (isNrfOasData(data)) {
               paths = { ...paths, ...data.paths };
