@@ -286,7 +286,7 @@ export const generatePathsFromBuild = async ({
     );
 
   // Filter route group names, /(backend)/todos => /todos
-  const removeBracketedContent = (path: string) => {
+  const removeRouteGroupNames = (path: string) => {
     return path.replace(/\/?\([^)]*\)/g, '').replace(/\/+/g, '/');
   };
 
@@ -372,7 +372,7 @@ export const generatePathsFromBuild = async ({
               return;
             }
 
-            const cleanedApiRouteName = removeBracketedContent(getApiRouteName(apiRoute));
+            const cleanedApiRouteName = removeRouteGroupNames(getApiRouteName(apiRoute));
 
             const data = await res.default._getPathsForRoute(cleanedApiRouteName);
 
