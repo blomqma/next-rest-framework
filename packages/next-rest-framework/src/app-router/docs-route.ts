@@ -12,7 +12,7 @@ export const docsRoute = (_config?: NextRestFrameworkConfig) => {
 
   const handler = async (
     _req: NextRequest,
-    _context: { params: BaseQuery }
+    _context: { params: Promise<BaseQuery> }
   ) => {
     try {
       const host = _req.clone().headers.get('host') ?? '';
