@@ -27,7 +27,8 @@ const getRouteName = (file: string) =>
     .replace('/route.js', '')
     .replace(/\\/g, '/')
     .replaceAll('[', '{')
-    .replaceAll(']', '}');
+    .replaceAll(']', '}')
+    .replace(/\/?\([^)]*\)/g, ''); // Remove route groups.
 
 // Convert file path of an API route to an API route name.
 const getApiRouteName = (file: string) =>
