@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.6 - 2025-04-13
+
+#### Fixed
+
+- Do not include route group names to generated OpenAPI spec.
+
 ### 6.0.5 - 2024-09-24
 
 #### Changed
