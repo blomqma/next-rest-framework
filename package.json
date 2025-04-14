@@ -29,7 +29,7 @@
     "next": "14.0.3",
     "prettier": "3.0.2",
     "typescript": "5.2.2",
-    "zod": "3.22.2"
+    "zod": "3.22.3"
   },
   "prettier": {
     "semi": true,
