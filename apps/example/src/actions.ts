@@ -18,7 +18,7 @@ export const getTodos = rpcOperation()
       contentType: 'application/json'
     }
   ])
-  .handler(() => {
+  .handler(async () => {
     return MOCK_TODOS;
   });
 
@@ -41,7 +41,7 @@ export const getTodoById = rpcOperation()
       contentType: 'application/json'
     }
   ])
-  .handler((id) => {
+  .handler(async (id) => {
     const todo = MOCK_TODOS.find((t) => t.id === Number(id));
 
     if (!todo) {
@@ -81,7 +81,7 @@ export const deleteTodo = rpcOperation()
       contentType: 'application/json'
     }
   ])
-  .handler((id) => {
+  .handler(async (id) => {
     const todo = MOCK_TODOS.find((t) => t.id === Number(id));
 
     if (!todo) {
@@ -104,7 +104,7 @@ export const formDataUrlEncoded = rpcOperation()
       contentType: 'application/json'
     }
   ])
-  .handler((formData) => {
+  .handler(async (formData) => {
     return {
       text: formData.get('text')
     };
@@ -141,7 +141,7 @@ export const formDataMultipart = rpcOperation()
       contentType: 'application/json'
     }
   ])
-  .handler((formData) => {
+  .handler(async (formData) => {
     const file = formData.get('file');
     return file;
   });

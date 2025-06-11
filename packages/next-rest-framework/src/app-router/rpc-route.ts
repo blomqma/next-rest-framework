@@ -29,7 +29,7 @@ export const rpcRoute = <
 ) => {
   const handler = async (
     req: NextRequest,
-    { params }: { params: BaseParams }
+    { params }: { params: Promise<BaseParams> }
   ) => {
     try {
       if (req.method !== ValidMethod.POST) {
@@ -44,7 +44,7 @@ export const rpcRoute = <
         );
       }
 
-      const operation = operations[params.operationId ?? ''];
+      const operation = operations[(await params).operationId ?? ''];
 
       if (!operation) {
         return NextResponse.json(
