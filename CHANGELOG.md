@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.0.7 - 2025-04-13
+
+#### Changed
+
+- Add support for Next.js 15.
+
 ### 6.0.6 - 2025-04-13
 
 #### Fixed
