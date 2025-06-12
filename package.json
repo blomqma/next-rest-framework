@@ -6,8 +6,8 @@
     "build": "pnpm --filter next-rest-framework run build",
     "test": "pnpm --filter next-rest-framework run test",
     "test:watch": "pnpm --filter next-rest-framework run test:watch",
-    "format": "prettier --write '**/*.{ts,json}' && eslint --fix --max-warnings=0 --ext=.ts .",
-    "lint": "pnpm run -r lint && prettier --check '**/*.{ts,json}' && eslint --max-warnings=0 --ext=.ts . && swagger-cli validate ./apps/example/public/openapi.json",
+    "format": "prettier --write . && eslint --fix --max-warnings=0 --ext=.ts .",
+    "lint": "pnpm run -r lint && prettier --check . && eslint --max-warnings=0 --ext=.ts . && swagger-cli validate ./apps/example/public/openapi.json",
     "ci": "pnpm run build && pnpm run lint && pnpm run test"
   },
   "dependencies": {
