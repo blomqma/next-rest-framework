@@ -38,7 +38,7 @@ export const createMockRouteRequest = <Body, Query>({
   headers?: Record<string, string>;
 }): {
   req: NextRequest;
-  context: { params: typeof params };
+  context: { params: Promise<typeof params> };
 } => ({
   req: new NextRequest(`http://localhost:3000${path}?${qs.stringify(query)}`, {
     method,
@@ -52,7 +52,7 @@ export const createMockRouteRequest = <Body, Query>({
       ...headers
     }
   }),
-  context: { params }
+  context: { params: Promise.resolve(params) }
 });
 
 export const createMockRpcRouteRequest = <Body>({
@@ -69,7 +69,7 @@ export const createMockRpcRouteRequest = <Body>({
   headers?: Record<string, string>;
 } = {}): {
   req: NextRequest;
-  context: { params: { operationId: typeof operation } };
+  context: { params: Promise<{ operationId: typeof operation }> };
 } => {
   const { req } = createMockRouteRequest({
     path,
@@ -80,7 +80,7 @@ export const createMockRpcRouteRequest = <Body>({
     }
   });
 
-  return { req, context: { params: { operationId: operation } } };
+  return { req, context: { params: Promise.resolve({ operationId: operation }) } };
 };
 
 export const createMockApiRouteRequest = <
