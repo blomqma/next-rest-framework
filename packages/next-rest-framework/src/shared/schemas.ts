@@ -1,5 +1,5 @@
 import { type OpenAPIV3_1 } from 'openapi-types';
-import { z, type ZodObject, type ZodType } from 'zod';
+import { z, type ZodArray, type ZodObject, type ZodType } from 'zod';
 import { type zfd } from 'zod-form-data';
 import chalk from 'chalk';
 
@@ -8,6 +8,9 @@ const isZodSchema = (schema: unknown): schema is ZodType =>
 
 const isZodObjectSchema = (schema: unknown): schema is ZodObject =>
   isZodSchema(schema) && 'shape' in schema;
+
+const isZodArraySchema = (schema: ZodType): schema is ZodArray<ZodType> =>
+  schema.def.type === 'array' && 'element' in schema;
 
 const zodSchemaValidator = <T>({
   schema,
@@ -53,6 +56,29 @@ export const validateSchema = <T>({
 
 type SchemaType = 'input-params' | 'input-query' | 'input-body' | 'output-body';
 
+// Helper function to register descriptions in a local Zod registry
+const registerDescriptions = (
+  schema: ZodType,
+  registry: z.core.$ZodRegistry<{ description?: string }>
+): void => {
+  // Register description for the schema itself
+  if (schema.description) {
+    registry.add(schema, { description: schema.description });
+  }
+
+  // For object schemas, register descriptions for each property
+  if (isZodObjectSchema(schema)) {
+    Object.values(schema.shape).forEach((propSchema) => {
+      registerDescriptions(propSchema, registry);
+    });
+  }
+
+  // For array schemas, register description for the element type
+  if (isZodArraySchema(schema)) {
+    registerDescriptions(schema.element, registry);
+  }
+};
+
 export const getJsonSchema = ({
   schema,
   operationId,
@@ -64,6 +90,12 @@ export const getJsonSchema = ({
 }): OpenAPIV3_1.SchemaObject => {
   if (isZodSchema(schema)) {
     try {
+      // Create a local registry to avoid global registry conflicts (see: https://github.com/colinhacks/zod/issues/4145)
+      const localRegistry = z.core.registry<{ description?: string }>();
+
+      // Register descriptions in the local registry so toJSONSchema can access them
+      registerDescriptions(schema, localRegistry);
+
       // For input schemas, use 'input' to get what the API accepts (before transformations)
       // For output schemas, use 'output' to get what the API returns (after transformations)
       const io = type === 'output-body' ? 'output' : 'input';
@@ -71,7 +103,8 @@ export const getJsonSchema = ({
       return z.toJSONSchema(schema, {
         target: 'openapi-3.0',
         unrepresentable: 'any', // Allow unrepresentable types (date, bigint, etc.) to be converted to {}
-        io
+        io,
+        metadata: localRegistry
       }) as OpenAPIV3_1.SchemaObject;
     } catch (error) {
       const solutions: Record<SchemaType, string> = {
