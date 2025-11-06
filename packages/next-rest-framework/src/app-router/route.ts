@@ -65,7 +65,11 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
       let middlewareOptions: BaseOptions = {};
 
       if (middleware1) {
-        const res = await middleware1(reqClone, {...context, params: await context.params}, middlewareOptions);
+        const res = await middleware1(
+          reqClone,
+          { ...context, params: await context.params },
+          middlewareOptions
+        );
 
         const isOptionsResponse = (res: unknown): res is BaseOptions =>
           typeof res === 'object';
@@ -77,7 +81,11 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         }
 
         if (middleware2) {
-          const res2 = await middleware2(reqClone, {...context, params: await context.params}, middlewareOptions);
+          const res2 = await middleware2(
+            reqClone,
+            { ...context, params: await context.params },
+            middlewareOptions
+          );
 
           if (res2 instanceof Response) {
             return res2;
@@ -88,7 +96,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
           if (middleware3) {
             const res3 = await middleware3(
               reqClone,
-              {...context, params: await context.params},
+              { ...context, params: await context.params },
               middlewareOptions
             );
 
@@ -193,7 +201,9 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
               reqClone.formData = async () => {
                 const formData = new FormData();
 
-                for (const [key, value] of Object.entries(result.data as Record<string, unknown>)) {
+                for (const [key, value] of Object.entries(
+                  result.data as Record<string, unknown>
+                )) {
                   formData.append(key, value as string | Blob);
                 }
 
@@ -274,7 +284,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
 
       const res = await handler?.(
         reqClone as TypedNextRequest,
-        {...context, params: await context.params},
+        { ...context, params: await context.params },
         middlewareOptions
       );
 

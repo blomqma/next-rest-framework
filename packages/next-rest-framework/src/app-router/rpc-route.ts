@@ -89,15 +89,18 @@ export const rpcRoute = <
 
       if (middleware1) {
         const res1 = await middleware1(body, middlewareOptions);
-        if (res1 && typeof res1 === 'object') middlewareOptions = res1 as BaseOptions;
+        if (res1 && typeof res1 === 'object')
+          middlewareOptions = res1 as BaseOptions;
 
         if (middleware2) {
           const res2 = await middleware2(body, middlewareOptions);
-          if (res2 && typeof res2 === 'object') middlewareOptions = res2 as BaseOptions;
+          if (res2 && typeof res2 === 'object')
+            middlewareOptions = res2 as BaseOptions;
 
           if (middleware3) {
             const res3 = await middleware3(body, middlewareOptions);
-            if (res3 && typeof res3 === 'object') middlewareOptions = res3 as BaseOptions;
+            if (res3 && typeof res3 === 'object')
+              middlewareOptions = res3 as BaseOptions;
           }
         }
       }
@@ -169,7 +172,9 @@ export const rpcRoute = <
 
                 const formData = new FormData();
 
-                for (const [key, value] of Object.entries(result.data as Record<string, unknown>)) {
+                for (const [key, value] of Object.entries(
+                  result.data as Record<string, unknown>
+                )) {
                   formData.append(key, value as string | Blob);
                 }
 

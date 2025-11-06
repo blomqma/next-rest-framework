@@ -80,7 +80,10 @@ export const createMockRpcRouteRequest = <Body>({
     }
   });
 
-  return { req, context: { params: Promise.resolve({ operationId: operation }) } };
+  return {
+    req,
+    context: { params: Promise.resolve({ operationId: operation }) }
+  };
 };
 
 export const createMockApiRouteRequest = <

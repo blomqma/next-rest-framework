@@ -176,9 +176,11 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
 
               const formData = new FormData();
 
-              Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
-                formData.append(key, value as string | Blob);
-              });
+              Object.entries(data as Record<string, unknown>).forEach(
+                ([key, value]) => {
+                  formData.append(key, value as string | Blob);
+                }
+              );
 
               req.body = formData;
             } catch {

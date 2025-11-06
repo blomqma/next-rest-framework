@@ -15,7 +15,9 @@ const zodSchemaValidator = <T>({
 }: {
   schema: ZodType<T>;
   obj: unknown;
-}): { valid: true; errors: null; data: T } | { valid: false; errors: z.ZodIssue[]; data: null } => {
+}):
+  | { valid: true; errors: null; data: T }
+  | { valid: false; errors: z.ZodIssue[]; data: null } => {
   const result = schema.safeParse(obj);
 
   if (result.success) {
@@ -39,7 +41,9 @@ export const validateSchema = <T>({
 }: {
   schema: ZodType<T> | typeof zfd.formData;
   obj: unknown;
-}): { valid: true; errors: null; data: T } | { valid: false; errors: z.ZodIssue[]; data: null } => {
+}):
+  | { valid: true; errors: null; data: T }
+  | { valid: false; errors: z.ZodIssue[]; data: null } => {
   if (isZodSchema(schema)) {
     return zodSchemaValidator({ schema, obj });
   }
@@ -83,7 +87,9 @@ export const getJsonSchema = ({
 Warning: ${type} schema for operation ${operationId} could not be converted to a JSON schema. The OpenAPI spec may not be accurate.
 Error: ${error instanceof Error ? error.message : String(error)}
 This is most likely related to Zod v4's toJSONSchema() limitations or an issue with the schema structure.
-Please consider using the ${solutions[type]} property in addition to the Zod schema.`
+Please consider using the ${
+            solutions[type]
+          } property in addition to the Zod schema.`
         )
       );
 
