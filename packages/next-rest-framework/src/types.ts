@@ -1,5 +1,5 @@
 import { type OpenAPIV3_1 } from 'openapi-types';
-import { type ZodEffects, type z, type ZodSchema } from 'zod';
+import { type ZodType, type ZodTransform, type ZodPipe } from 'zod';
 
 export type DocsProvider = 'redoc' | 'swagger-ui';
 
@@ -86,7 +86,7 @@ export interface OutputObject<
   ContentType extends
     AnyContentTypeWithAutocompleteForMostCommonOnes = AnyContentTypeWithAutocompleteForMostCommonOnes
 > {
-  body: ZodSchema<Body>;
+  body: ZodType<Body>;
   bodySchema?:
     | OpenAPIV3_1.SchemaObject
     | OpenAPIV3_1.ReferenceObject /*! If defined, this will override the body schema for the OpenAPI spec. */;
@@ -203,8 +203,6 @@ interface FormDataLikeInput {
   entries: () => IterableIterator<[string, FormDataEntryValue]>;
 }
 
-export type ZodFormSchema<Data> = ZodEffects<
-  ZodSchema<Data>,
-  z.output<ZodSchema<Data>>,
-  FormData | FormDataLikeInput
->;
+export type ZodFormSchema<Data> =
+  | ZodTransform<Data, FormData | FormDataLikeInput>
+  | ZodPipe<any, ZodType<Data>>;

@@ -88,13 +88,16 @@ export const rpcRoute = <
       let middlewareOptions: BaseOptions = {};
 
       if (middleware1) {
-        middlewareOptions = await middleware1(body, middlewareOptions);
+        const res1 = await middleware1(body, middlewareOptions);
+        if (res1 && typeof res1 === 'object') middlewareOptions = res1 as BaseOptions;
 
         if (middleware2) {
-          middlewareOptions = await middleware2(body, middlewareOptions);
+          const res2 = await middleware2(body, middlewareOptions);
+          if (res2 && typeof res2 === 'object') middlewareOptions = res2 as BaseOptions;
 
           if (middleware3) {
-            middlewareOptions = await middleware3(body, middlewareOptions);
+            const res3 = await middleware3(body, middlewareOptions);
+            if (res3 && typeof res3 === 'object') middlewareOptions = res3 as BaseOptions;
           }
         }
       }
@@ -147,16 +150,16 @@ export const rpcRoute = <
               )
             ) {
               try {
-                const { valid, errors, data } = validateSchema({
+                const result = validateSchema({
                   schema: bodySchema,
                   obj: body
                 });
 
-                if (!valid) {
+                if (!result.valid) {
                   return NextResponse.json(
                     {
                       message: DEFAULT_ERRORS.invalidRequestBody,
-                      errors
+                      errors: result.errors
                     },
                     {
                       status: 400
@@ -166,7 +169,7 @@ export const rpcRoute = <
 
                 const formData = new FormData();
 
-                for (const [key, value] of Object.entries(data)) {
+                for (const [key, value] of Object.entries(result.data as Record<string, unknown>)) {
                   formData.append(key, value as string | Blob);
                 }
 

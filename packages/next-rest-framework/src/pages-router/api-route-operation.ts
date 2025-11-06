@@ -18,7 +18,7 @@ import {
   type BaseParams
 } from '../types';
 import { type NextApiRequest, type NextApiResponse } from 'next/types';
-import { type ZodSchema, type z } from 'zod';
+import { type ZodType, type z } from 'zod';
 
 export type TypedNextApiRequest<
   Method = keyof typeof ValidMethod,
@@ -135,14 +135,14 @@ interface InputObject<
   body?: ContentType extends ContentTypesThatSupportInputValidation
     ? ContentType extends FormDataContentType
       ? ZodFormSchema<Body>
-      : ZodSchema<Body>
+      : ZodType<Body>
     : never;
   /*! If defined, this will override the body schema for the OpenAPI spec. */
   bodySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
-  query?: ZodSchema<Query>;
+  query?: ZodType<Query>;
   /*! If defined, this will override the query schema for the OpenAPI spec. */
   querySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
-  params?: ZodSchema<Params>;
+  params?: ZodType<Params>;
   /*! If defined, this will override the params schema for the OpenAPI spec. */
   paramsSchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
 }

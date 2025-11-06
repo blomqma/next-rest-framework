@@ -165,16 +165,16 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
             try {
               const formData = await reqClone.formData();
 
-              const { valid, errors, data } = validateSchema({
+              const result = validateSchema({
                 schema: bodySchema,
                 obj: formData
               });
 
-              if (!valid) {
+              if (!result.valid) {
                 return NextResponse.json(
                   {
                     message: DEFAULT_ERRORS.invalidRequestBody,
-                    errors
+                    errors: result.errors
                   },
                   {
                     status: 400
@@ -186,14 +186,14 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
               reqClone = new NextRequest(reqClone.url, {
                 method: reqClone.method,
                 headers: reqClone.headers,
-                body: JSON.stringify(data)
+                body: JSON.stringify(result.data)
               });
 
               // Return parsed form data.
               reqClone.formData = async () => {
                 const formData = new FormData();
 
-                for (const [key, value] of Object.entries(data)) {
+                for (const [key, value] of Object.entries(result.data as Record<string, unknown>)) {
                   formData.append(key, value as string | Blob);
                 }
 
@@ -239,7 +239,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
             url.searchParams.delete(key);
 
             if (data[key]) {
-              url.searchParams.append(key, data[key]);
+              url.searchParams.append(key, data[key] as string);
             }
           });
 
@@ -268,7 +268,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
             );
           }
 
-          context.params = data;
+          context.params = Promise.resolve(data);
         }
       }
 

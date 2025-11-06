@@ -1,39 +1,45 @@
 import { type OpenAPIV3_1 } from 'openapi-types';
-import { zodToJsonSchema } from 'zod-to-json-schema';
-import { type AnyZodObject, type ZodSchema } from 'zod';
+import { z, type ZodObject, type ZodType } from 'zod';
 import { type zfd } from 'zod-form-data';
 import chalk from 'chalk';
 
-const isZodSchema = (schema: unknown): schema is ZodSchema =>
-  !!schema && typeof schema === 'object' && '_def' in schema;
+const isZodSchema = (schema: unknown): schema is ZodType =>
+  !!schema && typeof schema === 'object' && 'def' in schema;
 
-const isZodObjectSchema = (schema: unknown): schema is AnyZodObject =>
+const isZodObjectSchema = (schema: unknown): schema is ZodObject =>
   isZodSchema(schema) && 'shape' in schema;
 
-const zodSchemaValidator = ({
+const zodSchemaValidator = <T>({
   schema,
   obj
 }: {
-  schema: ZodSchema;
+  schema: ZodType<T>;
   obj: unknown;
-}) => {
-  const data = schema.safeParse(obj);
-  const errors = !data.success ? data.error.issues : null;
+}): { valid: true; errors: null; data: T } | { valid: false; errors: z.ZodIssue[]; data: null } => {
+  const result = schema.safeParse(obj);
+
+  if (result.success) {
+    return {
+      valid: true,
+      errors: null,
+      data: result.data
+    };
+  }
 
   return {
-    valid: data.success,
-    errors,
-    data: data.success ? data.data : null
+    valid: false,
+    errors: result.error.issues,
+    data: null
   };
 };
 
-export const validateSchema = ({
+export const validateSchema = <T>({
   schema,
   obj
 }: {
-  schema: ZodSchema | typeof zfd.formData;
+  schema: ZodType<T> | typeof zfd.formData;
   obj: unknown;
-}) => {
+}): { valid: true; errors: null; data: T } | { valid: false; errors: z.ZodIssue[]; data: null } => {
   if (isZodSchema(schema)) {
     return zodSchemaValidator({ schema, obj });
   }
@@ -48,16 +54,21 @@ export const getJsonSchema = ({
   operationId,
   type
 }: {
-  schema: ZodSchema;
+  schema: ZodType;
   operationId: string;
   type: SchemaType;
 }): OpenAPIV3_1.SchemaObject => {
   if (isZodSchema(schema)) {
     try {
-      return zodToJsonSchema(schema, {
-        $refStrategy: 'none',
-        target: 'openApi3'
-      });
+      // For input schemas, use 'input' to get what the API accepts (before transformations)
+      // For output schemas, use 'output' to get what the API returns (after transformations)
+      const io = type === 'output-body' ? 'output' : 'input';
+
+      return z.toJSONSchema(schema, {
+        target: 'openapi-3.0',
+        unrepresentable: 'any', // Allow unrepresentable types (date, bigint, etc.) to be converted to {}
+        io
+      }) as OpenAPIV3_1.SchemaObject;
     } catch (error) {
       const solutions: Record<SchemaType, string> = {
         'input-params': 'paramsSchema',
@@ -70,7 +81,8 @@ export const getJsonSchema = ({
         chalk.yellowBright(
           `
 Warning: ${type} schema for operation ${operationId} could not be converted to a JSON schema. The OpenAPI spec may not be accurate.
-This is most likely related to an issue with the \`zod-to-json-schema\`: https://github.com/StefanTerdell/zod-to-json-schema?tab=readme-ov-file#known-issues
+Error: ${error instanceof Error ? error.message : String(error)}
+This is most likely related to Zod v4's toJSONSchema() limitations or an issue with the schema structure.
 Please consider using the ${solutions[type]} property in addition to the Zod schema.`
         )
       );
@@ -82,9 +94,9 @@ Please consider using the ${solutions[type]} property in addition to the Zod sch
   throw Error('Invalid schema.');
 };
 
-export const getSchemaKeys = ({ schema }: { schema: ZodSchema }) => {
+export const getSchemaKeys = ({ schema }: { schema: ZodType }) => {
   if (isZodObjectSchema(schema)) {
-    return Object.keys(schema._def.shape());
+    return Object.keys(schema.shape);
   }
 
   throw Error('Invalid schema.');

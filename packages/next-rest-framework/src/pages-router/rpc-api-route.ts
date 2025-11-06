@@ -62,13 +62,16 @@ export const rpcApiRoute = <
       let middlewareOptions: BaseOptions = {};
 
       if (middleware1) {
-        middlewareOptions = await middleware1(req.body, {});
+        const res1 = await middleware1(req.body, {});
+        if (res1 && typeof res1 === 'object') middlewareOptions = res1 as BaseOptions;
 
         if (middleware2) {
-          middlewareOptions = await middleware2(req.body, middlewareOptions);
+          const res2 = await middleware2(req.body, middlewareOptions);
+          if (res2 && typeof res2 === 'object') middlewareOptions = res2 as BaseOptions;
 
           if (middleware3) {
-            middlewareOptions = await middleware3(req.body, middlewareOptions);
+            const res3 = await middleware3(req.body, middlewareOptions);
+            if (res3 && typeof res3 === 'object') middlewareOptions = res3 as BaseOptions;
           }
         }
       }
@@ -128,15 +131,15 @@ export const rpcApiRoute = <
             }
 
             try {
-              const { valid, errors, data } = validateSchema({
+              const result = validateSchema({
                 schema: bodySchema,
                 obj: req.body
               });
 
-              if (!valid) {
+              if (!result.valid) {
                 res.status(400).json({
                   message: DEFAULT_ERRORS.invalidRequestBody,
-                  errors
+                  errors: result.errors
                 });
 
                 return;
@@ -144,7 +147,7 @@ export const rpcApiRoute = <
 
               const formData = new FormData();
 
-              Object.entries(data).forEach(([key, value]) => {
+              Object.entries(result.data as Record<string, unknown>).forEach(([key, value]) => {
                 formData.append(key, value as string | Blob);
               });
 
