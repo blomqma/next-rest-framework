@@ -26,7 +26,7 @@
     "eslint-plugin-import": "2.28.1",
     "eslint-plugin-n": "16.0.2",
     "eslint-plugin-promise": "6.1.1",
-    "next": "15.1.6",
+    "next": "14.2.32",
     "prettier": "3.0.2",
     "typescript": "5.2.2",
     "zod": "^4.1.13"
