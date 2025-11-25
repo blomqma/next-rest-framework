@@ -441,4 +441,26 @@ describe('rpcRoute', () => {
     expect(console.log).toHaveBeenCalledWith('baz');
     expect(console.log).toHaveBeenCalledWith('handler');
   });
+
+  it('ignores non-object middleware return values when building options', async () => {
+    const { req, context } = createMockRpcRouteRequest({
+      body: { foo: 'bar' },
+      headers: { 'content-type': 'application/json' }
+    });
+
+    const res = await rpcRoute({
+      test: rpcOperation()
+        .input({
+          contentType: 'application/json',
+          body: z.object({ foo: z.string() })
+        })
+        .middleware(() => 'noop' as any)
+        .middleware(() => undefined)
+        .middleware(() => 42 as any)
+        .handler((_input, options) => options)
+    }).POST(req, context);
+
+    const json = await res?.json();
+    expect(json).toEqual({});
+  });
 });

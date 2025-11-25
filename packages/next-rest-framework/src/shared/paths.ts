@@ -12,7 +12,7 @@ import {
 import { merge } from 'lodash';
 
 import { getJsonSchema } from './schemas';
-import { type ZodObject, type ZodSchema, type ZodRawShape } from 'zod';
+import { type ZodObject, type ZodType, type ZodRawShape } from 'zod';
 import { type ApiRouteOperationDefinition } from '../pages-router';
 import { type RouteOperationDefinition } from '../app-router';
 import { type RpcOperationDefinition } from './rpc-operation';
@@ -112,7 +112,7 @@ export const getPathsFromRoute = ({
         };
 
         const description =
-          input.bodySchema?.description ?? input.body._def.description;
+          input.bodySchema?.description ?? input.body.description;
 
         if (description) {
           generatedOperationObject.requestBody.description = description;
@@ -185,7 +185,7 @@ export const getPathsFromRoute = ({
 
           const description =
             bodySchema?.description ??
-            body._def.description ??
+            body.description ??
             `Response for status ${status}`;
 
           return Object.assign(obj, {
@@ -219,7 +219,7 @@ export const getPathsFromRoute = ({
         pathParameters = Object.entries(schema).map(([name, schema]) => {
           const _schema = (input.params as ZodObject<ZodRawShape>).shape[
             name
-          ] as ZodSchema;
+          ] as ZodType;
 
           // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
           return {
@@ -269,7 +269,7 @@ export const getPathsFromRoute = ({
           ...Object.entries(schema).map(([name, schema]) => {
             const _schema = (input.query as ZodObject<ZodRawShape>).shape[
               name
-            ] as ZodSchema;
+            ] as ZodType;
 
             // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
             return {

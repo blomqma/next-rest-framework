@@ -41,8 +41,7 @@
     "formidable": "^3.5.1",
     "lodash": "4.17.21",
     "prettier": "3.0.2",
-    "qs": "6.11.2",
-    "zod-to-json-schema": "3.21.4"
+    "qs": "6.11.2"
   },
   "devDependencies": {
     "@types/formidable": "^3.4.5",
@@ -58,7 +57,7 @@
     "ts-node": "10.9.1",
     "tsup": "8.0.1",
     "typescript": "*",
-    "zod": "*",
-    "zod-form-data": "*"
+    "zod": "^4.1.13",
+    "zod-form-data": "3.0.1"
   }
 }
