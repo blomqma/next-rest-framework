@@ -4,6 +4,7 @@ import { validateSchema } from '../../src/shared';
 import { createMockApiRouteRequest } from '../utils';
 import { apiRoute, apiRouteOperation } from '../../src/pages-router';
 import { zfd } from 'zod-form-data';
+import { getPathsFromRoute } from '../../src/shared/paths';
 
 describe('apiRoute', () => {
   it.each(Object.values(ValidMethod))(
@@ -654,5 +655,53 @@ describe('apiRoute', () => {
     expect(console.log).toHaveBeenCalledWith('bar');
     expect(console.log).toHaveBeenCalledWith('baz');
     expect(console.log).toHaveBeenCalledWith('handler');
+  });
+
+  it('preserves schema descriptions in OpenAPI spec', async () => {
+    const { req, res } = createMockApiRouteRequest({
+      method: ValidMethod.GET
+    });
+
+    const schema = z.object({
+      foo: z.string().describe('A test field'),
+      items: z
+        .array(
+          z.object({
+            id: z.string().describe('Item ID'),
+            name: z.string().describe('Item name')
+          })
+        )
+        .describe('List of items')
+    });
+
+    const operations = {
+      test: apiRouteOperation({ method: 'GET' })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: schema
+          }
+        ])
+        .handler((_req, res) => {
+          res.json({ foo: 'bar', items: [{ id: '1', name: 'Test' }] });
+        })
+    };
+
+    await apiRoute(operations)(req, res);
+
+    const { schemas } = getPathsFromRoute({
+      operations,
+      route: '/api/test'
+    });
+
+    const responseSchema = schemas?.Test200ResponseBody;
+    expect(responseSchema?.properties?.foo?.description).toBe('A test field');
+    expect(responseSchema?.properties?.items?.description).toBe(
+      'List of items'
+    );
+    const itemsSchema = responseSchema?.properties?.items as any;
+    expect(itemsSchema?.items?.properties?.id?.description).toBe('Item ID');
+    expect(itemsSchema?.items?.properties?.name?.description).toBe('Item name');
   });
 });

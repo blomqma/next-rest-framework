@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-invalid-void-type */
 
-import { type z, type ZodSchema } from 'zod';
+import { type z, type ZodType } from 'zod';
 import { validateSchema } from './schemas';
 import { DEFAULT_ERRORS } from '../constants';
 import {
@@ -21,12 +21,12 @@ interface InputObject<ContentType = BaseContentType, Body = unknown> {
   contentType?: ContentType;
   body?: ContentType extends FormDataContentType
     ? ZodFormSchema<Body>
-    : ZodSchema<Body>;
+    : ZodType<Body>;
   /*! If defined, this will override the body schema for the OpenAPI spec. */
   bodySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
 }
 interface OutputObject {
-  body: ZodSchema;
+  body: ZodType;
   /*! If defined, this will override the body schema for the OpenAPI spec. */
   bodySchema?: OpenAPIV3_1.SchemaObject | OpenAPIV3_1.ReferenceObject;
   contentType: BaseContentType;
@@ -49,7 +49,7 @@ type RpcOperationHandler<
 > = (
   params: ContentType extends FormDataContentType
     ? TypedFormData<z.infer<ZodFormSchema<Body>>>
-    : z.infer<ZodSchema<Body>>,
+    : z.infer<ZodType<Body>>,
   options: Options
 ) =>
   | Promise<z.infer<Outputs[number]['body']>>
@@ -75,7 +75,7 @@ export type RpcOperationDefinition<
   ? (
       body: ContentType extends FormDataContentType
         ? FormData
-        : z.infer<ZodSchema<Body>>
+        : z.infer<ZodType<Body>>
     ) => TypedResponse
   : () => TypedResponse) & {
   _meta: OperationDefinitionMeta;
@@ -185,7 +185,7 @@ export const rpcOperation = (openApiOperation?: OpenApiOperation) => {
       const operation = async (
         body: ContentType extends FormDataContentType
           ? FormData
-          : z.infer<ZodSchema<Body>>
+          : z.infer<ZodType<Body>>
       ) => await callOperation(body);
 
       operation._meta = meta;

@@ -16,7 +16,7 @@
     "jsdom": "24.0.0",
     "next-rest-framework": "workspace:*",
     "tsx": "4.7.2",
-    "zod-form-data": "2.0.2"
+    "zod-form-data": "3.0.1"
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.6",

@@ -998,19 +998,18 @@
   "components": {
     "schemas": {
       "CreateTodo201ResponseBody": {
-        "type": "string",
-        "description": "New TODO created message."
+        "description": "New TODO created message.",
+        "type": "string"
       },
       "CreateTodo401ResponseBody": {
-        "type": "string",
-        "description": "Unauthorized."
+        "description": "Unauthorized.",
+        "type": "string"
       },
       "CreateTodoRequestBody": {
+        "description": "New TODO's name.",
         "type": "object",
         "properties": { "name": { "type": "string" } },
-        "required": ["name"],
-        "additionalProperties": false,
-        "description": "New TODO's name."
+        "required": ["name"]
       },
       "CreateTodoResponseBody": {
         "type": "object",
@@ -1026,18 +1025,18 @@
       "DeleteTodo404ResponseBody": { "type": "string" },
       "DeleteTodoRequestBody": { "type": "string" },
       "DeleteTodoResponseBody": {
+        "description": "TODO not found.",
         "type": "object",
         "properties": { "error": { "type": "string" } },
         "required": ["error"],
-        "additionalProperties": false,
-        "description": "TODO not found."
+        "additionalProperties": false
       },
       "DeleteTodoResponseBody2": {
+        "description": "TODO deleted message.",
         "type": "object",
         "properties": { "message": { "type": "string" } },
         "required": ["message"],
-        "additionalProperties": false,
-        "description": "TODO deleted message."
+        "additionalProperties": false
       },
       "ErrorMessage": {
         "type": "object",
@@ -1058,40 +1057,40 @@
         "format": "binary"
       },
       "FormDataUrlEncodedRequestBody": {
+        "description": "Test form description.",
         "type": "object",
         "properties": { "text": { "type": "string" } },
-        "required": ["text"],
-        "additionalProperties": false,
-        "description": "Test form description."
+        "required": ["text"]
       },
       "FormDataUrlEncodedResponseBody": {
+        "description": "Test form response.",
         "type": "object",
         "properties": { "text": { "type": "string" } },
         "required": ["text"],
-        "additionalProperties": false,
-        "description": "Test form response."
+        "additionalProperties": false
       },
       "GetParams200ResponseBody": {
+        "description": "Parameters response.",
         "type": "object",
         "properties": {
           "slug": { "type": "string", "enum": ["foo", "bar", "baz"] },
           "total": { "type": "string" }
         },
         "required": ["slug", "total"],
-        "additionalProperties": false,
-        "description": "Parameters response."
+        "additionalProperties": false
       },
       "GetPathParams200ResponseBody": {
+        "description": "Parameters response.",
         "type": "object",
         "properties": {
           "slug": { "type": "string", "enum": ["foo", "bar", "baz"] },
           "total": { "type": "string" }
         },
         "required": ["slug", "total"],
-        "additionalProperties": false,
-        "description": "Parameters response."
+        "additionalProperties": false
       },
       "GetTodoById200ResponseBody": {
+        "description": "TODO response.",
         "type": "object",
         "properties": {
           "id": { "type": "number" },
@@ -1099,25 +1098,25 @@
           "completed": { "type": "boolean" }
         },
         "required": ["id", "name", "completed"],
-        "additionalProperties": false,
-        "description": "TODO response."
+        "additionalProperties": false
       },
       "GetTodoById404ResponseBody": {
-        "type": "string",
-        "description": "TODO not found."
+        "description": "TODO not found.",
+        "type": "string"
       },
       "GetTodoByIdRequestBody": {
-        "type": "string",
-        "description": "TODO name."
+        "description": "TODO name.",
+        "type": "string"
       },
       "GetTodoByIdResponseBody": {
+        "description": "TODO not found.",
         "type": "object",
         "properties": { "error": { "type": "string" } },
         "required": ["error"],
-        "additionalProperties": false,
-        "description": "TODO not found."
+        "additionalProperties": false
       },
       "GetTodoByIdResponseBody2": {
+        "description": "TODO response.",
         "type": "object",
         "properties": {
           "id": { "type": "number" },
@@ -1125,10 +1124,10 @@
           "completed": { "type": "boolean" }
         },
         "required": ["id", "name", "completed"],
-        "additionalProperties": false,
-        "description": "TODO response."
+        "additionalProperties": false
       },
       "GetTodos200ResponseBody": {
+        "description": "List of TODOs.",
         "type": "array",
         "items": {
           "type": "object",
@@ -1139,10 +1138,10 @@
           },
           "required": ["id", "name", "completed"],
           "additionalProperties": false
-        },
-        "description": "List of TODOs."
+        }
       },
       "GetTodosResponseBody": {
+        "description": "List of TODOs.",
         "type": "array",
         "items": {
           "type": "object",
@@ -1153,8 +1152,7 @@
           },
           "required": ["id", "name", "completed"],
           "additionalProperties": false
-        },
-        "description": "List of TODOs."
+        }
       },
       "MessageWithErrors": {
         "type": "object",
@@ -1204,18 +1202,17 @@
       },
       "RouteWithExternalDep200ResponseBody": { "type": "string" },
       "UrlEncodedFormData200ResponseBody": {
+        "description": "Test form response.",
         "type": "object",
         "properties": { "text": { "type": "string" } },
         "required": ["text"],
-        "additionalProperties": false,
-        "description": "Test form response."
+        "additionalProperties": false
       },
       "UrlEncodedFormDataRequestBody": {
+        "description": "Test form description.",
         "type": "object",
         "properties": { "text": { "type": "string" } },
-        "required": ["text"],
-        "additionalProperties": false,
-        "description": "Test form description."
+        "required": ["text"]
       }
     }
   }
