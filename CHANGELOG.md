@@ -1,6 +1,14 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.1.0 - 2025-11-26
+
+#### Added
+
+- Add support for Zod v4.
+
+Contributors: @flackou
+
 ### 6.0.7 - 2025-04-13
 
 #### Changed
