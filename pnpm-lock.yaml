@@ -49,8 +49,8 @@ importers:
         specifier: 6.1.1
         version: 6.1.1(eslint@8.47.0)
       next:
-        specifier: 15.4.8
-        version: 15.4.8(@babel/core@7.22.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: 15.4.9
+        version: 15.4.9(@babel/core@7.22.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       prettier:
         specifier: 3.0.2
         version: 3.0.2
@@ -164,7 +164,7 @@ importers:
         version: 29.6.4(@types/node@20.5.4)(ts-node@10.9.1(@types/node@20.5.4)(typescript@5.2.2))
       next:
         specifier: '*'
-        version: 15.4.8(@babel/core@7.22.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        version: 15.4.9(@babel/core@7.22.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       node-mocks-http:
         specifier: 1.13.0
         version: 1.13.0
@@ -1559,8 +1559,8 @@ packages:
   '@mdx-js/util@1.6.22':
     resolution: {integrity: sha512-H1rQc1ZOHANWBvPcW+JpGwr+juXSxM8Q8YCkm3GhZd8REu1fHR3z99CErO1p9pkcfcxZnMdIZdIsXkOHY0NilA==}
 
-  '@next/env@15.4.8':
-    resolution: {integrity: sha512-LydLa2MDI1NMrOFSkO54mTc8iIHSttj6R6dthITky9ylXV2gCGi0bHQjVCtLGRshdRPjyh2kXbxJukDtBWQZtQ==}
+  '@next/env@15.4.9':
+    resolution: {integrity: sha512-OYR0RulK5phnbxxzcLE4/ECgfx1PL3EHrDbjyelJ7jauaO+/Qvj5gG8JPMltB51CygC2KrZ0aAfYLjPYjYY17A==}
 
   '@next/eslint-plugin-next@14.0.4':
     resolution: {integrity: sha512-U3qMNHmEZoVmHA0j/57nRfi3AscXNvkOnxDmle/69Jz/G0o/gWjXTDdlgILZdrxQ0Lw/jv2mPW8PGy0EGIHXhQ==}
@@ -2520,8 +2520,8 @@ packages:
   caniuse-lite@1.0.30001538:
     resolution: {integrity: sha512-HWJnhnID+0YMtGlzcp3T9drmBJUVDchPJ08tpUGFLs9CYlwWPH2uLgpHn8fND5pCgXVtnGS3H4QR9XLMHVNkHw==}
 
-  caniuse-lite@1.0.30001759:
-    resolution: {integrity: sha512-Pzfx9fOKoKvevQf8oCXoyNRQ5QyxJj+3O0Rqx2V5oxT61KGx8+n6hV/IUyJeifUci2clnmmKVpvtiqRzgiWjSw==}
+  caniuse-lite@1.0.30001760:
+    resolution: {integrity: sha512-7AAMPcueWELt1p3mi13HR/LHH0TJLT11cnwDJEs3xA4+CK/PLKeO9Kl1oru24htkyUKtkGCvAx4ohB0Ttry8Dw==}
 
   ccount@1.1.0:
     resolution: {integrity: sha512-vlNK021QdI7PNeiUh/lKkC/mNHHfV0m/Ad5JoI0TYtlBnJAslM/JIkm/tGC88bkLIwO6OQ5uV6ztS6kVAtCDlg==}
@@ -4627,8 +4627,8 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  next@15.4.8:
-    resolution: {integrity: sha512-jwOXTz/bo0Pvlf20FSb6VXVeWRssA2vbvq9SdrOPEg9x8E1B27C2rQtvriAn600o9hH61kjrVRexEffv3JybuA==}
+  next@15.4.9:
+    resolution: {integrity: sha512-/NedNmbiH4Umt/7SohT9VKxEdBt02Lj33xHrukE7d8Li6juT+75sEq4a4U06jggrvdbklKgr78OZEyWZ8XRrtw==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
     hasBin: true
     peerDependencies:
@@ -8667,7 +8667,7 @@ snapshots:
 
   '@mdx-js/util@1.6.22': {}
 
-  '@next/env@15.4.8': {}
+  '@next/env@15.4.9': {}
 
   '@next/eslint-plugin-next@14.0.4':
     dependencies:
@@ -9761,13 +9761,13 @@ snapshots:
   caniuse-api@3.0.0:
     dependencies:
       browserslist: 4.21.10
-      caniuse-lite: 1.0.30001759
+      caniuse-lite: 1.0.30001760
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
 
   caniuse-lite@1.0.30001538: {}
 
-  caniuse-lite@1.0.30001759: {}
+  caniuse-lite@1.0.30001760: {}
 
   ccount@1.1.0: {}
 
@@ -12285,11 +12285,11 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next@15.4.8(@babel/core@7.22.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+  next@15.4.9(@babel/core@7.22.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
-      '@next/env': 15.4.8
+      '@next/env': 15.4.9
       '@swc/helpers': 0.5.15
-      caniuse-lite: 1.0.30001759
+      caniuse-lite: 1.0.30001760
       postcss: 8.4.31
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
