@@ -1,6 +1,12 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.1.1 - 2026-01-08
+
+#### Update
+
+- Security patches
+
 ### 6.1.0 - 2025-11-26
 
 #### Added
