@@ -39,7 +39,7 @@
     "chalk": "4.1.2",
     "commander": "10.0.1",
     "formidable": "^3.5.1",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "prettier": "3.0.2",
     "qs": "6.14.1"
   },
