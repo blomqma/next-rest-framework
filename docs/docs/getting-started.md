@@ -583,3 +583,19 @@ export default function Page() {
 ```
 
 The `rpcClient` calls can also be easily integrated with any data fetching framework, like React Query or RTKQ.
+
+### [AI assistant skill](#ai-assistant-skill)
+
+This repository includes an agent skill at `skills/create-next-rest-framework-api`, installable with the [`skills` CLI](https://github.com/vercel-labs/skills).
+
+Install:
+
+```bash
+npx skills add blomqma/next-rest-framework --skill create-next-rest-framework-api
+```
+
+Install globally instead of per-project:
+
+```bash
+npx skills add blomqma/next-rest-framework --skill create-next-rest-framework-api --global
+```

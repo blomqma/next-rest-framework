@@ -25,6 +25,7 @@
 
 - [Table of contents](#table-of-contents)
 - [Overview](#overview)
+- [AI Assistant Skill](#ai-assistant-skill)
 - [Features](#features)
   - [Lightweight, type-safe, easy to use](#lightweight-type-safe-easy-to-use)
 - [Requirements](#requirements)
@@ -74,6 +75,22 @@ Next REST Framework is an open-source, opinionated, lightweight, easy-to-use set
 
 - [Live demo](https://next-rest-framework-demo.vercel.app)
 - [Docs](https://next-rest-framework.vercel.app)
+
+## [AI Assistant Skill](#ai-assistant-skill)
+
+This repository ships an agent skill at `skills/create-next-rest-framework-api`, installable with the [`skills` CLI](https://github.com/vercel-labs/skills).
+
+Install:
+
+```bash
+npx skills add blomqma/next-rest-framework --skill create-next-rest-framework-api
+```
+
+Install globally instead of per-project:
+
+```bash
+npx skills add blomqma/next-rest-framework --skill create-next-rest-framework-api --global
+```
 
 This is a monorepo containing the following packages / projects:
 

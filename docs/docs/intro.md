@@ -40,3 +40,5 @@ You also need the following dependencies installed in you Next.js project:
 ```sh
 npm install next-rest-framework
 ```
+
+For AI agent setup, see [AI assistant skill](./getting-started#ai-assistant-skill).
