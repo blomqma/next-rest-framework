@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Next REST Framework API"
+  short_description: "Set up typed Next.js APIs with next-rest-framework"
+  default_prompt: "Use $create-next-rest-framework-api to implement a typed Next.js API route with OpenAPI docs and CLI validation."
