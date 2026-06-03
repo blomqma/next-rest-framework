@@ -28,3 +28,27 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: false
+
+  zod-matrix:
+    name: "Zod ${{ matrix.zod }} compatibility"
+    runs-on: ubuntu-latest
+    strategy:
+      # Test against multiple Zod 4 minor versions to catch cross-realm
+      # regressions early — see #222.
+      fail-fast: false
+      matrix:
+        zod: ["4.1.13", "4.2.0", "4.4.3", "latest"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "pnpm"
+      - run: pnpm i --frozen-lockfile
+      - name: Override zod version
+        run: pnpm add -D --filter next-rest-framework zod@${{ matrix.zod }}
+      - run: pnpm --filter next-rest-framework run build
+      - run: pnpm --filter next-rest-framework run test

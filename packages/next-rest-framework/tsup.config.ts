@@ -30,6 +30,11 @@ export default defineConfig({
     'src/cli/validate.ts'
   ],
   bundle: true,
+  // `zod` and `zod-form-data` are externalised so that schemas constructed by
+  // the consumer's installed `zod` share the same realm as the `toJSONSchema`
+  // call inside this package. Bundling them caused cross-realm bugs where
+  // `_zod.bag` was unreadable across versions (see #222).
+  external: ['zod', 'zod-form-data'],
   esbuildPlugins: [uaParserDirnamePlugin()],
   format: ['cjs', 'esm'],
   platform: 'node'

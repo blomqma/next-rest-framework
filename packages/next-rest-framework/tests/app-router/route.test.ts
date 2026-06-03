@@ -727,4 +727,102 @@ describe('route', () => {
     expect(itemsSchema?.items?.properties?.id?.description).toBe('Item ID');
     expect(itemsSchema?.items?.properties?.name?.description).toBe('Item name');
   });
+
+  it('preserves Zod refinements in generated OpenAPI schema', async () => {
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST
+    });
+
+    const inputSchema = z.object({
+      // string constraints
+      title: z.string().min(1).max(100),
+      slug: z.string().regex(/^[a-z-]+$/),
+      // string formats
+      email: z.email(),
+      url: z.url(),
+      uuid: z.uuid(),
+      isoDate: z.iso.datetime(),
+      // number constraints
+      age: z.number().min(0).max(150),
+      // integer
+      count: z.number().int(),
+      // multipleOf
+      stride: z.number().multipleOf(5),
+      // array constraints
+      tags: z.array(z.string()).min(1).max(5),
+      // enum / literal
+      role: z.enum(['admin', 'user', 'guest']),
+      kind: z.literal('special'),
+      // default
+      verbose: z.boolean().default(false),
+      // optional
+      note: z.string().optional()
+    });
+
+    const outputSchema = z.object({
+      id: z.string().min(1)
+    });
+
+    const operations = {
+      createItem: routeOperation({ method: 'POST' })
+        .input({
+          contentType: 'application/json',
+          body: inputSchema
+        })
+        .outputs([
+          {
+            status: 201,
+            contentType: 'application/json',
+            body: outputSchema
+          }
+        ])
+        .handler(() => TypedNextResponse.json({ id: '1' }, { status: 201 }))
+    } as const;
+
+    await route(operations).POST(req, context);
+
+    const { schemas } = getPathsFromRoute({
+      operations,
+      route: '/api/items'
+    });
+
+    const req_ = schemas?.CreateItemRequestBody as any;
+    const p = req_?.properties;
+
+    // string constraints
+    expect(p?.title?.minLength).toBe(1);
+    expect(p?.title?.maxLength).toBe(100);
+    expect(p?.slug?.pattern).toBe('^[a-z-]+$');
+
+    // string formats
+    expect(p?.email?.format).toBe('email');
+    expect(p?.url?.format).toBe('uri');
+    expect(p?.uuid?.format).toBe('uuid');
+    expect(p?.isoDate?.format).toBe('date-time');
+
+    // number constraints
+    expect(p?.age?.minimum).toBe(0);
+    expect(p?.age?.maximum).toBe(150);
+    expect(p?.count?.type).toBe('integer');
+    expect(p?.stride?.multipleOf).toBe(5);
+
+    // array constraints
+    expect(p?.tags?.minItems).toBe(1);
+    expect(p?.tags?.maxItems).toBe(5);
+
+    // enum / literal
+    expect(p?.role?.enum).toEqual(['admin', 'user', 'guest']);
+    expect(p?.kind?.enum).toEqual(['special']);
+
+    // default values
+    expect(p?.verbose?.default).toBe(false);
+
+    // required fields (note: 'note' is optional, 'verbose' has default)
+    expect(req_?.required).toContain('title');
+    expect(req_?.required).not.toContain('note');
+
+    // response refinements
+    const res_ = schemas?.CreateItem201ResponseBody as any;
+    expect(res_?.properties?.id?.minLength).toBe(1);
+  });
 });
