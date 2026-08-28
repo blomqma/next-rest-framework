@@ -28,7 +28,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 版本得显式写：这个仓库的 package.json 里没有 packageManager 字段（上游就没有），
+      # action 自己找不到版本会直接失败。与 ci.yml 保持同一个大版本。
       - uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - uses: actions/setup-node@v4
         with:
