@@ -2,8 +2,10 @@ name: "CI"
 
 on:
   push:
-    branches:
-      - "**"
+    # pkg 是发布分支：根的 package.json 是发布元数据（没有 ci 脚本，dist 是构建产物），
+    # 在这条上跑 build/lint/test 没有意义。它的源码与 main 保持一致，由 main 的 CI 把关。
+    branches-ignore:
+      - "pkg"
 
 jobs:
   build:

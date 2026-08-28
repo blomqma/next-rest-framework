@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import qs from 'qs';
 import { DEFAULT_ERRORS } from '../constants';
 import { validateSchema } from '../shared';
-import { logNextRestFrameworkError } from '../shared/logging';
+import {
+  logNextRestFrameworkError,
+  logNextRestFrameworkResponse
+} from '../shared/logging';
 import { getPathsFromRoute } from '../shared/paths';
 import {
   type FormDataContentType,
@@ -30,10 +33,19 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
     _req: NextRequest,
     context: { params: Promise<BaseParams> }
   ) => {
+    let operationId: string | undefined;
+
     try {
-      const operation = Object.entries(operations).find(
+      const operationEntry = Object.entries(operations).find(
         ([_operationId, operation]) => operation.method === _req.method
-      )?.[1];
+      );
+      operationId = operationEntry?.[0];
+      const operation = operationEntry?.[1];
+      const logContext = {
+        method: _req.method,
+        operationId,
+        url: _req.url
+      };
 
       if (!operation) {
         return NextResponse.json(
@@ -61,6 +73,10 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
 
       reqClone.json = async () => await _req.clone().json();
       reqClone.formData = async () => await _req.clone().formData();
+      // `new NextRequest(url, { method, headers })` above creates a body-less request, so the
+      // inherited `text()` would resolve to ''. Handlers that need the raw body (e.g. webhook
+      // signature verification over the exact payload) must read it from the original request.
+      reqClone.text = async () => await _req.clone().text();
 
       let middlewareOptions: BaseOptions = {};
 
@@ -75,6 +91,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
           typeof res === 'object';
 
         if (res instanceof Response) {
+          await logNextRestFrameworkResponse(res, logContext);
           return res;
         } else if (isOptionsResponse(res)) {
           middlewareOptions = res;
@@ -88,6 +105,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
           );
 
           if (res2 instanceof Response) {
+            await logNextRestFrameworkResponse(res2, logContext);
             return res2;
           } else if (isOptionsResponse(res2)) {
             middlewareOptions = res2;
@@ -101,6 +119,7 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
             );
 
             if (res3 instanceof Response) {
+              await logNextRestFrameworkResponse(res3, logContext);
               return res3;
             } else if (isOptionsResponse(res3)) {
               middlewareOptions = res3;
@@ -295,9 +314,14 @@ export const route = <T extends Record<string, RouteOperationDefinition>>(
         );
       }
 
+      await logNextRestFrameworkResponse(res, logContext);
       return res;
     } catch (error) {
-      logNextRestFrameworkError(error);
+      await logNextRestFrameworkError(error, {
+        method: _req.method,
+        operationId,
+        url: _req.url
+      });
       return NextResponse.json(
         { message: DEFAULT_ERRORS.unexpectedError },
         { status: 500 }

@@ -14,4 +14,9 @@ export {
   type TypedNextRequest,
   TypedNextResponse
 } from './app-router';
-export { rpcOperation } from './shared';
+export {
+  rpcOperation,
+  setErrorReporter,
+  type NextRestFrameworkErrorReporter,
+  type NextRestFrameworkErrorLogContext
+} from './shared';

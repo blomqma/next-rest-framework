@@ -9,10 +9,6 @@ const isZodSchema = (schema: unknown): schema is ZodTypeAny =>
 const isZodObjectSchema = (schema: unknown): schema is z.ZodObject<any> =>
   schema instanceof z.ZodObject;
 
-const isZodArraySchema = (
-  schema: ZodTypeAny
-): schema is z.ZodArray<ZodTypeAny> => schema instanceof z.ZodArray;
-
 const zodSchemaValidator = <T>({
   schema,
   obj
@@ -57,31 +53,6 @@ export const validateSchema = <T>({
 
 type SchemaType = 'input-params' | 'input-query' | 'input-body' | 'output-body';
 
-// Helper function to register descriptions in a local Zod registry
-const registerDescriptions = (
-  schema: ZodTypeAny,
-  registry: z.core.$ZodRegistry<{ description?: string }>
-): void => {
-  // Register description for the schema itself
-  if (schema.description) {
-    registry.add(schema, { description: schema.description });
-  }
-
-  // For object schemas, register descriptions for each property
-  if (isZodObjectSchema(schema)) {
-    Object.values(schema.shape as Record<string, ZodTypeAny>).forEach(
-      (propSchema) => {
-        registerDescriptions(propSchema, registry);
-      }
-    );
-  }
-
-  // For array schemas, register description for the element type
-  if (isZodArraySchema(schema)) {
-    registerDescriptions(schema.element, registry);
-  }
-};
-
 export const getJsonSchema = ({
   schema,
   operationId,
@@ -93,21 +64,31 @@ export const getJsonSchema = ({
 }): OpenAPIV3_1.SchemaObject => {
   if (isZodSchema(schema)) {
     try {
-      // Create a local registry to avoid global registry conflicts (see: https://github.com/colinhacks/zod/issues/4145)
-      const localRegistry = z.core.registry<{ description?: string }>();
-
-      // Register descriptions in the local registry so toJSONSchema can access them
-      registerDescriptions(schema, localRegistry);
-
       // For input schemas, use 'input' to get what the API accepts (before transformations)
       // For output schemas, use 'output' to get what the API returns (after transformations)
       const io = type === 'output-body' ? 'output' : 'input';
 
+      // Descriptions are deliberately NOT routed through a local registry.
+      //
+      // This used to build a local registry via a `registerDescriptions` walk and pass it as
+      // `metadata`, citing https://github.com/colinhacks/zod/issues/4145. That issue is about
+      // `.meta({ id })` collisions ("ID x already exists in the registry"), which are thrown by
+      // `registry.add` in *user* code -- a local registry in here cannot prevent them. Meanwhile
+      // the option did real damage: `metadata` REPLACES the registry `toJSONSchema` reads, so any
+      // description the walk missed was dropped, and `.describe()` writes to `z.globalRegistry`.
+      //
+      // The walk only descended `ZodObject.shape` and `ZodArray.element`, so it stopped dead at
+      // every wrapper -- `.default()`, `.optional()`, `.nullish()`, unions, records. A field like
+      // `z.array(z.object({ data: nodeData.nullish() })).default([])` lost every nested
+      // description, silently, while the properties themselves came through: the spec looked
+      // complete and was not.
+      //
+      // Omitting `metadata` lets zod read its global registry, which is exactly where
+      // `.describe()` puts things.
       return z.toJSONSchema(schema, {
         target: 'openapi-3.0',
         unrepresentable: 'any', // Allow unrepresentable types (date, bigint, etc.) to be converted to {}
-        io,
-        metadata: localRegistry
+        io
       }) as OpenAPIV3_1.SchemaObject;
     } catch (error) {
       const solutions: Record<SchemaType, string> = {

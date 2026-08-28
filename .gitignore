@@ -6,3 +6,4 @@ tsconfig.tsbuildinfo
 next-env.d.ts
 build
 .docusaurus
+.idea/

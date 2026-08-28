@@ -364,6 +364,37 @@ describe('route', () => {
     expect(json).toEqual({ foo: 'bar' });
   });
 
+  it('exposes the raw request body via text()', async () => {
+    const { req, context } = createMockRouteRequest({
+      method: ValidMethod.POST,
+      body: { foo: 'bar' },
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+
+    const res = await route({
+      test: routeOperation({ method: 'POST' })
+        .outputs([
+          {
+            status: 200,
+            contentType: 'application/json',
+            body: z.object({
+              raw: z.string()
+            })
+          }
+        ])
+        .handler(async (req) => {
+          const raw = await req.text();
+          return TypedNextResponse.json({ raw });
+        })
+    }).POST(req, context);
+
+    const json = await res?.json();
+    expect(res?.status).toEqual(200);
+    expect(json).toEqual({ raw: JSON.stringify({ foo: 'bar' }) });
+  });
+
   it('works with application/x-www-form-urlencoded', async () => {
     const { req, context } = createMockRouteRequest({
       method: ValidMethod.POST,

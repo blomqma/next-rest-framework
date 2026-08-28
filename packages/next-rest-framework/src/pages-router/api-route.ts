@@ -40,10 +40,14 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
       );
     }
 
+    let operationId: string | undefined;
+
     try {
-      const operation = Object.entries(operations).find(
+      const operationEntry = Object.entries(operations).find(
         ([_operationId, operation]) => operation.method === req.method
-      )?.[1];
+      );
+      operationId = operationEntry?.[0];
+      const operation = operationEntry?.[1];
 
       if (!operation) {
         res.setHeader(
@@ -247,7 +251,11 @@ export const apiRoute = <T extends Record<string, ApiRouteOperationDefinition>>(
         res.status(501).json({ message: DEFAULT_ERRORS.notImplemented });
       }
     } catch (error) {
-      logNextRestFrameworkError(error);
+      await logNextRestFrameworkError(error, {
+        method: req.method,
+        operationId,
+        url: req.url
+      });
       res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
   };

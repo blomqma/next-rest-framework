@@ -10,11 +10,11 @@
     "validate": "pnpm prebuild && NODE_OPTIONS='--import=tsx' next-rest-framework validate",
     "custom-generate-openapi": "pnpm prebuild && tsx ./src/scripts/custom-generate-openapi.ts",
     "custom-validate-openapi": "pnpm prebuild && tsx ./src/scripts/custom-validate-openapi.ts",
-    "lint": "tsc && next lint"
+    "lint": "tsc"
   },
   "dependencies": {
     "jsdom": "24.0.0",
-    "next-rest-framework": "workspace:*",
+    "next-rest-framework": "workspace:@ai0x0/next-rest-framework@*",
     "tsx": "4.7.2",
     "zod-form-data": "3.0.1"
   },

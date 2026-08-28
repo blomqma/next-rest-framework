@@ -1,6 +1,17 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+### 6.2.0 - 2026-08-21
+
+#### Added
+
+- `setErrorReporter` — a process-wide hook that hands the framework's caught errors to the
+  application before it answers with the generic 500. The route wrappers catch every handler
+  throw, which means the error never propagates and a host framework's error hook (Next's
+  `onRequestError`) never sees it: until now `console.error` was the only channel, so on a
+  serverless host the detail was only available to whoever happened to be tailing the logs.
+  The response sent to the client is unchanged.
+
 ### 6.1.1 - 2026-01-08
 
 #### Update

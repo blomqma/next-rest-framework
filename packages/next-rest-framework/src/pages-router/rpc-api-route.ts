@@ -42,6 +42,8 @@ export const rpcApiRoute = <
       );
     }
 
+    let operationId: string | undefined;
+
     try {
       if (req.method !== ValidMethod.POST) {
         res.setHeader('Allow', 'POST');
@@ -49,7 +51,8 @@ export const rpcApiRoute = <
         return;
       }
 
-      const operation = operations[req.query.operationId?.toString() ?? ''];
+      operationId = req.query.operationId?.toString() ?? '';
+      const operation = operations[operationId];
 
       if (!operation) {
         res.status(400).json({ message: DEFAULT_ERRORS.operationNotAllowed });
@@ -202,7 +205,11 @@ export const rpcApiRoute = <
       const json = await parseRpcOperationResponseJson(_res);
       res.status(200).json(json);
     } catch (error) {
-      logNextRestFrameworkError(error);
+      await logNextRestFrameworkError(error, {
+        method: req.method,
+        operationId,
+        url: req.url
+      });
       res.status(400).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
   };

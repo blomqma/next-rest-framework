@@ -25,7 +25,10 @@ export const docsRoute = (_config?: NextRestFrameworkConfig) => {
         }
       });
     } catch (error) {
-      logNextRestFrameworkError(error);
+      await logNextRestFrameworkError(error, {
+        method: _req.method,
+        url: _req.url
+      });
 
       return NextResponse.json(
         { message: DEFAULT_ERRORS.unexpectedError },

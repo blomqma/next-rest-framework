@@ -31,6 +31,8 @@ export const rpcRoute = <
     req: NextRequest,
     { params }: { params: Promise<BaseParams> }
   ) => {
+    let operationId: string | undefined;
+
     try {
       if (req.method !== ValidMethod.POST) {
         return NextResponse.json(
@@ -44,7 +46,8 @@ export const rpcRoute = <
         );
       }
 
-      const operation = operations[(await params).operationId ?? ''];
+      operationId = (await params).operationId ?? '';
+      const operation = operations[operationId];
 
       if (!operation) {
         return NextResponse.json(
@@ -221,7 +224,11 @@ export const rpcRoute = <
         }
       });
     } catch (error) {
-      logNextRestFrameworkError(error);
+      await logNextRestFrameworkError(error, {
+        method: req.method,
+        operationId,
+        url: req.url
+      });
 
       return NextResponse.json(
         { message: DEFAULT_ERRORS.unexpectedError },

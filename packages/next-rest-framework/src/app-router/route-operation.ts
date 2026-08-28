@@ -19,10 +19,13 @@ import {
 import { NextResponse, type NextRequest } from 'next/server';
 import { type ZodType, type z } from 'zod';
 import { type ValidMethod } from '../constants';
-import { type I18NConfig } from 'next/dist/server/config-shared';
-import { type NextURL } from 'next/dist/server/web/next-url';
 import { type OpenAPIV3_1 } from 'openapi-types';
-import { type ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies';
+import { type NextConfig } from 'next';
+
+// Use public API types instead of internal Next.js paths to avoid cross-version type incompatibilities.
+type NextURL = NextRequest['nextUrl'];
+type ResponseCookies = NextResponse['cookies'];
+type I18NConfig = NonNullable<NextConfig['i18n']>;
 
 interface TypedSearchParams<Query = BaseQuery> extends URLSearchParams {
   get: <K extends keyof Query & string>(key: K) => string | null;

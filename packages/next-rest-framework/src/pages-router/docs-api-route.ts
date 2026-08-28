@@ -35,7 +35,10 @@ export const docsApiRoute = (_config?: NextRestFrameworkConfig) => {
       res.setHeader('Content-Type', 'text/html');
       res.status(200).send(html);
     } catch (error) {
-      logNextRestFrameworkError(error);
+      await logNextRestFrameworkError(error, {
+        method: req.method,
+        url: req.url
+      });
       res.status(500).json({ message: DEFAULT_ERRORS.unexpectedError });
     }
   };
