@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "jsdom": "24.0.0",
-    "next-rest-framework": "workspace:*",
+    "next-rest-framework": "workspace:@ai0x0/next-rest-framework@*",
     "tsx": "4.7.2",
     "zod-form-data": "3.0.1"
   },

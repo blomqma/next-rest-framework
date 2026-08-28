@@ -1,0 +1,60 @@
+# 发布 @ai0x0/next-rest-framework 到 npm。
+#
+# 打一个 v* 的标签就发（与仓库既有的 v6.1.3 那套标签同一个写法）。发之前先按标签核一遍
+# 版本号：标签与 package.json 对不上就直接失败 —— 发错版本号是没法撤回的。
+#
+# 上游那条 CI（ci.yml）照旧跑 build/lint/test，这条只管发布。
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "只构建、不发布"
+        type: boolean
+        default: true
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter @ai0x0/next-rest-framework build
+
+      - name: Check tag matches package version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG=${GITHUB_REF#refs/tags/v}
+          PKG=$(node -p "require('./packages/next-rest-framework/package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::标签 ($TAG) 与 package.json ($PKG) 对不上"
+            exit 1
+          fi
+
+      - name: Publish
+        if: startsWith(github.ref, 'refs/tags/') && inputs.dry_run != true
+        working-directory: packages/next-rest-framework
+        run: pnpm publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

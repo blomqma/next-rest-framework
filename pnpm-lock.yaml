@@ -67,7 +67,7 @@ importers:
         specifier: 24.0.0
         version: 24.0.0
       next-rest-framework:
-        specifier: workspace:*
+        specifier: workspace:@ai0x0/next-rest-framework@*
         version: link:../../packages/next-rest-framework
       tsx:
         specifier: 4.7.2

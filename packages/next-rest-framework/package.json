@@ -1,7 +1,7 @@
 {
-  "name": "next-rest-framework",
+  "name": "@ai0x0/next-rest-framework",
   "version": "6.2.0",
-  "description": "Next REST Framework - Type-safe, self-documenting APIs for Next.js",
+  "description": "Type-safe, self-documenting APIs for Next.js — AI0x0 的维护分支（fork of next-rest-framework by Markus Blomqvist）",
   "keywords": [
     "nextjs",
     "rest",
@@ -10,8 +10,7 @@
   ],
   "homepage": "https://next-rest-framework.vercel.app",
   "bugs": {
-    "url": "https://github.com/blomqma/next-rest-framework/issues",
-    "email": "blomqma@omg.lol"
+    "url": "https://github.com/AI0x0/next-rest-framework/issues"
   },
   "license": "ISC",
   "author": "Markus Blomqvist <blomqma@omg.lol>",
@@ -23,7 +22,7 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/blomqma/next-rest-framework.git",
+    "url": "https://github.com/AI0x0/next-rest-framework.git",
     "directory": "packages/next-rest-framework"
   },
   "scripts": {
@@ -62,5 +61,8 @@
     "typescript": "*",
     "zod": "^4.1.13",
     "zod-form-data": "3.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
