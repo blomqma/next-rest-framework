@@ -65,6 +65,8 @@ export interface NextRestFrameworkConfig {
     faviconUrl?: string;
     /*! A URL for a custom logo. */
     logoUrl?: string;
+    /*! Disables Redoc's anonymous usage telemetry, which Redoc 3 sends by default. Used by the `redoc` provider only. */
+    disableTelemetry?: boolean;
     /*! Basic customization options for OG meta tags: https://ogp.me/#metadata */
     ogConfig?: {
       title: string /*! og:title */;
