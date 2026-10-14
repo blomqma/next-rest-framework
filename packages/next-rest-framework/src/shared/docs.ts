@@ -19,6 +19,7 @@ export const getHtmlForDocs = ({
       description = openApiObject?.info?.description ?? DEFAULT_DESCRIPTION,
       faviconUrl = DEFAULT_FAVICON_URL,
       logoUrl = DEFAULT_LOGO_URL,
+      disableTelemetry,
       ogConfig: {
         title: ogTitle = title,
         type: ogType = DEFAULT_OG_TYPE,
@@ -52,29 +53,22 @@ export const getHtmlForDocs = ({
     <meta property="og:url" content="${orgUrl}" />
     <meta property="og:image" content="${ogImageUrl}" />`;
 
+  const redocOptions = JSON.stringify({ disableTelemetry });
+
   const redocHtml = `<!DOCTYPE html>
 <html>
   <head>
     ${htmlMetaTags}
-    <link
-      href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700"
-      rel="stylesheet"
-    />
   </head>
   <body>
     <div id="redoc"></div>
-    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
-    <script>
-      window.onload = () => {
-        fetch('${url}')
-          .then(res => res.json())
-          .then(spec => {
-            spec.info['title'] = "${title}";
-            spec.info['description'] = "${description}";
-            spec.info['x-logo'] = { url: "${logoUrl}" };
-            Redoc.init(spec, {}, document.getElementById('redoc'));
-          });
-      };
+    <script type="module">
+      import { init } from "https://cdn.redoc.ly/redoc/v3.0.1/bundles/redoc.standalone.js";
+      const spec = await fetch('${url}').then(res => res.json());
+      spec.info['title'] = "${title}";
+      spec.info['description'] = "${description}";
+      spec.info['x-logo'] = { url: "${logoUrl}" };
+      init(spec, ${redocOptions}, document.getElementById('redoc'));
     </script>
   </body>
 </html>`;

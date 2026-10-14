@@ -711,14 +711,15 @@ The following options can be passed to the `docsRoute` (app router) and `docsApi
 
 The docs config options can be used to customize the generated docs:
 
-| Name          | Description                                                                                                                                  |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `provider`    | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`.                                  |
-| `title`       | Custom title, used for the visible title and HTML title.                                                                                     |
-| `description` | Custom description, used for the visible description and HTML meta description.                                                              |
-| `faviconUrl`  | Custom HTML meta favicon URL.                                                                                                                |
-| `logoUrl`     | A URL for a custom logo.                                                                                                                     |
-| `ogConfig`    | [Basic customization options](https://ogp.me/#metadata) for OG meta tags. Requires the following fields: `title`, `type`, `url`, `imageUrl`. |
+| Name               | Description                                                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provider`         | Determines whether to render the docs using Redoc (`redoc`) or SwaggerUI `swagger-ui`. Defaults to `redoc`.                                  |
+| `title`            | Custom title, used for the visible title and HTML title.                                                                                     |
+| `description`      | Custom description, used for the visible description and HTML meta description.                                                              |
+| `faviconUrl`       | Custom HTML meta favicon URL.                                                                                                                |
+| `logoUrl`          | A URL for a custom logo.                                                                                                                     |
+| `disableTelemetry` | Disables Redoc's anonymous usage telemetry, which Redoc 3 sends by default. Used by the `redoc` provider only.                               |
+| `ogConfig`         | [Basic customization options](https://ogp.me/#metadata) for OG meta tags. Requires the following fields: `title`, `type`, `url`, `imageUrl`. |
 
 ### REST
 
